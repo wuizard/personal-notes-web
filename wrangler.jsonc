@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "notes-maker-web",
+  "name": "personal-notes-web",
 
   // Paths are relative to this file, which lives at the REPOSITORY ROOT rather
   // than inside notes-maker-web/.
