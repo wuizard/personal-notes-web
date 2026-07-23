@@ -1,0 +1,40 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "notes-maker-web",
+
+  // Paths are relative to this file, which lives at the REPOSITORY ROOT rather
+  // than inside notes-maker-web/.
+  //
+  // That is deliberate. Cloudflare Workers Builds runs its deploy command from
+  // the repo root, and with no config there wrangler falls back to workspace
+  // detection, finds several candidate packages and refuses:
+  //
+  //   ✘ The Cloudflare application detection logic has been run in the root of
+  //     a workspace instead of targeting a specific project.
+  //
+  // Putting the config where the deploy actually runs removes the failure
+  // rather than working around it in a dashboard field that has to be kept in
+  // sync by hand. There is exactly one deployable in this repo, so root-level
+  // deploy config costs nothing in clarity.
+  "main": "notes-maker-web/worker/index.ts",
+  "compatibility_date": "2026-07-01",
+
+  "assets": {
+    "directory": "./notes-maker-web/out",
+    "binding": "ASSETS",
+
+    // The export writes `en/notes.html`, not `en/notes/index.html`.
+    // `auto-trailing-slash` is what maps a request for `/en/notes` onto it.
+    "html_handling": "auto-trailing-slash",
+
+    // Serve the exported 404 page for unknown paths. Explicitly NOT
+    // "single-page-application": this app has real prerendered routes, and
+    // SPA fallback would return 200 + the shell for genuinely missing URLs,
+    // which search engines index as duplicate content.
+    "not_found_handling": "404-page"
+  },
+
+  "observability": {
+    "enabled": true
+  }
+}

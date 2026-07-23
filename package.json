@@ -8,10 +8,14 @@
     "build": "pnpm --filter notes-maker-web build",
     "lint": "pnpm --filter notes-maker-web lint",
     "typecheck": "pnpm --filter notes-maker-web typecheck",
-    "deploy": "pnpm --filter notes-maker-web exec wrangler deploy"
+    "deploy": "pnpm run build && wrangler deploy",
+    "cf:dev": "pnpm run build && wrangler dev"
   },
   "engines": {
     "node": ">=20.9.0"
   },
-  "packageManager": "pnpm@11.1.2"
+  "packageManager": "pnpm@11.1.2",
+  "devDependencies": {
+    "wrangler": "^4.113.0"
+  }
 }

@@ -35,10 +35,12 @@ Everything else is served straight from the assets binding with no compute.
 pnpm run deploy      # from the repo root
 ```
 
-### Wrangler must not run at the workspace root
+### Why `wrangler.jsonc` sits at the repository root
 
-This is the one that will bite you, because the build succeeds first and the failure looks
-unrelated:
+It looks misplaced — the app is in `notes-maker-web/` — and it is there on purpose.
+
+Cloudflare Workers Builds runs its deploy command from the repository root. With no config there,
+wrangler falls back to workspace detection, finds several candidate packages, and refuses:
 
 ```
 ✘ [ERROR] The Cloudflare application detection logic has been run in the root of a
@@ -47,33 +49,36 @@ unrelated:
 Failed: error occurred while running deploy command
 ```
 
-`wrangler.jsonc` lives in `notes-maker-web/`, not at the root. Run from the root, wrangler sees a
-pnpm workspace with multiple potential applications and refuses to guess which one to deploy.
+This is a nasty one to diagnose because **the build succeeds first** — you get a full green build
+log and then a failure that reads like a wrangler bug.
 
-So the deploy command must enter the package. The root `deploy` script does exactly that:
+Two ways to fix it. Putting the config where the deploy actually runs is the one chosen here,
+because the alternative depends on a dashboard field staying in sync with the repo by hand — and a
+setting that lives only in a web UI is not reviewable, not versioned, and silently wrong the moment
+someone recreates the project.
 
-```jsonc
-"deploy": "pnpm --filter notes-maker-web exec wrangler deploy"
-```
+Paths inside it are therefore relative to the root (`notes-maker-web/worker/index.ts`,
+`./notes-maker-web/out`). `wrangler` is a **root** devDependency for the same reason: it is a
+repository-level deploy tool, not something the app imports.
 
-`pnpm --filter … exec` runs the command *inside* the package directory, where `wrangler.jsonc` is
-found automatically. It also uses the pinned devDependency rather than `npx`, which downloads a
-fresh wrangler on every build (~16s) and silently floats the version.
+The upshot is that a bare `npx wrangler deploy` at the root just works, which is what Cloudflare
+runs by default.
 
 ### Workers Builds (deploy on push)
 
 | Setting | Value |
 | --- | --- |
 | Build command | `pnpm run build` |
-| Deploy command | `pnpm run deploy` |
-| Root directory | *(repo root — both scripts filter to the package)* |
+| Deploy command | `npx wrangler deploy` *(Cloudflare's default — no change needed)* |
+| Root directory | *(repo root)* |
 | `NODE_VERSION` | `24` |
 
-A bare `npx wrangler deploy` as the deploy command runs at the root and fails with the error above.
+Because the config is at the root, the default deploy command works unmodified. `pnpm run deploy`
+is equivalent and additionally rebuilds first, which is what you want locally.
 
 Root directory stays at the repository root even though the app is a subdirectory: the pnpm
 workspace lockfile lives at the top, and `pnpm install --frozen-lockfile` needs to see it. The
-filters in both scripts are what select the package.
+build script filters to the package; the deploy reads `wrangler.jsonc`, which is already there.
 
 Set `NODE_VERSION` explicitly. Cloudflare's default image has shipped Node 22 while this project is
 developed and tested on 24 — the `engines` floor is 20.9 so 22 does build, but pinning it removes a
@@ -82,15 +87,14 @@ difference you would otherwise only discover from a version-specific failure.
 First time only:
 
 ```bash
-pnpm --filter notes-maker-web exec wrangler login
+pnpm exec wrangler login
 ```
 
 Local verification against the real runtime — worth doing before every deploy, because it catches
 asset-handling differences that `next start` cannot:
 
 ```bash
-pnpm --filter notes-maker-web build
-pnpm --filter notes-maker-web cf:dev         # wrangler dev, workerd
+pnpm run cf:dev                             # build + wrangler dev (workerd)
 ```
 
 `wrangler.jsonc` is the whole configuration. Two settings there are load-bearing:
@@ -162,7 +166,6 @@ pnpm --filter notes-maker-web lint
 pnpm --filter notes-maker-web typecheck
 pnpm --filter notes-maker-web typecheck:worker
 pnpm --filter notes-maker-web test
-pnpm --filter notes-maker-web build
 ```
 
 CI runs all but the worker typecheck; add it there when the Worker grows beyond the redirect.

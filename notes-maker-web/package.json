@@ -11,9 +11,7 @@
     "gen:icons": "node scripts/generate-icons.mjs",
     "check:messages": "node scripts/check-messages.mjs",
     "test": "vitest run",
-    "typecheck:worker": "tsc --noEmit -p worker/tsconfig.json",
-    "cf:dev": "wrangler dev",
-    "cf:deploy": "pnpm build && wrangler deploy"
+    "typecheck:worker": "tsc --noEmit -p worker/tsconfig.json"
   },
   "dependencies": {
     "@heroui/react": "^3.2.2",
@@ -48,7 +46,6 @@
     "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.10",
-    "wrangler": "^4.113.0"
+    "vitest": "^4.1.10"
   }
 }
