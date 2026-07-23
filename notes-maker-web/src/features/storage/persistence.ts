@@ -55,6 +55,39 @@ export async function estimateStorage(): Promise<StorageEstimate> {
   return { usage, quota, ratio: quota > 0 ? usage / quota : 0, supported: true };
 }
 
+export interface UserDataSize {
+  noteBytes: number;
+  fileBytes: number;
+  total: number;
+}
+
+/**
+ * Measures what the USER actually stored — notes plus attachments.
+ *
+ * `estimateStorage()` reports the whole origin: IndexedDB, Cache Storage, and
+ * service-worker overhead. Presenting that alone next to a note count is
+ * actively misleading — a fresh install with one note reported ~4MB, of which
+ * 99% was cached application code, not anything the user wrote.
+ *
+ * Reading blob sizes does not decode them, so this stays cheap.
+ */
+export async function measureUserData(): Promise<UserDataSize> {
+  const db = getDb();
+  const [notes, files] = await Promise.all([db.notes.toArray(), db.files.toArray()]);
+
+  const noteBytes = notes.reduce(
+    // A rough but honest byte count for the JSON a note serialises to.
+    (sum, note) => sum + new Blob([JSON.stringify(note)]).size,
+    0,
+  );
+  const fileBytes = files.reduce(
+    (sum, file) => sum + (file.blob?.size ?? 0) + (file.thumb?.size ?? 0),
+    0,
+  );
+
+  return { noteBytes, fileBytes, total: noteBytes + fileBytes };
+}
+
 /** Above this, warn and stop accepting new images — but never block text. */
 export const QUOTA_WARN_RATIO = 0.8;
 

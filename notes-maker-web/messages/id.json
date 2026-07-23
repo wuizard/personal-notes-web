@@ -61,7 +61,10 @@
     "quotaWarning": "Ruang penyimpanan Anda hampir penuh. Ekspor cadangan, lalu hapus beberapa gambar untuk melegakan ruang.",
     "reset": "Atur ulang data lokal",
     "resetExplain": "Menghapus semua catatan di perangkat ini. Tindakan ini tidak dapat dibatalkan.",
-    "resetConfirm": "Ketik DELETE untuk mengonfirmasi"
+    "resetConfirm": "Ketik DELETE untuk mengonfirmasi",
+    "yourData": "Catatan dan lampiran",
+    "siteTotal": "Data situs",
+    "siteTotalHint": "Termasuk berkas aplikasi yang disimpan peramban agar bisa dibuka offline — bukan catatan Anda."
   },
   "backup": {
     "title": "Cadangan",

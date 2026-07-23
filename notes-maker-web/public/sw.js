@@ -16,7 +16,16 @@
  * responsible for the shell.
  */
 
-const VERSION = "v1";
+// Replaced at build time by scripts/stamp-sw.mjs with a hash of the build
+// output. This is load-bearing, not cosmetic.
+//
+// /_next/static/** is content-hashed, so cache-first is safe — but the cache
+// NAME has to change per deploy too. With a fixed name, every release adds a
+// fresh set of hashed chunks to the same cache and the previous release's
+// chunks are never evicted, so it grows without bound on real devices. The
+// activate handler below deletes every `nm-` cache that is not in `keep`, so
+// stamping the version is what actually reclaims the old build's assets.
+const VERSION = "__BUILD_ID__";
 const SHELL_CACHE = `nm-shell-${VERSION}`;
 const STATIC_CACHE = `nm-static-${VERSION}`;
 // A static file, deliberately: it is locale-independent and needs no JS, so it

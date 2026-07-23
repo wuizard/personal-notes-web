@@ -2,7 +2,7 @@
   "name": "Notes Maker",
   "short_name": "Notes",
   "description": "Free, no account, stored in your own browser.",
-  "start_url": "/notes",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
