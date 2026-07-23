@@ -1,0 +1,15 @@
+packages:
+  - "notes-maker-web"
+  - "notes-maker-admin" # Phase 2
+  - "packages/*" # Phase 2
+
+# Build scripts are blocked by default. Each entry below was reviewed before allowing:
+#   sharp            — Next.js image optimization (native binary)
+#   unrs-resolver    — ESLint import resolver (native binary)
+#   @swc/core        — Next.js compiler (native binary)
+#   @parcel/watcher  — file watching for dev/build tooling (native binary)
+allowBuilds:
+  "@parcel/watcher": true
+  "@swc/core": true
+  sharp: true
+  unrs-resolver: true

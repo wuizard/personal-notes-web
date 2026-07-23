@@ -1,0 +1,127 @@
+{
+  "app": {
+    "name": "Notes Maker",
+    "tagline": "Your notes, kept on your device."
+  },
+  "nav": {
+    "notes": "Notes",
+    "reminders": "Reminders",
+    "archive": "Archive",
+    "trash": "Trash",
+    "settings": "Settings",
+    "labels": "Labels",
+    "search": "Search notes",
+    "menu": "Menu"
+  },
+  "note": {
+    "composePlaceholder": "Take a note…",
+    "titlePlaceholder": "Title",
+    "save": "Save",
+    "cancel": "Cancel",
+    "count": "{count, plural, =0 {No notes} one {# note} other {# notes}}",
+    "empty": {
+      "title": "Nothing here yet.",
+      "body": "Your first note is one keystroke away.",
+      "action": "Take a note"
+    },
+    "actions": {
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "archive": "Archive",
+      "delete": "Delete",
+      "restore": "Restore",
+      "color": "Colour"
+    },
+    "archived": "Note archived",
+    "deleted": "Note deleted",
+    "undo": "Undo"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "Match system"
+  },
+  "locale": {
+    "label": "Language"
+  },
+  "storage": {
+    "local": "Stored on this device",
+    "syncPill": "Saved",
+    "title": "Storage",
+    "used": "{used} of {total} used",
+    "unknown": "Storage size unavailable",
+    "persistence": "Protected from automatic cleanup",
+    "persistenceOn": "Protected",
+    "persistenceOff": "Not protected",
+    "persistenceExplain": "Browsers sometimes clear stored data to free up space. Protecting this site prevents that.",
+    "protect": "Protect my notes",
+    "quotaWarning": "You're running low on space. Export a backup, and remove some images to free room.",
+    "reset": "Reset local data",
+    "resetExplain": "Deletes every note on this device. This cannot be undone.",
+    "resetConfirm": "Type DELETE to confirm"
+  },
+  "backup": {
+    "title": "Backup",
+    "explain": "Your notes live only in this browser. A backup file is the way to move them or get them back.",
+    "export": "Export backup",
+    "exporting": "Preparing…",
+    "exported": "Backup downloaded",
+    "import": "Import backup",
+    "importing": "Restoring…",
+    "lastExport": "Last backup: {date}",
+    "never": "never",
+    "mode": {
+      "merge": "Merge with existing notes",
+      "replace": "Replace everything"
+    },
+    "result": "Added {added}, updated {updated}, skipped {skipped}.",
+    "error": {
+      "not_a_zip": "That file isn't a readable backup.",
+      "missing_manifest": "That backup is missing its manifest.",
+      "missing_notes": "That backup contains no notes file.",
+      "unsupported_version": "That backup was made by a newer version. Update the app first.",
+      "missing_image": "That backup references an image it doesn't contain.",
+      "malformed": "That backup is damaged and can't be read safely.",
+      "unknown": "Something went wrong reading that file."
+    }
+  },
+  "eviction": {
+    "title": "Your notes were removed by your browser",
+    "body": "Browsers sometimes clear stored data to free up space. This wasn't something you did.",
+    "restore": "Restore from backup",
+    "dismiss": "Start fresh"
+  },
+  "landing": {
+    "heroTitle": "Notes that stay yours.",
+    "heroBody": "Free, no account, and stored in your own browser. Nothing is sent to any server.",
+    "cta": "Start writing",
+    "noAccount": "No sign-up required.",
+    "startInColor": "Start a note in {color}",
+    "pickColorLabel": "Or start in a colour"
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance"
+  },
+  "color": {
+    "paper": "Paper",
+    "blush": "Blush",
+    "peach": "Peach",
+    "butter": "Butter",
+    "sage": "Sage",
+    "mint": "Mint",
+    "sky": "Sky",
+    "periwinkle": "Periwinkle",
+    "lilac": "Lilac",
+    "clay": "Clay"
+  },
+  "editor": {
+    "bodyPlaceholder": "Start writing…",
+    "none": "Select a note, or write a new one.",
+    "back": "Back to notes",
+    "saved": "Saved",
+    "saving": "Saving…",
+    "openNote": "Open note"
+  }
+}

@@ -1,0 +1,53 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# next.js
+.next/
+out/
+next-env.d.ts
+
+# production
+build/
+dist/
+
+# misc
+.DS_Store
+*.pem
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env
+.env
+.env*.local
+!.env.example
+
+# typescript
+*.tsbuildinfo
+
+# testing
+coverage/
+playwright-report/
+test-results/
+
+# pwa — generated service worker artifacts
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/workbox-*.js.map
+
+# go (Phase 2)
+*.exe
+*.test
+*.out
+vendor/
+
+*.md

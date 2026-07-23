@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: notes-maker-web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Catches a translation key present in one catalog but missing from the
+      # other. next-intl resolves those at runtime, so without this a missing
+      # Indonesian string ships silently and is found by a user.
+      - name: Check locale catalogs
+        run: pnpm --filter notes-maker-web check:messages
+
+      - name: Lint
+        run: pnpm --filter notes-maker-web lint
+
+      - name: Typecheck
+        run: pnpm --filter notes-maker-web typecheck
+
+      # Export/import is the free tier's only recovery path (docs/08 §8.6).
+      # A regression here loses user data with no server copy to restore from.
+      - name: Test
+        run: pnpm --filter notes-maker-web test
+
+      - name: Build
+        run: pnpm --filter notes-maker-web build

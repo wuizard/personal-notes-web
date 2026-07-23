@@ -1,0 +1,127 @@
+{
+  "app": {
+    "name": "Notes Maker",
+    "tagline": "Catatan Anda, tersimpan di perangkat Anda."
+  },
+  "nav": {
+    "notes": "Catatan",
+    "reminders": "Pengingat",
+    "archive": "Arsip",
+    "trash": "Sampah",
+    "settings": "Pengaturan",
+    "labels": "Label",
+    "search": "Cari catatan",
+    "menu": "Menu"
+  },
+  "note": {
+    "composePlaceholder": "Tulis catatan…",
+    "titlePlaceholder": "Judul",
+    "save": "Simpan",
+    "cancel": "Batal",
+    "count": "{count, plural, =0 {Belum ada catatan} other {# catatan}}",
+    "empty": {
+      "title": "Belum ada apa pun di sini.",
+      "body": "Catatan pertama Anda hanya sejauh satu ketukan.",
+      "action": "Tulis catatan"
+    },
+    "actions": {
+      "pin": "Sematkan",
+      "unpin": "Lepas sematan",
+      "archive": "Arsipkan",
+      "delete": "Hapus",
+      "restore": "Pulihkan",
+      "color": "Warna"
+    },
+    "archived": "Catatan diarsipkan",
+    "deleted": "Catatan dihapus",
+    "undo": "Urungkan"
+  },
+  "theme": {
+    "label": "Tema",
+    "light": "Terang",
+    "dark": "Gelap",
+    "system": "Ikuti sistem"
+  },
+  "locale": {
+    "label": "Bahasa"
+  },
+  "storage": {
+    "local": "Tersimpan di perangkat ini",
+    "syncPill": "Tersimpan",
+    "title": "Penyimpanan",
+    "used": "{used} dari {total} terpakai",
+    "unknown": "Ukuran penyimpanan tidak tersedia",
+    "persistence": "Terlindung dari pembersihan otomatis",
+    "persistenceOn": "Terlindungi",
+    "persistenceOff": "Belum terlindungi",
+    "persistenceExplain": "Peramban terkadang menghapus data tersimpan untuk mengosongkan ruang. Melindungi situs ini mencegah hal itu.",
+    "protect": "Lindungi catatan saya",
+    "quotaWarning": "Ruang penyimpanan Anda hampir penuh. Ekspor cadangan, lalu hapus beberapa gambar untuk melegakan ruang.",
+    "reset": "Atur ulang data lokal",
+    "resetExplain": "Menghapus semua catatan di perangkat ini. Tindakan ini tidak dapat dibatalkan.",
+    "resetConfirm": "Ketik DELETE untuk mengonfirmasi"
+  },
+  "backup": {
+    "title": "Cadangan",
+    "explain": "Catatan Anda hanya tersimpan di peramban ini. Berkas cadangan adalah cara memindahkan atau memulihkannya.",
+    "export": "Ekspor cadangan",
+    "exporting": "Menyiapkan…",
+    "exported": "Cadangan telah diunduh",
+    "import": "Impor cadangan",
+    "importing": "Memulihkan…",
+    "lastExport": "Cadangan terakhir: {date}",
+    "never": "belum pernah",
+    "mode": {
+      "merge": "Gabungkan dengan catatan yang ada",
+      "replace": "Ganti semuanya"
+    },
+    "result": "Ditambah {added}, diperbarui {updated}, dilewati {skipped}.",
+    "error": {
+      "not_a_zip": "Berkas itu bukan cadangan yang bisa dibaca.",
+      "missing_manifest": "Cadangan itu tidak memiliki manifes.",
+      "missing_notes": "Cadangan itu tidak memuat berkas catatan.",
+      "unsupported_version": "Cadangan itu dibuat oleh versi yang lebih baru. Perbarui aplikasi terlebih dahulu.",
+      "missing_image": "Cadangan itu merujuk gambar yang tidak disertakan.",
+      "malformed": "Cadangan itu rusak dan tidak dapat dibaca dengan aman.",
+      "unknown": "Terjadi kesalahan saat membaca berkas itu."
+    }
+  },
+  "eviction": {
+    "title": "Catatan Anda dihapus oleh peramban",
+    "body": "Peramban terkadang menghapus data tersimpan untuk mengosongkan ruang. Ini bukan kesalahan Anda.",
+    "restore": "Pulihkan dari cadangan",
+    "dismiss": "Mulai dari awal"
+  },
+  "landing": {
+    "heroTitle": "Catatan yang tetap milik Anda.",
+    "heroBody": "Gratis, tanpa akun, dan tersimpan di peramban Anda sendiri. Tidak ada yang dikirim ke server mana pun.",
+    "cta": "Mulai menulis",
+    "noAccount": "Tanpa perlu mendaftar.",
+    "startInColor": "Tulis catatan warna {color}",
+    "pickColorLabel": "Atau mulai dengan warna"
+  },
+  "settings": {
+    "title": "Pengaturan",
+    "appearance": "Tampilan"
+  },
+  "color": {
+    "paper": "Kertas",
+    "blush": "Merah muda",
+    "peach": "Persik",
+    "butter": "Kuning mentega",
+    "sage": "Hijau sage",
+    "mint": "Mint",
+    "sky": "Biru langit",
+    "periwinkle": "Biru lavender",
+    "lilac": "Lila",
+    "clay": "Tanah liat"
+  },
+  "editor": {
+    "bodyPlaceholder": "Mulai menulis…",
+    "none": "Pilih catatan, atau tulis yang baru.",
+    "back": "Kembali ke catatan",
+    "saved": "Tersimpan",
+    "saving": "Menyimpan…",
+    "openNote": "Buka catatan"
+  }
+}

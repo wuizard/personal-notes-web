@@ -1,0 +1,243 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Notes Maker — pastel theme
+   Spec: docs/05-design-system.md
+
+   HeroUI v3 defines its semantic tokens inside `@layer theme`. These
+   overrides are deliberately UNLAYERED, so they win the cascade without
+   needing !important. HeroUI registers every token as a Tailwind colour
+   via `@theme inline`, so overriding the raw variable also updates every
+   utility (bg-surface, text-foreground, border-border, …).
+
+   The one rule that makes pastel work: pastel belongs to NOTES. The
+   chrome stays near-neutral. See docs/05 §5.1.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* chrome */
+  --background: #faf9fb; /* canvas — never pure white behind white cards */
+  --background-secondary: #f4f2f7;
+  --background-tertiary: #ede9f2;
+  --foreground: #2e2a33; /* ink — 13.9:1 on paper */
+
+  --surface: #ffffff;
+  --surface-foreground: #2e2a33;
+  --surface-secondary: #f4f2f7;
+  --surface-secondary-foreground: #2e2a33;
+  --surface-tertiary: #ede9f2;
+  --surface-tertiary-foreground: #2e2a33;
+
+  --muted: #6b6472; /* ink-muted — 5.6:1 */
+  --border: #e8e4ee; /* line */
+  --border-secondary: #ede9f2;
+  --border-tertiary: #f4f2f7;
+
+  /* the single accent — focus, primary, active nav */
+  --accent: #6b5fd6;
+  --accent-foreground: #ffffff;
+  --accent-hover: #5b4fcf;
+  --accent-soft: #eeebfc;
+  --accent-soft-foreground: #5b4fcf; /* accent-text — 6.3:1 on light */
+  --accent-soft-hover: #ddd8f8;
+
+  --focus: #6b5fd6;
+
+  --danger: #d6455e;
+  --danger-foreground: #ffffff;
+  --danger-soft: #fdeaee;
+  --danger-soft-foreground: #b32f45;
+
+  --success: #3f9e77;
+  --success-foreground: #ffffff;
+  --success-soft: #e6f4ee;
+  --success-soft-foreground: #2c7256;
+
+  --warning: #c98a2e;
+  --warning-foreground: #ffffff;
+  --warning-soft: #fbf1e0;
+  --warning-soft-foreground: #96651f;
+
+  /* ── project-owned tokens (not part of HeroUI) ── */
+  --ink-subtle: #948ca0; /* 3.2:1 — decorative / 14px+ only, never essential */
+  --card-border: rgb(46 42 51 / 0.08);
+
+  --shadow-rest: 0 1px 2px rgb(46 42 51 / 0.06);
+  --shadow-hover: 0 4px 12px rgb(46 42 51 / 0.1);
+  --shadow-modal: 0 16px 48px rgb(46 42 51 / 0.18);
+
+  /* ── the ten note colours ── */
+  --note-paper: #ffffff;
+  --note-blush: #ffe4ec;
+  --note-peach: #ffe8d6;
+  --note-butter: #fff6d1;
+  --note-sage: #e2f0df;
+  --note-mint: #d9f2ea;
+  --note-sky: #ddebfb;
+  --note-periwinkle: #e4e4fa;
+  --note-lilac: #f2e3f7;
+  --note-clay: #efe6dc;
+  --note-ink: #2e2a33;
+}
+
+.dark,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --background: #141118;
+  --background-secondary: #1e1b24;
+  --background-tertiary: #262130;
+  --foreground: #ede9f2;
+
+  --surface: #1e1b24;
+  --surface-foreground: #ede9f2;
+  --surface-secondary: #262130;
+  --surface-secondary-foreground: #ede9f2;
+  --surface-tertiary: #302b38;
+  --surface-tertiary-foreground: #ede9f2;
+
+  --muted: #a79fb4;
+  --border: #302b38;
+  --border-secondary: #262130;
+  --border-tertiary: #1e1b24;
+
+  /* accent lightened so it stays legible on a dark ground */
+  --accent: #9b90f0;
+  --accent-foreground: #1a1620;
+  --accent-hover: #b0a6f5;
+  --accent-soft: #292440;
+  --accent-soft-foreground: #b0a6f5;
+  --accent-soft-hover: #332d4e;
+
+  --focus: #9b90f0;
+
+  --danger: #e8697f;
+  --danger-foreground: #1a1620;
+  --danger-soft: #3a222a;
+  --danger-soft-foreground: #f0909f;
+
+  --success: #5fbe95;
+  --success-foreground: #1a1620;
+  --success-soft: #1e3229;
+  --success-soft-foreground: #7fcfab;
+
+  --warning: #dfa85c;
+  --warning-foreground: #1a1620;
+  --warning-soft: #362a1a;
+  --warning-soft-foreground: #e9bd80;
+
+  --ink-subtle: #7c7488;
+  --card-border: rgb(255 255 255 / 0.06);
+
+  /* shadows are near-invisible on dark; separation comes from surface lightness */
+  --shadow-rest: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-hover: 0 4px 14px rgb(0 0 0 / 0.5);
+  --shadow-modal: 0 16px 48px rgb(0 0 0 / 0.6);
+
+  /* hue-preserving desaturated darks, picked by hand — see docs/05 §5.2.
+     Algorithmically darkening the pastels turns them all to the same mud
+     and destroys the user's colour-coding. */
+  --note-paper: #1e1b24;
+  --note-blush: #43303a;
+  --note-peach: #45362a;
+  --note-butter: #423d26;
+  --note-sage: #2c3b2e;
+  --note-mint: #263b38;
+  --note-sky: #26354a;
+  --note-periwinkle: #2f2e4a;
+  --note-lilac: #3b2c44;
+  --note-clay: #3a332c;
+  --note-ink: #ede9f2;
+}
+
+/* Register project-owned tokens as Tailwind utilities.
+   `inline` keeps the var() reference, so utilities follow the theme. */
+@theme inline {
+  --color-ink-subtle: var(--ink-subtle);
+
+  --color-note-paper: var(--note-paper);
+  --color-note-blush: var(--note-blush);
+  --color-note-peach: var(--note-peach);
+  --color-note-butter: var(--note-butter);
+  --color-note-sage: var(--note-sage);
+  --color-note-mint: var(--note-mint);
+  --color-note-sky: var(--note-sky);
+  --color-note-periwinkle: var(--note-periwinkle);
+  --color-note-lilac: var(--note-lilac);
+  --color-note-clay: var(--note-clay);
+  --color-note-ink: var(--note-ink);
+
+  --radius-card: 16px;
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ── base ── */
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Focus is always visible — docs/05 §5.9. Never remove without a replacement.
+ *
+ * This MUST live in @layer base. The token overrides above are deliberately
+ * unlayered so they beat HeroUI's `@layer theme`, but unlayered rules beat
+ * *every* layer — including `@layer utilities`. Left unlayered, this selector
+ * silently overrode Tailwind's `outline-none` on every field in the app, so
+ * inputs that had opted out of the ring drew one anyway. Layer order is
+ * `theme, base, components, utilities`, so from `base` a component can still
+ * opt out with `outline-none` and put the ring on its wrapper instead.
+ */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+}
+
+/* Row actions — docs/06 §6.3.
+ *
+ * Visible by default, and hidden-until-hover ONLY on devices that actually
+ * have a pointer. Gating on `hover: hover` rather than a breakpoint is what
+ * keeps the actions reachable on a touch laptop and on tablets, where a
+ * width-based guess would hide them with no way to reveal them.
+ *
+ * Hiding uses opacity, not `display`, so the buttons stay in the tab order and
+ * `:focus-within` reveals them for keyboard users.
+ */
+@layer components {
+  .row-actions {
+    opacity: 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .row-actions {
+      opacity: 0;
+      transition: opacity 160ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .group:hover .row-actions,
+    .group:focus-within .row-actions {
+      opacity: 1;
+    }
+  }
+}
+
+/* docs/05 §5.7 — everything collapses under reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

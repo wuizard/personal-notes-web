@@ -1,0 +1,16 @@
+{
+  "name": "notes-maker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first note-taking PWA",
+  "scripts": {
+    "dev": "pnpm --filter notes-maker-web dev",
+    "build": "pnpm --filter notes-maker-web build",
+    "lint": "pnpm --filter notes-maker-web lint",
+    "typecheck": "pnpm --filter notes-maker-web typecheck"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "packageManager": "pnpm@11.1.2"
+}
