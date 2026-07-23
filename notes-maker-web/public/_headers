@@ -1,0 +1,25 @@
+# Cloudflare asset headers. Copied verbatim into out/ by the Next export.
+
+# The service worker must never be served from a stale cache. A cached sw.js
+# pins users to the deploy that installed it, and no later release ever
+# reaches them — the most common way a PWA on a CDN silently breaks.
+/sw.js
+  Cache-Control: no-cache
+  Service-Worker-Allowed: /
+
+# The manifest changes rarely but must not outlive an icon change.
+/manifest.webmanifest
+  Cache-Control: public, max-age=3600
+
+# Build output is content-hashed, so it can be cached forever.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Generated icons are stable filenames — cache for a day, not forever.
+/icons/*
+  Cache-Control: public, max-age=86400
+
+# HTML is cheap and must reflect a new deploy immediately.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

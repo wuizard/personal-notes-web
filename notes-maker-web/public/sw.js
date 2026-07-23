@@ -19,9 +19,14 @@
 const VERSION = "v1";
 const SHELL_CACHE = `nm-shell-${VERSION}`;
 const STATIC_CACHE = `nm-static-${VERSION}`;
-// A static file, deliberately: it bypasses locale rewriting in proxy.ts and
-// needs no JS, so it renders even when everything else has failed.
-const OFFLINE_URL = "/offline.html";
+// A static file, deliberately: it is locale-independent and needs no JS, so it
+// renders even when everything else has failed.
+//
+// Requested WITHOUT the .html extension: Cloudflare's asset handling
+// (`html_handling: "auto-trailing-slash"`) 307s `/offline.html` to `/offline`,
+// and `cache.add()` rejects a redirected response — which would leave the
+// offline fallback silently uninstalled.
+const OFFLINE_URL = "/offline";
 
 const PRECACHE = [OFFLINE_URL];
 
