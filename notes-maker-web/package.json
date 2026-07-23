@@ -25,6 +25,7 @@
     "dexie": "^4.4.4",
     "dexie-react-hooks": "^4.4.0",
     "fflate": "^0.8.3",
+    "geist": "^1.7.2",
     "lucide-react": "^1.25.0",
     "next": "16.2.11",
     "next-intl": "^4.13.3",
