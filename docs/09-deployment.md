@@ -32,8 +32,52 @@ Everything else is served straight from the assets binding with no compute.
 ## 9.2 Deploying to Workers
 
 ```bash
-pnpm --filter notes-maker-web cf:deploy      # next build && wrangler deploy
+pnpm run deploy      # from the repo root
 ```
+
+### Wrangler must not run at the workspace root
+
+This is the one that will bite you, because the build succeeds first and the failure looks
+unrelated:
+
+```
+✘ [ERROR] The Cloudflare application detection logic has been run in the root of a
+  workspace instead of targeting a specific project. Change your working directory
+  to one of the applications in the workspace and try again.
+Failed: error occurred while running deploy command
+```
+
+`wrangler.jsonc` lives in `notes-maker-web/`, not at the root. Run from the root, wrangler sees a
+pnpm workspace with multiple potential applications and refuses to guess which one to deploy.
+
+So the deploy command must enter the package. The root `deploy` script does exactly that:
+
+```jsonc
+"deploy": "pnpm --filter notes-maker-web exec wrangler deploy"
+```
+
+`pnpm --filter … exec` runs the command *inside* the package directory, where `wrangler.jsonc` is
+found automatically. It also uses the pinned devDependency rather than `npx`, which downloads a
+fresh wrangler on every build (~16s) and silently floats the version.
+
+### Workers Builds (deploy on push)
+
+| Setting | Value |
+| --- | --- |
+| Build command | `pnpm run build` |
+| Deploy command | `pnpm run deploy` |
+| Root directory | *(repo root — both scripts filter to the package)* |
+| `NODE_VERSION` | `24` |
+
+A bare `npx wrangler deploy` as the deploy command runs at the root and fails with the error above.
+
+Root directory stays at the repository root even though the app is a subdirectory: the pnpm
+workspace lockfile lives at the top, and `pnpm install --frozen-lockfile` needs to see it. The
+filters in both scripts are what select the package.
+
+Set `NODE_VERSION` explicitly. Cloudflare's default image has shipped Node 22 while this project is
+developed and tested on 24 — the `engines` floor is 20.9 so 22 does build, but pinning it removes a
+difference you would otherwise only discover from a version-specific failure.
 
 First time only:
 
