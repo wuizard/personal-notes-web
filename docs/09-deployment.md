@@ -129,6 +129,35 @@ the top and pnpm needs to see it.
 2. Add a Pages Function at `functions/index.ts` with the same logic as `worker/index.ts` — at which
    point you are running a Worker anyway, which is the argument for using Workers directly.
 
+## 9.3a Why `/` needs `run_worker_first`
+
+The deployed site 404s at the origin root unless the Worker is explicitly routed there first:
+
+```jsonc
+"assets": { "run_worker_first": ["/"] }
+```
+
+There is no `out/index.html` (locales are always prefixed), so `/` misses the asset router, and
+`not_found_handling: "404-page"` then answers with `404.html` **itself** — the Worker is never
+invoked and the language redirect never runs.
+
+**`wrangler dev` does not reproduce this.** Locally the Worker receives `/` and the redirect works,
+so the failure only appears on a real deployment. Do not treat a passing `wrangler dev` as proof
+that the root works.
+
+Scoped to `"/"` rather than `true`: every other path is a real asset and must keep being served by
+the asset router with no compute.
+
+`public/index.html` is a second line of defence for the same request — a static page that detects
+language client-side and redirects. It is what serves `/` on Pages, where there is no Worker at all.
+Which one handled a request is easy to check:
+
+```bash
+curl -I https://your-domain/     # 307 = Worker (preferred);  200 = static fallback
+```
+
+If you ever see `200` there on Workers, `run_worker_first` has stopped taking effect.
+
 ## 9.4 The caching trap
 
 `public/_headers` sets `Cache-Control: no-cache` on `/sw.js`. **Do not remove it.**

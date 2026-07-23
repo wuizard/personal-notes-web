@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Notes Maker</title>
+    <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml" />
+
+    <!--
+      Safety net for the origin root.
+
+      `localePrefix: "always"` means the export has no page at `/` — the real
+      redirect is `worker/index.ts`, which negotiates Accept-Language and issues
+      a 307. This file exists so that if the Worker does not run for `/` (asset
+      routing precedence, or a Pages deployment where there is no Worker at
+      all), the front door still works instead of returning 404.
+
+      Which one served the request is easy to tell:
+        curl -I /   → 307  = the Worker ran (preferred)
+                    → 200  = this fallback ran, so the Worker is not handling /
+
+      Not indexed: the locale pages are the canonical URLs.
+    -->
+    <meta name="robots" content="noindex" />
+    <meta http-equiv="refresh" content="0; url=/id" />
+
+    <style>
+      /* Match the app background so there is no white flash before the hop. */
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        background: #faf9fb;
+        color: #6b6472;
+        font: 400 14px/1.5 ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #141118;
+          color: #a79fb4;
+        }
+      }
+      a {
+        color: inherit;
+      }
+    </style>
+
+    <script>
+      // Runs before render, so the redirect happens without a visible page.
+      // Mirrors the Worker's logic: primary subtag, default Indonesian.
+      (function () {
+        var supported = ["id", "en"];
+        var target = "id";
+        var langs = navigator.languages || [navigator.language || ""];
+        for (var i = 0; i < langs.length; i++) {
+          var primary = String(langs[i]).toLowerCase().split("-")[0];
+          if (supported.indexOf(primary) !== -1) {
+            target = primary;
+            break;
+          }
+        }
+        // `replace`, not `assign`: the root must not sit in history, or Back
+        // from the app lands here and immediately bounces forward again.
+        location.replace("/" + target + location.search + location.hash);
+      })();
+    </script>
+  </head>
+  <body>
+    <!-- Only ever seen with JS disabled and the meta refresh blocked. -->
+    <p><a href="/id">Buka Notes Maker</a> · <a href="/en">Open Notes Maker</a></p>
+  </body>
+</html>

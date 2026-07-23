@@ -31,7 +31,22 @@
     // "single-page-application": this app has real prerendered routes, and
     // SPA fallback would return 200 + the shell for genuinely missing URLs,
     // which search engines index as duplicate content.
-    "not_found_handling": "404-page"
+    "not_found_handling": "404-page",
+
+    // Route "/" to the Worker BEFORE asset routing sees it.
+    //
+    // Without this the deployed site 404s at the origin root. There is no
+    // `out/index.html` (locales are always prefixed), so `/` misses the asset
+    // router, and `not_found_handling: "404-page"` then answers with 404.html
+    // itself — the Worker is never invoked and the language redirect never
+    // runs.
+    //
+    // `wrangler dev` does NOT reproduce this: locally the Worker gets `/` and
+    // the redirect works, so this is only observable on a real deployment.
+    //
+    // Scoped to "/" rather than `true`: every other path is a real asset and
+    // must keep being served directly by the asset router, with no compute.
+    "run_worker_first": ["/"]
   },
 
   "observability": {
