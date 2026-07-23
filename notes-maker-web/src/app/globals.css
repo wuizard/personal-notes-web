@@ -230,6 +230,29 @@ body {
   }
 }
 
+/* A slow drift for the idle empty-state character. Under
+   prefers-reduced-motion the rule below collapses it to nothing. */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* docs/05 §5.7 — everything collapses under reduced motion. */
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -3,6 +3,7 @@
 import { I18nProvider } from "@heroui/react";
 import { ThemeProvider } from "next-themes";
 import type { ReactNode } from "react";
+import { ToastProvider } from "./ui/toast";
 
 /**
  * HeroUI v3 needs no provider of its own — it is built on
@@ -30,7 +31,7 @@ export function Providers({
         enableSystem
         disableTransitionOnChange
       >
-        {children}
+        <ToastProvider>{children}</ToastProvider>
       </ThemeProvider>
     </I18nProvider>
   );
