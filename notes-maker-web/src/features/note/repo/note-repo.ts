@@ -136,13 +136,15 @@ export async function searchNotes(query: string): Promise<LocalNote[]> {
   );
 }
 
-/** Permanently deletes trashed notes and their images. Irreversible. */
+/** Permanently deletes trashed notes and their attachments. Irreversible. */
 export async function emptyTrash(): Promise<number> {
   const db = getDb();
-  return db.transaction("rw", db.notes, db.images, async () => {
+  return db.transaction("rw", db.notes, db.files, async () => {
     const trashed = await db.notes.filter((n) => n.deleted_at !== null).toArray();
     const ids = trashed.map((n) => n.client_id);
-    await db.images.where("note_id").anyOf(ids).delete();
+    // Attachments must go in the same transaction — orphaned blobs would keep
+    // consuming quota with nothing left to reach them.
+    await db.files.where("note_id").anyOf(ids).delete();
     await db.notes.bulkDelete(ids);
     return ids.length;
   });

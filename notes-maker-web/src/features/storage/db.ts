@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import type { LocalImage, LocalNote, MetaRow } from "./types";
+import type { FileKind, LocalFile, LocalImage, LocalNote, MetaRow } from "./types";
 
 /**
  * The local database — docs/08 §8.2.
@@ -15,7 +15,9 @@ import type { LocalImage, LocalNote, MetaRow } from "./types";
  */
 export class NotesDB extends Dexie {
   notes!: Table<LocalNote, string>;
+  /** Superseded by `files` in v2. Declared so the store is never dropped. */
   images!: Table<LocalImage, string>;
+  files!: Table<LocalFile, string>;
   meta!: Table<MetaRow, string>;
 
   constructor() {
@@ -29,6 +31,48 @@ export class NotesDB extends Dexie {
       images: "id, note_id",
       meta: "key",
     });
+
+    /**
+     * v2 — attachments generalised from images to arbitrary files.
+     *
+     * `images` is deliberately still declared. Dexie drops any store missing
+     * from the latest version, and dropping the store that holds the only copy
+     * of a user's photos is precisely what docs/08 §8.1 forbids.
+     *
+     * The upgrade MOVES rows rather than copying them: Dexie runs it in a
+     * single transaction that rolls back entirely on failure, so there is no
+     * partial state to recover from — and copying would double image storage
+     * for exactly the users closest to their quota.
+     */
+    this.version(2)
+      .stores({
+        notes: "client_id, updated_at, [archived+pinned], deleted_at, _dirty",
+        images: "id, note_id",
+        files: "id, note_id, kind",
+        meta: "key",
+      })
+      .upgrade(async (tx) => {
+        const legacy = await tx.table<LocalImage, string>("images").toArray();
+        if (!legacy.length) return;
+
+        const migrated: LocalFile[] = legacy.map((image, i) => ({
+          id: image.id,
+          note_id: image.note_id,
+          kind: "image" as FileKind,
+          // v1 never stored a filename; synthesise a stable, sensible one.
+          name: `image-${i + 1}.webp`,
+          mime: image.blob.type || "image/webp",
+          blob: image.blob,
+          thumb: image.thumb,
+          width: image.width,
+          height: image.height,
+          bytes: image.bytes,
+          created_at: image.created_at,
+        }));
+
+        await tx.table<LocalFile, string>("files").bulkAdd(migrated);
+        await tx.table("images").clear();
+      });
   }
 }
 

@@ -7,13 +7,20 @@ import type { LocalNote } from "../types";
  * values. A backup made today has to restore in three years, or the promise
  * behind "your data is yours" is empty.
  */
-export const BACKUP_FORMAT_VERSION = 1;
+/**
+ * 2 — attachments generalised from images to arbitrary files.
+ *
+ * A v1 backup still imports: its `images.json` is read and each entry becomes
+ * a file of kind "image". Old backups must keep working or the promise behind
+ * "your data is yours" is empty.
+ */
+export const BACKUP_FORMAT_VERSION = 2;
 
 export interface BackupManifest {
   format: number;
   exported_at: number;
   app: string;
-  counts: { notes: number; images: number };
+  counts: { notes: number; files: number };
 }
 
 export interface BackupImageMeta {
@@ -28,10 +35,26 @@ export interface BackupImageMeta {
   thumb_file: string;
 }
 
+/** v2 — one entry per attachment of any kind. */
+export interface BackupFileMeta {
+  id: string;
+  note_id: string;
+  kind: string;
+  name: string;
+  mime: string;
+  bytes: number;
+  created_at: number;
+  width?: number;
+  height?: number;
+  /** Filenames inside files/ — the binaries live there, not in JSON. */
+  blob_file: string;
+  thumb_file?: string;
+}
+
 export interface BackupPayload {
   manifest: BackupManifest;
   notes: LocalNote[];
-  images: BackupImageMeta[];
+  files: BackupFileMeta[];
 }
 
 export function backupFilename(date = new Date()): string {
