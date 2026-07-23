@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -8,10 +9,16 @@ import { Providers } from "@/shared/providers";
 import { RegisterServiceWorker } from "@/shared/pwa/register-sw";
 import "../globals.css";
 
-// Self-hosted via next/font — no external font request, which matters for an
-// offline-first app that must render correctly on a cold, disconnected start.
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+/**
+ * Fonts ship in the `geist` package rather than via `next/font/google`.
+ *
+ * Both self-host the font at runtime, but `next/font/google` *downloads* it
+ * from Google at BUILD time — which makes every deploy depend on a third-party
+ * network call. That is a real failure mode, not a theoretical one: it broke a
+ * local build and is the prime suspect for the Cloudflare build failure.
+ *
+ * The npm package carries the .woff2 files, so the build is hermetic.
+ */
 
 export const metadata: Metadata = {
   title: { default: "Notes Maker", template: "%s · Notes Maker" },
@@ -61,7 +68,7 @@ export default async function LocaleLayout({
       // next-themes writes class="dark" here on the client; suppressing the
       // hydration warning is the documented cost of avoiding a theme flash.
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full`}
+      className={`${GeistSans.variable} ${GeistMono.variable} h-full`}
     >
       <body className="min-h-full">
         <NextIntlClientProvider>

@@ -1,108 +1,178 @@
 "use client";
 
+import dynamic from "next/dynamic";
+import { Paperclip } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { useRef, useState } from "react";
-import { NOTE_COLORS, type NoteColor } from "@/features/storage";
+import { useCallback, useState } from "react";
+import { NOTE_COLORS, type NoteColor, type NoteDoc } from "@/features/storage";
 import { usePersistencePrompt } from "@/features/storage/hooks/use-persistence-prompt";
-import { docFromText } from "../model/body-text";
+import { addFile } from "@/features/file/repo";
+import { useFileInput } from "@/features/file/use-file-input";
+import { PendingAttachmentStrip } from "@/features/file/components/attachment-strip";
+import { splitTitle } from "../model/body-text";
 import { createNote } from "../repo/note-repo";
 
+// Tiptap and ProseMirror are ~90KB gzipped. Loading them lazily keeps them off
+// the initial bundle, which is what the docs/06 §6.10 budget is protecting —
+// the note list must render before the editor is needed.
+const RichTextEditor = dynamic(() => import("@/features/editor/rich-text-editor"), {
+  ssr: false,
+  loading: () => <div className="min-h-6" aria-busy="true" />,
+});
+
+const EMPTY_DOC: NoteDoc = { type: "doc", content: [{ type: "paragraph" }] };
+
 /**
- * Capture, at the top of the list pane.
+ * Capture, at the top of the list pane — docs/06 §6.2.
  *
- * Stage C expands this in place into the full editor with a toolbar
- * (docs/06 §6.2). For now it creates the note and hands selection to the
- * detail pane, which is where the writing continues.
+ * Collapsed to a single line until touched, then expands in place into a rich
+ * editor with formatting and an image button. It never opens a modal.
  */
 export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }) {
-  const t = useTranslations("note");
+  const t = useTranslations();
   const params = useSearchParams();
+  const [expanded, setExpanded] = useState(false);
+  const [doc, setDoc] = useState<NoteDoc>(EMPTY_DOC);
   const [text, setText] = useState("");
+  const [pending, setPending] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const { maybePrompt } = usePersistencePrompt();
 
-  // Handed over from the landing page swatches (/notes?color=mint). Validated
+  // Files can't be stored before the note exists (they key off note_id), so
+  // they're held here and written immediately after the note is created.
+  const attach = useFileInput(
+    useCallback(async (files: File[]) => {
+      setPending((current) => [...current, ...files]);
+    }, []),
+  );
+
+  // Handed over from the landing swatches (/notes?color=mint), validated
   // against the palette so a hand-edited URL cannot write a bogus colour.
   const requested = params.get("color");
   const initialColor: NoteColor = NOTE_COLORS.includes(requested as NoteColor)
     ? (requested as NoteColor)
     : "paper";
 
+  const hasContent = text.trim().length > 0 || pending.length > 0;
+
+  function reset() {
+    setDoc(EMPTY_DOC);
+    setText("");
+    setPending([]);
+    setExpanded(false);
+  }
+
   async function submit() {
-    const trimmed = text.trim();
     // An empty note is discarded silently — the user knows (docs/06 §6.2).
-    if (!trimmed || busy) return;
+    if (!hasContent || busy) return;
 
     setBusy(true);
     try {
-      const [first, ...rest] = trimmed.split("\n");
-      const note = await createNote({
-        title: first.slice(0, 200),
-        body: docFromText(rest.join("\n")),
-        color: initialColor,
-      });
-      setText("");
+      // The first block becomes the title and is removed from the body.
+      // Keeping it in both is what made a new note show its title twice.
+      const { title, body } = splitTitle(doc);
+      const note = await createNote({ title, body, color: initialColor });
+
+      // Sequential rather than Promise.all: each image decodes a full-size
+      // bitmap, and doing several at once is how a mid-range phone OOMs.
+      for (const file of pending) {
+        await addFile(note.client_id, file);
+      }
+
+      reset();
       onCreated?.(note.client_id);
-      // Ask about persistence only after the first save, never on load.
       await maybePrompt();
     } finally {
       setBusy(false);
     }
   }
 
+  if (!expanded) {
+    return (
+      <button
+        type="button"
+        data-compose-trigger
+        onClick={() => setExpanded(true)}
+        className="flex w-full items-center gap-2 rounded-xl border border-[var(--card-border)] bg-surface px-3 py-2.5 text-left text-[14px] text-ink-subtle shadow-[var(--shadow-rest)] transition-shadow hover:shadow-[var(--shadow-hover)]"
+      >
+        <span className="flex-1">{t("note.composePlaceholder")}</span>
+        <Paperclip size={16} strokeWidth={1.75} aria-hidden />
+      </button>
+    );
+  }
+
   return (
-    // The ring lives on the card, not the textarea: a hard outline drawn
-    // inside a bordered card reads as a rendering glitch, and the card is the
-    // thing the user perceives as "the input".
-    <div className="rounded-xl border border-[var(--card-border)] bg-surface p-2.5 shadow-[var(--shadow-rest)] focus-within:border-accent focus-within:shadow-[var(--shadow-hover)] focus-within:ring-1 focus-within:ring-accent">
-      <label className="sr-only" htmlFor="quick-compose">
-        {t("composePlaceholder")}
-      </label>
-      <textarea
-        id="quick-compose"
-        ref={inputRef}
-        rows={text ? 3 : 1}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-            e.preventDefault();
-            void submit();
-          }
+    <div
+      onPaste={attach.onPaste}
+      onDrop={attach.onDrop}
+      onDragOver={attach.onDragOver}
+      className="rounded-xl border border-[var(--card-border)] bg-surface p-2.5 shadow-[var(--shadow-rest)] focus-within:border-accent focus-within:ring-1 focus-within:ring-accent"
+    >
+      <RichTextEditor
+        initialDoc={EMPTY_DOC}
+        placeholder={t("note.composePlaceholder")}
+        autoFocus
+        onChange={(nextDoc, nextText) => {
+          setDoc(nextDoc);
+          setText(nextText);
         }}
-        placeholder={t("composePlaceholder")}
-        className="w-full resize-none bg-transparent text-[14px] leading-6 outline-none placeholder:text-ink-subtle"
-        style={initialColor !== "paper" ? { caretColor: `var(--accent)` } : undefined}
+        onSubmit={() => void submit()}
+        showToolbar
+        className="text-[14px] leading-6"
+        toolbarExtra={
+          <button
+            type="button"
+            onClick={attach.openPicker}
+            aria-label={t("editor.addFile")}
+            className="grid size-7 place-items-center rounded-md opacity-60 transition-opacity hover:opacity-100"
+          >
+            <Paperclip size={14} strokeWidth={2} aria-hidden />
+          </button>
+        }
       />
 
-      {text.trim() && (
-        <div className="mt-2 flex items-center justify-end gap-2 border-t border-[var(--card-border)] pt-2">
-          {initialColor !== "paper" && (
-            <span
-              className="mr-auto size-4 rounded-full border border-[var(--card-border)]"
-              style={{ background: `var(--note-${initialColor})` }}
-              aria-hidden
-            />
-          )}
-          <button
-            type="button"
-            onClick={() => setText("")}
-            className="rounded-lg px-2.5 py-1.5 text-[12.5px] text-muted transition-colors hover:bg-surface-secondary"
-          >
-            {t("cancel")}
-          </button>
-          <button
-            type="button"
-            onClick={() => void submit()}
-            disabled={busy}
-            className="rounded-lg bg-accent px-3 py-1.5 text-[12.5px] font-semibold text-accent-foreground transition-colors hover:bg-accent-hover disabled:opacity-60"
-          >
-            {t("save")}
-          </button>
+      <input {...attach.inputProps} />
+
+      {pending.length > 0 && (
+        <div className="mt-2.5">
+          <PendingAttachmentStrip
+            files={pending}
+            onRemove={(i) => setPending((list) => list.filter((_, idx) => idx !== i))}
+          />
         </div>
       )}
+
+      {attach.error && (
+        <p role="alert" className="mt-2 rounded-lg bg-danger-soft px-2.5 py-1.5 text-[12.5px] text-danger-soft-foreground">
+          {attach.error}
+        </p>
+      )}
+
+      <div className="mt-2 flex items-center justify-end gap-2 border-t border-[var(--card-border)] pt-2">
+        {initialColor !== "paper" && (
+          <span
+            className="mr-auto size-4 rounded-full border border-[var(--card-border)]"
+            style={{ background: `var(--note-${initialColor})` }}
+            aria-hidden
+          />
+        )}
+        <button
+          type="button"
+          onClick={reset}
+          className="rounded-lg px-2.5 py-1.5 text-[12.5px] text-muted transition-colors hover:bg-surface-secondary"
+        >
+          {t("note.cancel")}
+        </button>
+        <button
+          type="button"
+          onClick={() => void submit()}
+          disabled={busy || !hasContent}
+          className="rounded-lg bg-accent px-3 py-1.5 text-[12.5px] font-semibold text-accent-foreground transition-colors hover:bg-accent-hover disabled:opacity-50"
+        >
+          {t("note.save")}
+        </button>
+      </div>
     </div>
   );
 }

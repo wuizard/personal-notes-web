@@ -1,10 +1,11 @@
 import { unzip } from "fflate";
 import { getDb } from "../db";
 import { markHadNotes } from "../persistence";
-import type { LocalImage, LocalNote } from "../types";
+import type { FileKind, LocalFile, LocalNote } from "../types";
 import {
   BACKUP_FORMAT_VERSION,
   BackupError,
+  type BackupFileMeta,
   type BackupImageMeta,
   type BackupManifest,
 } from "./format";
@@ -25,7 +26,7 @@ export interface ImportResult {
   notesAdded: number;
   notesUpdated: number;
   notesSkipped: number;
-  imagesAdded: number;
+  filesAdded: number;
 }
 
 const decoder = new TextDecoder();
@@ -79,19 +80,23 @@ function normalise(note: LocalNote): LocalNote {
 interface ValidatedBackup {
   manifest: BackupManifest;
   notes: LocalNote[];
-  images: Array<{ meta: BackupImageMeta; blob: Blob; thumb: Blob }>;
+  files: Array<{ meta: BackupFileMeta; blob: Blob; thumb?: Blob }>;
+}
+
+function toBlob(bytes: Uint8Array, type: string): Blob {
+  return new Blob([bytes.slice().buffer as ArrayBuffer], { type });
 }
 
 /** Parses and fully validates a backup. Throws BackupError; writes nothing. */
 export async function readBackup(file: File | Blob): Promise<ValidatedBackup> {
-  let files: Record<string, Uint8Array>;
+  let entries: Record<string, Uint8Array>;
   try {
-    files = await unzipAsync(new Uint8Array(await file.arrayBuffer()));
+    entries = await unzipAsync(new Uint8Array(await file.arrayBuffer()));
   } catch {
     throw new BackupError("That file is not a readable .zip backup", "not_a_zip");
   }
 
-  const manifest = parseJson<BackupManifest>(files, "manifest.json", "missing_manifest");
+  const manifest = parseJson<BackupManifest>(entries, "manifest.json", "missing_manifest");
   if (typeof manifest.format !== "number") {
     throw new BackupError("Backup manifest has no format version", "malformed");
   }
@@ -105,7 +110,7 @@ export async function readBackup(file: File | Blob): Promise<ValidatedBackup> {
     );
   }
 
-  const rawNotes = parseJson<unknown[]>(files, "notes.json", "missing_notes");
+  const rawNotes = parseJson<unknown[]>(entries, "notes.json", "missing_notes");
   if (!Array.isArray(rawNotes)) throw new BackupError("notes.json is not a list", "malformed");
 
   const notes = rawNotes.filter(isValidNote).map(normalise);
@@ -116,27 +121,54 @@ export async function readBackup(file: File | Blob): Promise<ValidatedBackup> {
     );
   }
 
-  // images.json is optional — format 1 backups from a library with no images
-  // legitimately omit it.
-  const imageMeta = files["images.json"]
-    ? parseJson<BackupImageMeta[]>(files, "images.json", "malformed")
-    : [];
+  const files: ValidatedBackup["files"] = [];
 
-  const images: ValidatedBackup["images"] = [];
-  for (const meta of imageMeta) {
-    const blob = files[meta.blob_file];
-    const thumb = files[meta.thumb_file];
-    if (!blob || !thumb) {
-      throw new BackupError(`Backup references a missing image (${meta.id})`, "missing_image");
+  if (entries["files.json"]) {
+    // ── v2 ──
+    const meta = parseJson<BackupFileMeta[]>(entries, "files.json", "malformed");
+    for (const item of meta) {
+      const blob = entries[item.blob_file];
+      if (!blob) {
+        throw new BackupError(`Backup references a missing file (${item.name})`, "missing_image");
+      }
+      const thumbBytes = item.thumb_file ? entries[item.thumb_file] : undefined;
+      files.push({
+        meta: item,
+        blob: toBlob(blob, item.mime || "application/octet-stream"),
+        thumb: thumbBytes ? toBlob(thumbBytes, "image/webp") : undefined,
+      });
     }
-    images.push({
-      meta,
-      blob: new Blob([blob.slice().buffer as ArrayBuffer], { type: "image/webp" }),
-      thumb: new Blob([thumb.slice().buffer as ArrayBuffer], { type: "image/webp" }),
+  } else if (entries["images.json"]) {
+    // ── v1 ── every entry becomes a file of kind "image".
+    const legacy = parseJson<BackupImageMeta[]>(entries, "images.json", "malformed");
+    legacy.forEach((item, i) => {
+      const blob = entries[item.blob_file];
+      const thumb = entries[item.thumb_file];
+      if (!blob || !thumb) {
+        throw new BackupError(`Backup references a missing image (${item.id})`, "missing_image");
+      }
+      files.push({
+        meta: {
+          id: item.id,
+          note_id: item.note_id,
+          kind: "image",
+          // v1 stored no filename.
+          name: `image-${i + 1}.webp`,
+          mime: "image/webp",
+          bytes: item.bytes,
+          created_at: item.created_at,
+          width: item.width,
+          height: item.height,
+          blob_file: item.blob_file,
+          thumb_file: item.thumb_file,
+        },
+        blob: toBlob(blob, "image/webp"),
+        thumb: toBlob(thumb, "image/webp"),
+      });
     });
   }
 
-  return { manifest, notes, images };
+  return { manifest, notes, files };
 }
 
 /**
@@ -145,8 +177,8 @@ export async function readBackup(file: File | Blob): Promise<ValidatedBackup> {
  * merge (default) — adds unknown notes; on a client_id collision the copy with
  *   the later `updated_at` wins, so importing an old backup never clobbers
  *   newer local writing.
- * replace — clears notes and images first. Destructive; the UI confirms it.
- *   The `meta` table is deliberately preserved so the install marker and
+ * replace — clears notes and attachments first. Destructive; the UI confirms
+ *   it. The `meta` table is deliberately preserved so the install marker and
  *   eviction history survive.
  */
 export async function applyBackup(
@@ -159,13 +191,13 @@ export async function applyBackup(
     notesAdded: 0,
     notesUpdated: 0,
     notesSkipped: 0,
-    imagesAdded: 0,
+    filesAdded: 0,
   };
 
-  await db.transaction("rw", db.notes, db.images, db.meta, async () => {
+  await db.transaction("rw", db.notes, db.files, db.meta, async () => {
     if (mode === "replace") {
       await db.notes.clear();
-      await db.images.clear();
+      await db.files.clear();
     }
 
     const existing = new Map((await db.notes.toArray()).map((n) => [n.client_id, n]));
@@ -186,13 +218,16 @@ export async function applyBackup(
     if (toPut.length) await db.notes.bulkPut(toPut);
 
     const keptNoteIds = new Set((await db.notes.toArray()).map((n) => n.client_id));
-    const imageRows: LocalImage[] = backup.images
-      // Never import an image whose note did not survive the merge — it would
-      // be unreachable and count against the user's quota forever.
+    const rows: LocalFile[] = backup.files
+      // Never import an attachment whose note did not survive the merge — it
+      // would be unreachable and count against the user's quota forever.
       .filter(({ meta }) => keptNoteIds.has(meta.note_id))
       .map(({ meta, blob, thumb }) => ({
         id: meta.id,
         note_id: meta.note_id,
+        kind: (meta.kind as FileKind) ?? "other",
+        name: meta.name,
+        mime: meta.mime,
         blob,
         thumb,
         width: meta.width,
@@ -201,9 +236,9 @@ export async function applyBackup(
         created_at: meta.created_at,
       }));
 
-    if (imageRows.length) {
-      await db.images.bulkPut(imageRows);
-      result.imagesAdded = imageRows.length;
+    if (rows.length) {
+      await db.files.bulkPut(rows);
+      result.filesAdded = rows.length;
     }
   });
 

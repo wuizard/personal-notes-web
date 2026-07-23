@@ -27,9 +27,12 @@ export { buildBackupZip, downloadBackup } from "./export/export";
 export { applyBackup, importBackup, readBackup, type ImportMode, type ImportResult } from "./export/import";
 export { BACKUP_FORMAT_VERSION, BackupError, backupFilename } from "./export/format";
 export {
+  MAX_FILE_BYTES,
   META,
   NOTE_COLORS,
   type ChecklistItem,
+  type FileKind,
+  type LocalFile,
   type LocalImage,
   type LocalNote,
   type NoteColor,

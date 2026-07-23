@@ -11,7 +11,21 @@ import { defineRouting } from "next-intl/routing";
 export const routing = defineRouting({
   locales: ["id", "en"],
   defaultLocale: "id",
-  localePrefix: "as-needed",
+  /**
+   * `always`, not `as-needed`.
+   *
+   * `as-needed` leaves the default locale un-prefixed and relies on middleware
+   * to negotiate at request time — which a static export has no way to do.
+   * With `always`, `/id/notes` and `/en/notes` are both prerendered at build
+   * time and nothing has to be decided at runtime.
+   *
+   * It is also better for SEO: each locale gets a real, crawlable URL rather
+   * than one URL whose content depends on a header.
+   *
+   * `/` itself is redirected by the Worker (worker/index.ts), which is the one
+   * thing static hosting genuinely cannot do.
+   */
+  localePrefix: "always",
 });
 
 export type Locale = (typeof routing.locales)[number];

@@ -1,12 +1,13 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useIsDesktop } from "@/shared/hooks/use-media-query";
+import { useHotkeys } from "@/shared/hooks/use-hotkeys";
 import { NoteList } from "./note-list";
 import { NoteEditor } from "./note-editor";
+import { NoNoteSelected } from "./no-note-selected";
 
 /**
  * Master-detail workspace — the desktop layout of Evernote / Apple Notes
@@ -22,7 +23,6 @@ import { NoteEditor } from "./note-editor";
  * mobile back button closes the editor instead of leaving the app.
  */
 export function NoteWorkspace() {
-  const t = useTranslations("editor");
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -46,6 +46,23 @@ export function NoteWorkspace() {
     [isDesktop, params, pathname, router],
   );
 
+  // docs/06 §6.6. Only the shortcuts that have a meaning in v1 — advertising
+  // a key that does nothing is worse than not having it.
+  useHotkeys(
+    useMemo(
+      () => ({
+        c: () => document.querySelector<HTMLElement>("[data-compose-trigger]")?.click(),
+        "/": () => document.getElementById("note-search")?.focus(),
+        Escape: () => {
+          const search = document.getElementById("note-search");
+          if (document.activeElement === search) (search as HTMLInputElement).blur();
+          else if (selectedId) select(null);
+        },
+      }),
+      [selectedId, select],
+    ),
+  );
+
   const showEditor = isDesktop || selectedId !== null;
   const showList = isDesktop || selectedId === null;
 
@@ -67,8 +84,8 @@ export function NoteWorkspace() {
               showBack={!isDesktop}
             />
           ) : (
-            <div className="hidden flex-1 items-center justify-center p-8 md:flex">
-              <p className="max-w-[28ch] text-center text-sm text-muted">{t("none")}</p>
+            <div className="hidden flex-1 md:flex">
+              <NoNoteSelected />
             </div>
           )}
         </div>

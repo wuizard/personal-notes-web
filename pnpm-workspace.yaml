@@ -8,8 +8,12 @@ packages:
 #   unrs-resolver    — ESLint import resolver (native binary)
 #   @swc/core        — Next.js compiler (native binary)
 #   @parcel/watcher  — file watching for dev/build tooling (native binary)
+#   esbuild          — bundler used by wrangler (native binary)
+#   workerd          — the Cloudflare Workers runtime, for local dev + deploy
 allowBuilds:
   "@parcel/watcher": true
   "@swc/core": true
+  esbuild: true
   sharp: true
   unrs-resolver: true
+  workerd: true

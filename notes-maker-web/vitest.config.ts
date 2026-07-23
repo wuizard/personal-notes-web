@@ -6,7 +6,7 @@ export default defineConfig({
     environment: "node",
     // Registers a fake IndexedDB on globalThis before any module imports Dexie.
     setupFiles: ["fake-indexeddb/auto"],
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
   },
   resolve: {
     alias: { "@": path.join(import.meta.dirname, "src") },

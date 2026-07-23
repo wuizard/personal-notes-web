@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { NOTE_COLORS } from "@/features/storage/types";
+import { BrandMark } from "@/shared/ui/brand-mark";
 import { ThemeToggle } from "@/shared/ui/theme-toggle";
 import { LocaleSwitcher } from "@/shared/ui/locale-switcher";
 
@@ -24,9 +25,7 @@ export default async function LandingPage({
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="flex items-center gap-3 px-6 py-4">
-        <span className="flex size-7 items-center justify-center rounded-[9px] bg-accent text-sm font-bold text-accent-foreground">
-          N
-        </span>
+        <BrandMark size={28} />
         <span className="font-semibold tracking-tight">{t("app.name")}</span>
         <div className="ml-auto flex items-center gap-1">
           <LocaleSwitcher />

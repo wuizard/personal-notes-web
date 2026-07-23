@@ -1,68 +1,58 @@
 /**
- * Generates PWA icons from inline SVG. Run: pnpm gen:icons
+ * Generates PWA icons from the brand system. Run: pnpm gen:icons
+ *
+ * The brand files in `notes-maker-vector-brand-system/` are the source of
+ * truth — this script only rasterises them. It used to draw its own
+ * approximation of the mark (0.72 scale, 0.16 radius, 0.075 stroke), which
+ * happened to look close but violated the brand guide's "do not alter
+ * individual line lengths, corner radii, or the gradient" rule. Redrawing a
+ * logo in code is how a brand quietly drifts.
  *
  * Two variants, because they are genuinely different problems:
- *  - "any"      — rounded-square app icon, drawn edge to edge
- *  - "maskable" — full-bleed background with the glyph inside the safe zone
- *                 (the centre 80%), since the OS may crop it to a circle,
- *                 a squircle, or a rounded rect depending on the launcher.
- *
- * Shipping only "any" icons is the usual mistake: Android then crops the
- * artwork and the glyph loses its corners.
+ *  - "any"      — the rounded app icon, drawn edge to edge
+ *  - "maskable" — the SQUARE (full-bleed) icon, because the OS crops maskable
+ *                 icons to a circle or squircle of its choosing. Feeding it the
+ *                 rounded artwork would clip the corners twice.
  */
-import { mkdir, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
-const OUT = path.join(import.meta.dirname, "..", "public", "icons");
+const HERE = import.meta.dirname;
+const BRAND = path.join(HERE, "..", "..", "notes-maker-vector-brand-system");
+const OUT = path.join(HERE, "..", "public", "icons");
 
-const ACCENT = "#6B5FD6";
-const ACCENT_LIGHT = "#B9A6F0";
-const PAPER = "#FFFFFF";
-
-/** @param {{maskable: boolean}} opts */
-function svg({ maskable }) {
-  // Safe zone: keep the glyph within the centre 80% for maskable icons.
-  const s = maskable ? 0.56 : 0.72;
-  const g = 512 * s;
-  const o = (512 - g) / 2;
-  const radius = maskable ? 0 : 112;
-
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="${ACCENT}"/>
-      <stop offset="1" stop-color="${ACCENT_LIGHT}"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="${radius}" fill="url(#bg)"/>
-  <g transform="translate(${o} ${o})">
-    <rect width="${g}" height="${g}" rx="${g * 0.16}" fill="${PAPER}" opacity="0.96"/>
-    <g stroke="${ACCENT}" stroke-width="${g * 0.075}" stroke-linecap="round" opacity="0.85">
-      <line x1="${g * 0.22}" y1="${g * 0.33}" x2="${g * 0.78}" y2="${g * 0.33}"/>
-      <line x1="${g * 0.22}" y1="${g * 0.52}" x2="${g * 0.66}" y2="${g * 0.52}"/>
-      <line x1="${g * 0.22}" y1="${g * 0.71}" x2="${g * 0.5}" y2="${g * 0.71}"/>
-    </g>
-  </g>
-</svg>`;
-}
+const ROUNDED = path.join(BRAND, "04-app-icons", "notes-maker-app-icon-rounded.svg");
+const SQUARE = path.join(BRAND, "04-app-icons", "notes-maker-app-icon-square.svg");
+const FAVICON_SVG = path.join(BRAND, "06-favicon", "favicon.svg");
+const FAVICON_ICO = path.join(BRAND, "06-favicon", "favicon.ico");
 
 await mkdir(OUT, { recursive: true });
 
 const jobs = [
-  { name: "icon-192.png", size: 192, maskable: false },
-  { name: "icon-512.png", size: 512, maskable: false },
-  { name: "maskable-192.png", size: 192, maskable: true },
-  { name: "maskable-512.png", size: 512, maskable: true },
-  { name: "apple-touch-icon.png", size: 180, maskable: false },
+  { src: ROUNDED, name: "icon-192.png", size: 192 },
+  { src: ROUNDED, name: "icon-512.png", size: 512 },
+  { src: ROUNDED, name: "apple-touch-icon.png", size: 180 },
+  { src: SQUARE, name: "maskable-192.png", size: 192 },
+  { src: SQUARE, name: "maskable-512.png", size: 512 },
 ];
 
-for (const { name, size, maskable } of jobs) {
-  const buf = Buffer.from(svg({ maskable }));
-  await sharp(buf).resize(size, size).png({ compressionLevel: 9 }).toFile(path.join(OUT, name));
-  console.log(`✓ ${name} (${size}×${size})`);
+for (const { src, name, size } of jobs) {
+  const svg = await readFile(src);
+  // `density` matters: sharp rasterises SVG at 72dpi by default, so a 512px
+  // target rendered from a 512-unit viewBox would be resampled from a small
+  // bitmap and come out soft.
+  await sharp(svg, { density: Math.ceil((size / 512) * 72 * 4) })
+    .resize(size, size)
+    .png({ compressionLevel: 9 })
+    .toFile(path.join(OUT, name));
+  console.log(`✓ ${name} (${size}×${size})  ← ${path.basename(src)}`);
 }
 
-// Favicon as SVG — scales perfectly and costs ~600 bytes.
-await writeFile(path.join(OUT, "favicon.svg"), svg({ maskable: false }));
-console.log("✓ favicon.svg");
+// The SVG favicon is copied verbatim — it is already the brand master, and
+// re-encoding a vector only risks changing it.
+await copyFile(FAVICON_SVG, path.join(OUT, "favicon.svg"));
+console.log("✓ favicon.svg  ← brand master (copied verbatim)");
+
+await copyFile(FAVICON_ICO, path.join(OUT, "favicon.ico"));
+console.log("✓ favicon.ico  ← brand master (copied verbatim)");

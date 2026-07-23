@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { ThemeToggle } from "./theme-toggle";
 import { LocaleSwitcher } from "./locale-switcher";
+import { BrandMark } from "./brand-mark";
 
 const NAV = [
   { href: "/notes", key: "notes", icon: NotebookText },
@@ -41,9 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           href="/notes"
           className="flex items-center gap-2.5 rounded-lg px-2.5 pb-4 pt-1"
         >
-          <span className="flex size-6.5 items-center justify-center rounded-lg bg-accent text-[13px] font-bold text-accent-foreground">
-            N
-          </span>
+          <BrandMark size={26} className="shrink-0" />
           <span className="text-[14.5px] font-semibold tracking-tight">{t("app.name")}</span>
         </Link>
 
@@ -96,9 +95,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Mobile top bar: brand + controls only. Navigation lives at the bottom. */}
         <header className="flex items-center gap-2 border-b border-border px-4 py-2.5 md:hidden">
-          <span className="flex size-6.5 items-center justify-center rounded-lg bg-accent text-[13px] font-bold text-accent-foreground">
-            N
-          </span>
+          <BrandMark size={26} className="shrink-0" />
           <span className="text-[14.5px] font-semibold tracking-tight">{t("app.name")}</span>
           <div className="ml-auto flex items-center gap-1">
             <LocaleSwitcher />

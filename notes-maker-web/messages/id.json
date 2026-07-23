@@ -33,8 +33,10 @@
       "color": "Warna"
     },
     "archived": "Catatan diarsipkan",
-    "deleted": "Catatan dihapus",
-    "undo": "Urungkan"
+    "deleted": "Catatan dipindahkan ke sampah",
+    "undo": "Urungkan",
+    "restored": "Catatan dipulihkan",
+    "unarchived": "Catatan dikeluarkan dari arsip"
   },
   "theme": {
     "label": "Tema",
@@ -122,6 +124,72 @@
     "back": "Kembali ke catatan",
     "saved": "Tersimpan",
     "saving": "Menyimpan…",
-    "openNote": "Buka catatan"
+    "openNote": "Buka catatan",
+    "format": {
+      "label": "Pemformatan",
+      "bold": "Tebal",
+      "italic": "Miring",
+      "strike": "Coret",
+      "bulletList": "Daftar poin",
+      "orderedList": "Daftar bernomor",
+      "code": "Kode"
+    },
+    "addImage": "Tambah gambar",
+    "removeImage": "Hapus gambar",
+    "imageAlt": "Gambar terlampir",
+    "imageError": {
+      "unsupported_type": "Jenis berkas itu tidak didukung.",
+      "too_large": "Gambar itu terlalu besar.",
+      "decode_failed": "Gambar itu tidak dapat dibaca.",
+      "encode_failed": "Gambar itu tidak dapat diproses.",
+      "quota": "Ruang tidak cukup untuk gambar. Ekspor cadangan dan kosongkan ruang.",
+      "unknown": "Gambar itu tidak dapat ditambahkan."
+    },
+    "viewImage": "Lihat gambar",
+    "closeImage": "Tutup gambar",
+    "nextImage": "Gambar berikutnya",
+    "prevImage": "Gambar sebelumnya",
+    "imageCount": "{current} dari {total}",
+    "download": "Unduh",
+    "previewUnavailable": "Pratinjau tidak tersedia",
+    "attachments": "Lampiran",
+    "addFile": "Tambah berkas",
+    "removeFile": "Hapus berkas",
+    "openFile": "Buka berkas",
+    "fileError": {
+      "too_large": "Berkas itu melebihi batas 25 MB.",
+      "quota": "Ruang tidak cukup untuk lampiran. Ekspor cadangan dan kosongkan ruang.",
+      "unsupported_type": "Jenis berkas itu tidak didukung.",
+      "decode_failed": "Gambar itu tidak dapat dibaca.",
+      "encode_failed": "Gambar itu tidak dapat diproses.",
+      "unknown": "Berkas itu tidak dapat ditambahkan."
+    }
+  },
+  "archive": {
+    "title": "Arsip",
+    "emptyTitle": "Belum ada arsip.",
+    "emptyBody": "Catatan yang diarsipkan tidak mengganggu, tetapi tetap bisa dicari.",
+    "unarchive": "Keluarkan dari arsip"
+  },
+  "trash": {
+    "title": "Sampah",
+    "emptyTitle": "Sampah kosong.",
+    "emptyBody": "Catatan di sini dihapus permanen setelah 30 hari.",
+    "emptyAction": "Kosongkan sampah",
+    "restore": "Pulihkan",
+    "deleteForever": "Hapus permanen",
+    "confirmTitle": "Kosongkan sampah?",
+    "confirmBody": "{count, plural, other {# catatan}} akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.",
+    "confirmCta": "Hapus permanen",
+    "cancel": "Batal",
+    "emptied": "Sampah dikosongkan"
+  },
+  "reminders": {
+    "title": "Pengingat",
+    "soonTitle": "Pengingat segera hadir.",
+    "soonBody": "Anda akan bisa menyetel waktu pada catatan mana pun dan diingatkan saat membuka aplikasi."
+  },
+  "search": {
+    "noResults": "Tidak ada catatan yang cocok dengan “{query}”."
   }
 }
