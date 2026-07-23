@@ -33,8 +33,10 @@
       "color": "Colour"
     },
     "archived": "Note archived",
-    "deleted": "Note deleted",
-    "undo": "Undo"
+    "deleted": "Note moved to trash",
+    "undo": "Undo",
+    "restored": "Note restored",
+    "unarchived": "Note unarchived"
   },
   "theme": {
     "label": "Theme",
@@ -122,6 +124,72 @@
     "back": "Back to notes",
     "saved": "Saved",
     "saving": "Saving…",
-    "openNote": "Open note"
+    "openNote": "Open note",
+    "format": {
+      "label": "Formatting",
+      "bold": "Bold",
+      "italic": "Italic",
+      "strike": "Strikethrough",
+      "bulletList": "Bullet list",
+      "orderedList": "Numbered list",
+      "code": "Code"
+    },
+    "addImage": "Add image",
+    "removeImage": "Remove image",
+    "imageAlt": "Attached image",
+    "imageError": {
+      "unsupported_type": "That file type is not supported.",
+      "too_large": "That image is too large.",
+      "decode_failed": "That image could not be read.",
+      "encode_failed": "That image could not be processed.",
+      "quota": "Not enough space left for images. Export a backup and free some room.",
+      "unknown": "That image could not be added."
+    },
+    "viewImage": "View image",
+    "closeImage": "Close image",
+    "nextImage": "Next image",
+    "prevImage": "Previous image",
+    "imageCount": "{current} of {total}",
+    "download": "Download",
+    "previewUnavailable": "Preview not available",
+    "attachments": "Attachments",
+    "addFile": "Add file",
+    "removeFile": "Remove file",
+    "openFile": "Open file",
+    "fileError": {
+      "too_large": "That file is over the 25 MB limit.",
+      "quota": "Not enough space left for attachments. Export a backup and free some room.",
+      "unsupported_type": "That file type is not supported.",
+      "decode_failed": "That image could not be read.",
+      "encode_failed": "That image could not be processed.",
+      "unknown": "That file could not be added."
+    }
+  },
+  "archive": {
+    "title": "Archive",
+    "emptyTitle": "Nothing archived.",
+    "emptyBody": "Archived notes stay out of your way but stay searchable.",
+    "unarchive": "Unarchive"
+  },
+  "trash": {
+    "title": "Trash",
+    "emptyTitle": "Trash is empty.",
+    "emptyBody": "Notes here are deleted forever after 30 days.",
+    "emptyAction": "Empty trash",
+    "restore": "Restore",
+    "deleteForever": "Delete forever",
+    "confirmTitle": "Empty trash?",
+    "confirmBody": "{count, plural, one {# note} other {# notes}} will be deleted permanently. This cannot be undone.",
+    "confirmCta": "Delete permanently",
+    "cancel": "Cancel",
+    "emptied": "Trash emptied"
+  },
+  "reminders": {
+    "title": "Reminders",
+    "soonTitle": "Reminders are coming soon.",
+    "soonBody": "You will be able to set a time on any note and be reminded when you open the app."
+  },
+  "search": {
+    "noResults": "No notes match “{query}”."
   }
 }

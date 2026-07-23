@@ -1,18 +1,26 @@
 "use client";
 
 import { useLiveQuery } from "dexie-react-hooks";
-import { Archive, ArrowLeft, Check, Pin, PinOff, Trash2 } from "lucide-react";
+import dynamic from "next/dynamic";
+import { Archive, ArrowLeft, Check, Paperclip, Pin, PinOff, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { NOTE_COLORS, type NoteColor } from "@/features/storage";
-import { docFromText, flattenDoc } from "../model/body-text";
+import { NOTE_COLORS, type NoteColor, type NoteDoc } from "@/features/storage";
+import { addFile } from "@/features/file/repo";
+import { useFileInput } from "@/features/file/use-file-input";
+import { AttachmentStrip } from "@/features/file/components/attachment-strip";
 import { getNote, setArchived, setPinned, trashNote, updateNote } from "../repo/note-repo";
+
+const RichTextEditor = dynamic(() => import("@/features/editor/rich-text-editor"), {
+  ssr: false,
+  loading: () => <div className="min-h-24" aria-busy="true" />,
+});
 
 const SAVE_DEBOUNCE_MS = 600;
 
 interface Draft {
   title: string;
-  body: string;
+  doc: NoteDoc;
 }
 
 /**
@@ -46,8 +54,18 @@ export function NoteEditor({
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pending = useRef<(() => void) | null>(null);
 
+  // Sequential, not Promise.all: each image decodes a full-size bitmap, and
+  // several at once is how a mid-range phone runs out of memory.
+  const attach = useFileInput(
+    useCallback(
+      async (files: File[]) => {
+        for (const file of files) await addFile(noteId, file);
+      },
+      [noteId],
+    ),
+  );
+
   const title = draft?.title ?? note?.title ?? "";
-  const body = draft?.body ?? (note ? flattenDoc(note.body) : "");
 
   const flush = useCallback(() => {
     if (timer.current) {
@@ -67,7 +85,7 @@ export function NoteEditor({
       pending.current = () => {
         void updateNote(noteId, {
           title: next.title.slice(0, 200),
-          body: docFromText(next.body),
+          body: next.doc,
         }).then(() => setSaved(true));
       };
 
@@ -108,8 +126,19 @@ export function NoteEditor({
 
   return (
     <div
+      onPaste={attach.onPaste}
+      onDrop={attach.onDrop}
+      onDragOver={attach.onDragOver}
       className="flex min-h-0 flex-1 flex-col"
-      style={{ background: `var(--note-${note.color})`, color: "var(--note-ink)" }}
+      style={
+        {
+          background: `var(--note-${note.color})`,
+          color: "var(--note-ink)",
+          // Inherited by the sticky toolbar so it is opaque in the note's own
+          // colour; a transparent sticky bar lets text scroll under it.
+          "--editor-surface": `var(--note-${note.color})`,
+        } as React.CSSProperties
+      }
     >
       {/* toolbar */}
       <div className="flex items-center gap-1 border-b border-[var(--card-border)] px-2 py-2">
@@ -179,23 +208,46 @@ export function NoteEditor({
         <input
           id="note-title"
           value={title}
-          onChange={(e) => schedule({ title: e.target.value, body })}
+          onChange={(e) => schedule({ title: e.target.value, doc: draft?.doc ?? note.body })}
           onBlur={flush}
           placeholder={t("note.titlePlaceholder")}
           className="w-full bg-transparent text-[19px] font-semibold tracking-tight outline-none placeholder:opacity-40"
         />
 
-        <label className="sr-only" htmlFor="note-body">
-          {t("editor.bodyPlaceholder")}
-        </label>
-        <textarea
-          id="note-body"
-          value={body}
-          onChange={(e) => schedule({ title, body: e.target.value })}
-          onBlur={flush}
+        <RichTextEditor
+          // Remount when the note changes so Tiptap reloads its content —
+          // the editor owns its document after mount and ignores prop changes.
+          key={noteId}
+          initialDoc={note.body}
           placeholder={t("editor.bodyPlaceholder")}
-          className="mt-3 min-h-64 w-full flex-1 resize-none bg-transparent text-[16px] leading-[1.65] outline-none placeholder:opacity-40"
+          onChange={(nextDoc) => schedule({ title, doc: nextDoc })}
+          onBlur={flush}
+          showToolbar
+          toolbarPosition="top"
+          className="mt-3 flex-1 text-[16px] leading-[1.65]"
+          toolbarExtra={
+            <button
+              type="button"
+              onClick={attach.openPicker}
+              aria-label={t("editor.addFile")}
+              className="grid size-7 place-items-center rounded-md opacity-60 transition-opacity hover:opacity-100"
+            >
+              <Paperclip size={14} strokeWidth={2} aria-hidden />
+            </button>
+          }
         />
+
+        <input {...attach.inputProps} />
+
+        <div className="mt-3">
+          <AttachmentStrip noteId={noteId} />
+        </div>
+
+        {attach.error && (
+          <p role="alert" className="mt-2 rounded-lg bg-danger-soft px-2.5 py-1.5 text-[12.5px] text-danger-soft-foreground">
+            {attach.error}
+          </p>
+        )}
       </div>
 
       {/* colour picker */}
