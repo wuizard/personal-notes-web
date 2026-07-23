@@ -123,7 +123,15 @@ export function FileViewer({
           </button>
         )}
 
-        <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center">
+        {/*
+          `self-stretch` is load-bearing. The row centres its children, which
+          leaves this wrapper's height derived from its content — and a
+          content-derived height is not a definite one, so `h-full` on the PDF
+          <object> collapsed it to a ~150px box and `max-h-full` on an image
+          resolved to no constraint at all, letting it overflow at natural size.
+          Stretching gives the wrapper the row's height so both resolve.
+        */}
+        <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center self-stretch">
           {/* Remounted per file so <video> and <object> reload their source
               rather than keeping the previous one. */}
           <FilePreview key={file.id} file={file} />
