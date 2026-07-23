@@ -49,5 +49,3 @@ public/workbox-*.js.map
 *.test
 *.out
 vendor/
-
-*.md
