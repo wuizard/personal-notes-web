@@ -13,6 +13,7 @@ import {
   importBackup,
   isPersisted,
   isQuotaCritical,
+  measureUserData,
   requestPersistence,
   type ImportMode,
   type ImportResult,
@@ -60,6 +61,9 @@ export function StoragePanel() {
     [refreshKey],
   );
   const persisted = useLiveQuery<boolean | undefined>(() => isPersisted(), [refreshKey]);
+
+  // Re-runs whenever notes or files change, because it touches both tables.
+  const userData = useLiveQuery(() => measureUserData(), [refreshKey]);
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
@@ -122,9 +126,27 @@ export function StoragePanel() {
             <dt className="text-muted">{t("nav.notes")}</dt>
             <dd className="tabular-nums">{noteCount ?? "—"}</dd>
           </div>
+          {/*
+            The user's own data, shown first and on its own.
+            `estimate().usage` below is origin-wide — it counts the cached app
+            bundle too, which dwarfs the notes and makes the figure read as if
+            a single note were consuming megabytes.
+          */}
           <div className="flex justify-between gap-4">
-            <dt className="text-muted">{t("storage.title")}</dt>
+            <dt className="text-muted">{t("storage.yourData")}</dt>
             <dd className="tabular-nums">
+              {userData ? formatBytes(userData.total) : "—"}
+            </dd>
+          </div>
+
+          <div className="flex justify-between gap-4">
+            <dt className="text-muted">
+              {t("storage.siteTotal")}
+              <span className="mt-0.5 block max-w-[34ch] text-[11.5px] text-ink-subtle">
+                {t("storage.siteTotalHint")}
+              </span>
+            </dt>
+            <dd className="shrink-0 tabular-nums">
               {estimate?.supported && estimate.quota > 0
                 ? t("storage.used", {
                     used: formatBytes(estimate.usage),

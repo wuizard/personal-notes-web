@@ -61,7 +61,10 @@
     "quotaWarning": "You're running low on space. Export a backup, and remove some images to free room.",
     "reset": "Reset local data",
     "resetExplain": "Deletes every note on this device. This cannot be undone.",
-    "resetConfirm": "Type DELETE to confirm"
+    "resetConfirm": "Type DELETE to confirm",
+    "yourData": "Notes and attachments",
+    "siteTotal": "Site data",
+    "siteTotalHint": "Includes the app files your browser caches so it works offline — not your notes."
   },
   "backup": {
     "title": "Backup",

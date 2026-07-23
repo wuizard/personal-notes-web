@@ -17,10 +17,12 @@ export {
   isQuotaCritical,
   markHadNotes,
   markPersistencePrompted,
+  measureUserData,
   requestPersistence,
   setLastExportAt,
   wasPersistencePrompted,
   type BootState,
+  type UserDataSize,
   type StorageEstimate,
 } from "./persistence";
 export { buildBackupZip, downloadBackup } from "./export/export";
