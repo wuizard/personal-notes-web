@@ -6,6 +6,10 @@ node_modules/
 # next.js
 .next/
 out/
+
+# cloudflare / wrangler
+.wrangler/
+.dev.vars
 next-env.d.ts
 
 # production
@@ -37,6 +41,7 @@ yarn-error.log*
 coverage/
 playwright-report/
 test-results/
+notes-maker-vector-brand-system/
 
 # pwa — generated service worker artifacts
 public/sw.js

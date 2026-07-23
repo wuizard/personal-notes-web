@@ -30,5 +30,8 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  // The Worker runs in the Cloudflare runtime, not the browser. It has its own
+  // tsconfig with workers-types; compiling it against the DOM lib here would
+  // give it a `window` that does not exist at runtime.
+  "exclude": ["node_modules", "worker", "out"]
 }

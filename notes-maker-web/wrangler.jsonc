@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "notes-maker-web",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-07-01",
+
+  "assets": {
+    "directory": "./out",
+    "binding": "ASSETS",
+
+    // The export writes `en/notes.html`, not `en/notes/index.html`.
+    // `auto-trailing-slash` is what maps a request for `/en/notes` onto it.
+    "html_handling": "auto-trailing-slash",
+
+    // Serve the exported 404 page for unknown paths. Explicitly NOT
+    // "single-page-application": this app has real prerendered routes, and
+    // SPA fallback would return 200 + the shell for genuinely missing URLs,
+    // which search engines index as duplicate content.
+    "not_found_handling": "404-page"
+  },
+
+  "observability": {
+    "enabled": true
+  }
+}

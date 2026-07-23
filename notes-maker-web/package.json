@@ -10,11 +10,18 @@
     "typecheck": "tsc --noEmit",
     "gen:icons": "node scripts/generate-icons.mjs",
     "check:messages": "node scripts/check-messages.mjs",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck:worker": "tsc --noEmit -p worker/tsconfig.json",
+    "cf:dev": "wrangler dev",
+    "cf:deploy": "pnpm build && wrangler deploy"
   },
   "dependencies": {
     "@heroui/react": "^3.2.2",
     "@heroui/styles": "^3.2.2",
+    "@tiptap/extension-image": "^3.28.0",
+    "@tiptap/extension-placeholder": "^3.28.0",
+    "@tiptap/react": "^3.28.0",
+    "@tiptap/starter-kit": "^3.28.0",
     "dexie": "^4.4.4",
     "dexie-react-hooks": "^4.4.0",
     "fflate": "^0.8.3",
@@ -27,16 +34,20 @@
     "uuidv7": "^1.2.1"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260722.1",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.11",
     "fake-indexeddb": "^6.2.5",
+    "jsdom": "^29.1.1",
     "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "wrangler": "^4.113.0"
   }
 }
