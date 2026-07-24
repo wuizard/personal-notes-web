@@ -39,4 +39,5 @@ export {
   type LocalNote,
   type NoteColor,
   type NoteDoc,
+  type NoteKind,
 } from "./types";

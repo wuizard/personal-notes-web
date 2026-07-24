@@ -1,8 +1,9 @@
 import { uuidv7 } from "uuidv7";
 import { getDb } from "@/features/storage/db";
 import { markHadNotes } from "@/features/storage/persistence";
-import type { LocalNote, NoteColor, NoteDoc } from "@/features/storage/types";
+import type { ChecklistItem, LocalNote, NoteColor, NoteDoc, NoteKind } from "@/features/storage/types";
 import { buildBodyText } from "../model/body-text";
+import { checklistToDoc, docToChecklist, noteKind } from "../model/convert";
 
 /**
  * The only module that reads or writes notes.
@@ -17,6 +18,8 @@ export interface CreateNoteInput {
   title?: string;
   body?: NoteDoc;
   color?: NoteColor;
+  kind?: NoteKind;
+  checklist?: ChecklistItem[];
 }
 
 function now() {
@@ -30,9 +33,11 @@ export async function createNote(input: CreateNoteInput = {}): Promise<LocalNote
 
   const note: LocalNote = {
     client_id: uuidv7(),
+    kind: input.kind ?? "note",
     title: input.title ?? "",
     body,
-    body_text: buildBodyText(body),
+    body_text: buildBodyText(body, input.checklist),
+    ...(input.checklist ? { checklist: input.checklist } : {}),
     color: input.color ?? "paper",
     pinned: false,
     archived: false,
@@ -72,6 +77,46 @@ export async function updateNote(clientId: string, patch: NotePatch): Promise<vo
       next.body_text = buildBodyText(next.body, next.checklist);
     }
 
+    await db.notes.put(next);
+  });
+}
+
+/**
+ * Switches a note between its two kinds — docs/10 §10.1.
+ *
+ * checklist → note is lossless (items become a bulleted list). note →
+ * checklist flattens formatting to plain lines, which is why the UI confirms
+ * before calling it with `to: "checklist"`.
+ */
+export async function convertNoteKind(clientId: string, to: NoteKind): Promise<void> {
+  const db = getDb();
+  await db.transaction("rw", db.notes, async () => {
+    const existing = await db.notes.get(clientId);
+    if (!existing || noteKind(existing) === to) return;
+
+    let next: LocalNote;
+    if (to === "note") {
+      const body = checklistToDoc(existing.checklist ?? []);
+      // Rest/spread rather than `checklist: undefined` — IndexedDB stores an
+      // explicit undefined as a real value, and the absent-means-note contract
+      // in types.ts expects the key to be gone.
+      const { checklist: _dropped, ...rest } = existing;
+      void _dropped;
+      next = { ...rest, kind: "note", body, body_text: buildBodyText(body) };
+    } else {
+      const checklist = docToChecklist(existing.body);
+      const body: NoteDoc = { type: "doc", content: [{ type: "paragraph" }] };
+      next = {
+        ...existing,
+        kind: "checklist",
+        body,
+        checklist,
+        body_text: buildBodyText(body, checklist),
+      };
+    }
+
+    next.updated_at = now();
+    next._dirty = 1;
     await db.notes.put(next);
   });
 }
@@ -120,11 +165,14 @@ export async function listNotes(filter: NoteFilter = "active"): Promise<LocalNot
   });
 }
 
-/** Counts toward the free-tier cap: live notes only, excluding trash. */
+/**
+ * Counts toward the free-tier cap: live notes only, excluding trash — and
+ * excluding checklists, which are uncapped on every tier (docs/10 §10.7).
+ */
 export async function countActiveNotes(): Promise<number> {
   const db = getDb();
   const all = await db.notes.toArray();
-  return all.filter((n) => n.deleted_at === null && !n.archived).length;
+  return all.filter((n) => n.deleted_at === null && !n.archived && noteKind(n) === "note").length;
 }
 
 export async function searchNotes(query: string): Promise<LocalNote[]> {

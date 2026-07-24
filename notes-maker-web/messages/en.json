@@ -15,6 +15,14 @@
   },
   "note": {
     "composePlaceholder": "Take a note…",
+    "composeListPlaceholder": "Add a to-do…",
+    "composeNote": "Write a note instead",
+    "composeList": "Make it a checklist",
+    "convertToNote": "Convert to note",
+    "convertToChecklist": "Convert to checklist",
+    "convertWarnTitle": "Convert to checklist?",
+    "convertWarnBody": "Formatting like bold text and headings will be flattened into plain list items.",
+    "convertWarnCta": "Convert",
     "titlePlaceholder": "Title",
     "save": "Save",
     "cancel": "Cancel",
@@ -194,5 +202,14 @@
   },
   "search": {
     "noResults": "No notes match “{query}”."
+  },
+  "checklist": {
+    "itemPlaceholder": "List item",
+    "addItem": "Add item",
+    "removeItem": "Remove item",
+    "completed": "Completed ({count})",
+    "completedCount": "{count, plural, one {# completed} other {# completed}}",
+    "check": "Mark done",
+    "uncheck": "Mark not done"
   }
 }

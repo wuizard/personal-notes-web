@@ -2,14 +2,40 @@
 
 import { useLiveQuery } from "dexie-react-hooks";
 import dynamic from "next/dynamic";
-import { Archive, ArrowLeft, Check, Paperclip, Pin, PinOff, Trash2 } from "lucide-react";
+import {
+  Archive,
+  ArrowLeft,
+  Check,
+  ListChecks,
+  NotepadText,
+  Paperclip,
+  Pin,
+  PinOff,
+  Trash2,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { NOTE_COLORS, type NoteColor, type NoteDoc } from "@/features/storage";
+import {
+  NOTE_COLORS,
+  type ChecklistItem,
+  type NoteColor,
+  type NoteDoc,
+  type NoteKind,
+} from "@/features/storage";
 import { addFile } from "@/features/file/repo";
 import { useFileInput } from "@/features/file/use-file-input";
 import { AttachmentStrip } from "@/features/file/components/attachment-strip";
-import { getNote, setArchived, setPinned, trashNote, updateNote } from "../repo/note-repo";
+import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
+import { noteKind } from "../model/convert";
+import {
+  convertNoteKind,
+  getNote,
+  setArchived,
+  setPinned,
+  trashNote,
+  updateNote,
+} from "../repo/note-repo";
+import { ChecklistEditor } from "./checklist-editor";
 
 const RichTextEditor = dynamic(() => import("@/features/editor/rich-text-editor"), {
   ssr: false,
@@ -21,6 +47,7 @@ const SAVE_DEBOUNCE_MS = 600;
 interface Draft {
   title: string;
   doc: NoteDoc;
+  checklist?: ChecklistItem[];
 }
 
 /**
@@ -50,6 +77,7 @@ export function NoteEditor({
   // an effect (and the cascading render that comes with it).
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saved, setSaved] = useState(true);
+  const [confirmConvert, setConfirmConvert] = useState(false);
 
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pending = useRef<(() => void) | null>(null);
@@ -86,11 +114,24 @@ export function NoteEditor({
         void updateNote(noteId, {
           title: next.title.slice(0, 200),
           body: next.doc,
+          ...(next.checklist ? { checklist: next.checklist } : {}),
         }).then(() => setSaved(true));
       };
 
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(flush, SAVE_DEBOUNCE_MS);
+    },
+    [flush, noteId],
+  );
+
+  // Convert between kinds — docs/10 §10.1. The pending draft is flushed first
+  // so the conversion reads what the user just typed, and the draft is then
+  // dropped so the next render derives cleanly from the converted row.
+  const convert = useCallback(
+    async (to: NoteKind) => {
+      flush();
+      await convertNoteKind(noteId, to);
+      setDraft(null);
     },
     [flush, noteId],
   );
@@ -123,6 +164,8 @@ export function NoteEditor({
       </div>
     );
   }
+
+  const kind = noteKind(note);
 
   return (
     <div
@@ -162,6 +205,39 @@ export function NoteEditor({
         </span>
 
         <div className="ml-auto flex items-center gap-0.5">
+          {kind === "checklist" ? (
+            <>
+              {/* Notes get this button in the editor toolbar; a checklist has
+                  no formatting toolbar, so the attach affordance lives here. */}
+              <button
+                type="button"
+                onClick={attach.openPicker}
+                aria-label={t("editor.addFile")}
+                className="grid size-9 place-items-center rounded-xl opacity-70 hover:opacity-100"
+              >
+                <Paperclip size={16} strokeWidth={1.75} aria-hidden />
+              </button>
+              <button
+                type="button"
+                onClick={() => void convert("note")}
+                aria-label={t("note.convertToNote")}
+                title={t("note.convertToNote")}
+                className="grid size-9 place-items-center rounded-xl opacity-70 hover:opacity-100"
+              >
+                <NotepadText size={17} strokeWidth={1.75} aria-hidden />
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmConvert(true)}
+              aria-label={t("note.convertToChecklist")}
+              title={t("note.convertToChecklist")}
+              className="grid size-9 place-items-center rounded-xl opacity-70 hover:opacity-100"
+            >
+              <ListChecks size={17} strokeWidth={1.75} aria-hidden />
+            </button>
+          )}
           <button
             type="button"
             onClick={() => void setPinned(noteId, !note.pinned)}
@@ -208,34 +284,50 @@ export function NoteEditor({
         <input
           id="note-title"
           value={title}
-          onChange={(e) => schedule({ title: e.target.value, doc: draft?.doc ?? note.body })}
+          onChange={(e) =>
+            schedule({
+              title: e.target.value,
+              doc: draft?.doc ?? note.body,
+              checklist: draft?.checklist ?? note.checklist,
+            })
+          }
           onBlur={flush}
           placeholder={t("note.titlePlaceholder")}
           className="w-full bg-transparent text-[19px] font-semibold tracking-tight outline-none placeholder:opacity-40"
         />
 
-        <RichTextEditor
-          // Remount when the note changes so Tiptap reloads its content —
-          // the editor owns its document after mount and ignores prop changes.
-          key={noteId}
-          initialDoc={note.body}
-          placeholder={t("editor.bodyPlaceholder")}
-          onChange={(nextDoc) => schedule({ title, doc: nextDoc })}
-          onBlur={flush}
-          showToolbar
-          toolbarPosition="top"
-          className="mt-3 flex-1 text-[16px] leading-[1.65]"
-          toolbarExtra={
-            <button
-              type="button"
-              onClick={attach.openPicker}
-              aria-label={t("editor.addFile")}
-              className="grid size-7 place-items-center rounded-md opacity-60 transition-opacity hover:opacity-100"
-            >
-              <Paperclip size={14} strokeWidth={2} aria-hidden />
-            </button>
-          }
-        />
+        {kind === "checklist" ? (
+          <ChecklistEditor
+            items={draft?.checklist ?? note.checklist ?? []}
+            onChange={(items) =>
+              schedule({ title, doc: draft?.doc ?? note.body, checklist: items })
+            }
+            className="mt-3 flex-1 text-[16px] leading-[1.65]"
+          />
+        ) : (
+          <RichTextEditor
+            // Remount when the note changes so Tiptap reloads its content —
+            // the editor owns its document after mount and ignores prop changes.
+            key={noteId}
+            initialDoc={note.body}
+            placeholder={t("editor.bodyPlaceholder")}
+            onChange={(nextDoc) => schedule({ title, doc: nextDoc })}
+            onBlur={flush}
+            showToolbar
+            toolbarPosition="top"
+            className="mt-3 flex-1 text-[16px] leading-[1.65]"
+            toolbarExtra={
+              <button
+                type="button"
+                onClick={attach.openPicker}
+                aria-label={t("editor.addFile")}
+                className="grid size-7 place-items-center rounded-md opacity-60 transition-opacity hover:opacity-100"
+              >
+                <Paperclip size={14} strokeWidth={2} aria-hidden />
+              </button>
+            }
+          />
+        )}
 
         <input {...attach.inputProps} />
 
@@ -271,6 +363,22 @@ export function NoteEditor({
           </button>
         ))}
       </div>
+
+      {/* note → checklist flattens formatting, so it asks first — the other
+          direction is lossless and converts immediately (docs/10 §10.1). */}
+      {confirmConvert && (
+        <ConfirmDialog
+          title={t("note.convertWarnTitle")}
+          body={t("note.convertWarnBody")}
+          confirmLabel={t("note.convertWarnCta")}
+          cancelLabel={t("note.cancel")}
+          onCancel={() => setConfirmConvert(false)}
+          onConfirm={async () => {
+            setConfirmConvert(false);
+            await convert("checklist");
+          }}
+        />
+      )}
     </div>
   );
 }

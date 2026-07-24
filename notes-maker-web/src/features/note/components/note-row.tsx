@@ -4,6 +4,7 @@ import { Pin } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import type { LocalNote } from "@/features/storage";
+import { noteKind } from "../model/convert";
 
 /**
  * One row in any note list — active, archive, or trash.
@@ -27,8 +28,21 @@ export function NoteRow({
   highlight?: string;
 }) {
   const t = useTranslations("editor");
+  const tChecklist = useTranslations("checklist");
   const preview = note.body_text.trim();
   const interactive = Boolean(onOpen);
+
+  // Checklists render real checkbox glyphs instead of the plaintext preview,
+  // with checked items collapsed to a count — the card mirrors the editor's
+  // "Completed (n)" section (docs/10 §10.1).
+  const isChecklist = noteKind(note) === "checklist";
+  const items = isChecklist
+    ? (note.checklist ?? []).filter((i) => i.text.trim().length > 0)
+    : [];
+  const openItems = items
+    .filter((i) => !i.checked)
+    .sort((a, b) => a.order - b.order);
+  const doneCount = items.length - openItems.length;
 
   const content = (
     <div className="flex items-start gap-2">
@@ -38,13 +52,37 @@ export function NoteRow({
             <Marked text={note.title} term={highlight} />
           </h3>
         )}
-        {preview && (
-          // `whitespace-pre-line` keeps the line breaks that carry list
-          // structure; without it "1. play\n2. fun" renders as one run of
-          // words and the numbering reads as noise.
-          <p className="mt-0.5 line-clamp-3 whitespace-pre-line text-[12.5px] leading-relaxed opacity-75">
-            <Marked text={preview} term={highlight} />
-          </p>
+        {isChecklist ? (
+          items.length > 0 && (
+            <div className="mt-0.5 text-[12.5px] leading-relaxed opacity-75">
+              {openItems.slice(0, 4).map((item) => (
+                <p key={item.id} className="flex items-start gap-1.5">
+                  <span
+                    className="mt-[4.5px] size-[9px] shrink-0 rounded-[2.5px] border border-current opacity-60"
+                    aria-hidden
+                  />
+                  <span className="truncate">
+                    <Marked text={item.text} term={highlight} />
+                  </span>
+                </p>
+              ))}
+              {openItems.length > 4 && <p className="opacity-60">…</p>}
+              {doneCount > 0 && (
+                <p className="mt-0.5 opacity-60">
+                  {tChecklist("completedCount", { count: doneCount })}
+                </p>
+              )}
+            </div>
+          )
+        ) : (
+          preview && (
+            // `whitespace-pre-line` keeps the line breaks that carry list
+            // structure; without it "1. play\n2. fun" renders as one run of
+            // words and the numbering reads as noise.
+            <p className="mt-0.5 line-clamp-3 whitespace-pre-line text-[12.5px] leading-relaxed opacity-75">
+              <Marked text={preview} term={highlight} />
+            </p>
+          )
         )}
       </div>
       {note.pinned && (

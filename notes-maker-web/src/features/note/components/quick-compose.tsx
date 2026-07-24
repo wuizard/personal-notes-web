@@ -1,17 +1,24 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Paperclip } from "lucide-react";
+import { ListChecks, NotepadText, Paperclip } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
-import { NOTE_COLORS, type NoteColor, type NoteDoc } from "@/features/storage";
+import {
+  NOTE_COLORS,
+  type ChecklistItem,
+  type NoteColor,
+  type NoteDoc,
+} from "@/features/storage";
 import { usePersistencePrompt } from "@/features/storage/hooks/use-persistence-prompt";
 import { addFile } from "@/features/file/repo";
 import { useFileInput } from "@/features/file/use-file-input";
 import { PendingAttachmentStrip } from "@/features/file/components/attachment-strip";
 import { splitTitle } from "../model/body-text";
+import { checklistToDoc, docToChecklist, newChecklistItem } from "../model/convert";
 import { createNote } from "../repo/note-repo";
+import { ChecklistEditor } from "./checklist-editor";
 
 // Tiptap and ProseMirror are ~90KB gzipped. Loading them lazily keeps them off
 // the initial bundle, which is what the docs/06 §6.10 budget is protecting —
@@ -23,16 +30,23 @@ const RichTextEditor = dynamic(() => import("@/features/editor/rich-text-editor"
 
 const EMPTY_DOC: NoteDoc = { type: "doc", content: [{ type: "paragraph" }] };
 
+type Mode = "checklist" | "note";
+
 /**
  * Capture, at the top of the list pane — docs/06 §6.2.
  *
- * Collapsed to a single line until touched, then expands in place into a rich
- * editor with formatting and an image button. It never opens a modal.
+ * Creates a CHECKLIST by default (docs/10 §10.1) — Keep's model inverted,
+ * because quick to-dos are the dominant capture pattern. A note is one tap
+ * away, and switching modes mid-compose converts what was already typed
+ * rather than discarding it. It never opens a modal.
  */
 export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }) {
   const t = useTranslations();
   const params = useSearchParams();
   const [expanded, setExpanded] = useState(false);
+  const [mode, setMode] = useState<Mode>("checklist");
+  const [title, setTitle] = useState("");
+  const [items, setItems] = useState<ChecklistItem[]>([]);
   const [doc, setDoc] = useState<NoteDoc>(EMPTY_DOC);
   const [text, setText] = useState("");
   const [pending, setPending] = useState<File[]>([]);
@@ -54,9 +68,45 @@ export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }
     ? (requested as NoteColor)
     : "paper";
 
-  const hasContent = text.trim().length > 0 || pending.length > 0;
+  const itemsFilled = items.some((i) => i.text.trim().length > 0);
+  const hasContent =
+    mode === "checklist"
+      ? itemsFilled || title.trim().length > 0 || pending.length > 0
+      : text.trim().length > 0 || pending.length > 0;
+
+  function open(next: Mode) {
+    setMode(next);
+    if (next === "checklist" && items.length === 0) setItems([newChecklistItem(0)]);
+    setExpanded(true);
+  }
+
+  /** Converts what was typed so far instead of throwing it away. */
+  function switchMode() {
+    if (mode === "checklist") {
+      const kept = items.filter((i) => i.text.trim().length > 0);
+      const listDoc = checklistToDoc(kept);
+      const heading = title.trim();
+      const content = [
+        ...(heading ? [{ type: "paragraph", content: [{ type: "text", text: heading }] }] : []),
+        ...(listDoc.content ?? []),
+      ];
+      setDoc({ type: "doc", content: content.length ? content : [{ type: "paragraph" }] });
+      setText([heading, ...kept.map((i) => i.text)].filter(Boolean).join("\n"));
+      setTitle("");
+      setMode("note");
+    } else {
+      const { title: extracted, body } = splitTitle(doc);
+      const next = docToChecklist(body);
+      setTitle(extracted);
+      setItems(next.length ? next : [newChecklistItem(0)]);
+      setMode("checklist");
+    }
+  }
 
   function reset() {
+    setMode("checklist");
+    setTitle("");
+    setItems([]);
     setDoc(EMPTY_DOC);
     setText("");
     setPending([]);
@@ -64,15 +114,29 @@ export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }
   }
 
   async function submit() {
-    // An empty note is discarded silently — the user knows (docs/06 §6.2).
+    // An empty capture is discarded silently — the user knows (docs/06 §6.2).
     if (!hasContent || busy) return;
 
     setBusy(true);
     try {
-      // The first block becomes the title and is removed from the body.
-      // Keeping it in both is what made a new note show its title twice.
-      const { title, body } = splitTitle(doc);
-      const note = await createNote({ title, body, color: initialColor });
+      let note;
+      if (mode === "checklist") {
+        const cleaned = items
+          .filter((i) => i.text.trim().length > 0)
+          .map((i, order) => ({ ...i, order }));
+        note = await createNote({
+          kind: "checklist",
+          title: title.trim().slice(0, 200),
+          checklist: cleaned,
+          body: EMPTY_DOC,
+          color: initialColor,
+        });
+      } else {
+        // The first block becomes the title and is removed from the body.
+        // Keeping it in both is what made a new note show its title twice.
+        const { title: split, body } = splitTitle(doc);
+        note = await createNote({ title: split, body, color: initialColor });
+      }
 
       // Sequential rather than Promise.all: each image decodes a full-size
       // bitmap, and doing several at once is how a mid-range phone OOMs.
@@ -90,15 +154,26 @@ export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }
 
   if (!expanded) {
     return (
-      <button
-        type="button"
-        data-compose-trigger
-        onClick={() => setExpanded(true)}
-        className="flex w-full items-center gap-2 rounded-xl border border-[var(--card-border)] bg-surface px-3 py-2.5 text-left text-[14px] text-ink-subtle shadow-[var(--shadow-rest)] transition-shadow hover:shadow-[var(--shadow-hover)]"
-      >
-        <span className="flex-1">{t("note.composePlaceholder")}</span>
-        <Paperclip size={16} strokeWidth={1.75} aria-hidden />
-      </button>
+      <div className="flex w-full items-center rounded-xl border border-[var(--card-border)] bg-surface pr-1 shadow-[var(--shadow-rest)] transition-shadow hover:shadow-[var(--shadow-hover)]">
+        <button
+          type="button"
+          data-compose-trigger
+          onClick={() => open("checklist")}
+          className="flex min-w-0 flex-1 items-center gap-2 px-3 py-2.5 text-left text-[14px] text-ink-subtle"
+        >
+          <ListChecks size={16} strokeWidth={1.75} aria-hidden />
+          <span className="flex-1 truncate">{t("note.composeListPlaceholder")}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => open("note")}
+          aria-label={t("note.composeNote")}
+          title={t("note.composeNote")}
+          className="grid size-9 shrink-0 place-items-center rounded-lg text-ink-subtle transition-colors hover:bg-surface-secondary hover:text-foreground"
+        >
+          <NotepadText size={16} strokeWidth={1.75} aria-hidden />
+        </button>
+      </div>
     );
   }
 
@@ -109,28 +184,49 @@ export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }
       onDragOver={attach.onDragOver}
       className="rounded-xl border border-[var(--card-border)] bg-surface p-2.5 shadow-[var(--shadow-rest)] focus-within:border-accent focus-within:ring-1 focus-within:ring-accent"
     >
-      <RichTextEditor
-        initialDoc={EMPTY_DOC}
-        placeholder={t("note.composePlaceholder")}
-        autoFocus
-        onChange={(nextDoc, nextText) => {
-          setDoc(nextDoc);
-          setText(nextText);
-        }}
-        onSubmit={() => void submit()}
-        showToolbar
-        className="text-[14px] leading-6"
-        toolbarExtra={
-          <button
-            type="button"
-            onClick={attach.openPicker}
-            aria-label={t("editor.addFile")}
-            className="grid size-7 place-items-center rounded-md opacity-60 transition-opacity hover:opacity-100"
-          >
-            <Paperclip size={14} strokeWidth={2} aria-hidden />
-          </button>
-        }
-      />
+      {mode === "checklist" ? (
+        <>
+          <label className="sr-only" htmlFor="compose-title">
+            {t("note.titlePlaceholder")}
+          </label>
+          <input
+            id="compose-title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder={t("note.titlePlaceholder")}
+            className="w-full bg-transparent px-1 text-[14px] font-semibold outline-none placeholder:opacity-40"
+          />
+          <ChecklistEditor
+            items={items}
+            onChange={setItems}
+            autoFocus
+            className="mt-1 text-[14px] leading-6"
+          />
+        </>
+      ) : (
+        <RichTextEditor
+          initialDoc={doc}
+          placeholder={t("note.composePlaceholder")}
+          autoFocus
+          onChange={(nextDoc, nextText) => {
+            setDoc(nextDoc);
+            setText(nextText);
+          }}
+          onSubmit={() => void submit()}
+          showToolbar
+          className="text-[14px] leading-6"
+          toolbarExtra={
+            <button
+              type="button"
+              onClick={attach.openPicker}
+              aria-label={t("editor.addFile")}
+              className="grid size-7 place-items-center rounded-md opacity-60 transition-opacity hover:opacity-100"
+            >
+              <Paperclip size={14} strokeWidth={2} aria-hidden />
+            </button>
+          }
+        />
+      )}
 
       <input {...attach.inputProps} />
 
@@ -149,10 +245,33 @@ export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }
         </p>
       )}
 
-      <div className="mt-2 flex items-center justify-end gap-2 border-t border-[var(--card-border)] pt-2">
+      <div className="mt-2 flex items-center gap-2 border-t border-[var(--card-border)] pt-2">
+        <button
+          type="button"
+          onClick={switchMode}
+          aria-label={mode === "checklist" ? t("note.composeNote") : t("note.composeList")}
+          title={mode === "checklist" ? t("note.composeNote") : t("note.composeList")}
+          className="grid size-7 place-items-center rounded-md opacity-60 transition-opacity hover:opacity-100"
+        >
+          {mode === "checklist" ? (
+            <NotepadText size={15} strokeWidth={1.75} aria-hidden />
+          ) : (
+            <ListChecks size={15} strokeWidth={1.75} aria-hidden />
+          )}
+        </button>
+        {mode === "checklist" && (
+          <button
+            type="button"
+            onClick={attach.openPicker}
+            aria-label={t("editor.addFile")}
+            className="grid size-7 place-items-center rounded-md opacity-60 transition-opacity hover:opacity-100"
+          >
+            <Paperclip size={14} strokeWidth={2} aria-hidden />
+          </button>
+        )}
         {initialColor !== "paper" && (
           <span
-            className="mr-auto size-4 rounded-full border border-[var(--card-border)]"
+            className="size-4 rounded-full border border-[var(--card-border)]"
             style={{ background: `var(--note-${initialColor})` }}
             aria-hidden
           />
@@ -160,7 +279,7 @@ export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }
         <button
           type="button"
           onClick={reset}
-          className="rounded-lg px-2.5 py-1.5 text-[12.5px] text-muted transition-colors hover:bg-surface-secondary"
+          className="ml-auto rounded-lg px-2.5 py-1.5 text-[12.5px] text-muted transition-colors hover:bg-surface-secondary"
         >
           {t("note.cancel")}
         </button>

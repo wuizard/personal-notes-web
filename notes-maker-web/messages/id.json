@@ -15,6 +15,14 @@
   },
   "note": {
     "composePlaceholder": "Tulis catatan…",
+    "composeListPlaceholder": "Tambah tugas…",
+    "composeNote": "Tulis catatan biasa",
+    "composeList": "Jadikan daftar centang",
+    "convertToNote": "Ubah menjadi catatan",
+    "convertToChecklist": "Ubah menjadi daftar centang",
+    "convertWarnTitle": "Ubah menjadi daftar centang?",
+    "convertWarnBody": "Format seperti teks tebal dan judul akan diratakan menjadi butir daftar biasa.",
+    "convertWarnCta": "Ubah",
     "titlePlaceholder": "Judul",
     "save": "Simpan",
     "cancel": "Batal",
@@ -194,5 +202,14 @@
   },
   "search": {
     "noResults": "Tidak ada catatan yang cocok dengan “{query}”."
+  },
+  "checklist": {
+    "itemPlaceholder": "Butir daftar",
+    "addItem": "Tambah butir",
+    "removeItem": "Hapus butir",
+    "completed": "Selesai ({count})",
+    "completedCount": "{count, plural, other {# selesai}}",
+    "check": "Tandai selesai",
+    "uncheck": "Batalkan selesai"
   }
 }

@@ -40,6 +40,14 @@ export interface ChecklistItem {
   order: number;
 }
 
+/**
+ * Checklists are a first-class capture type (docs/10 §10.1), not a note
+ * decoration. `kind` is optional because rows written before it existed have
+ * no value — absent means "note", and normalising old rows in place would be
+ * a migration on the only copy of someone's data (docs/08 §8.1).
+ */
+export type NoteKind = "note" | "checklist";
+
 /** Tiptap / ProseMirror document. Kept loose until Stage C introduces Tiptap. */
 export interface NoteDoc {
   type: "doc";
@@ -50,6 +58,8 @@ export interface LocalNote {
   /** UUIDv7 — client-generated, sorts by creation time, and the Phase 2 idempotency key. */
   client_id: string;
 
+  /** Absent on rows created before checklists existed — read via noteKind(). */
+  kind?: NoteKind;
   title: string;
   body: NoteDoc;
   /** Flattened plaintext for local search. Derived; never authored directly. */
