@@ -104,19 +104,17 @@ export function NoteRow({
     // `group` drives the hover reveal of `.row-actions`; `relative` lets the
     // actions overlay the row rather than nest inside its button, which would
     // be invalid HTML.
-    <li className="group relative">
+    <li className="card-in group relative">
       {interactive ? (
         <button
           type="button"
           onClick={() => onOpen?.(note.client_id)}
           aria-current={selected ? "true" : undefined}
           aria-label={note.title || preview || t("openNote")}
-          className={`w-full rounded-xl border p-3 text-left transition-colors ${
+          className={`w-full rounded-2xl border p-3.5 text-left shadow-[var(--shadow-rest)] transition-shadow hover:shadow-[var(--shadow-hover)] ${
             actions ? "pb-9" : ""
           } ${
-            selected
-              ? "border-accent ring-1 ring-accent"
-              : "border-[var(--card-border)] hover:border-border"
+            selected ? "border-accent ring-1 ring-accent" : "border-[var(--card-border)]"
           }`}
           style={surface}
         >
@@ -124,7 +122,7 @@ export function NoteRow({
         </button>
       ) : (
         <div
-          className={`w-full rounded-xl border border-[var(--card-border)] p-3 ${
+          className={`w-full rounded-2xl border border-[var(--card-border)] p-3.5 shadow-[var(--shadow-rest)] ${
             actions ? "pb-9" : ""
           }`}
           style={surface}

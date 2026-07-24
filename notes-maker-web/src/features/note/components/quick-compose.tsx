@@ -154,7 +154,7 @@ export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }
 
   if (!expanded) {
     return (
-      <div className="flex w-full items-center rounded-xl border border-[var(--card-border)] bg-surface pr-1 shadow-[var(--shadow-rest)] transition-shadow hover:shadow-[var(--shadow-hover)]">
+      <div className="flex w-full items-center rounded-2xl border border-[var(--card-border)] bg-surface pr-1 shadow-[var(--shadow-rest)] transition-shadow hover:shadow-[var(--shadow-hover)]">
         <button
           type="button"
           data-compose-trigger
@@ -182,7 +182,7 @@ export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }
       onPaste={attach.onPaste}
       onDrop={attach.onDrop}
       onDragOver={attach.onDragOver}
-      className="rounded-xl border border-[var(--card-border)] bg-surface p-2.5 shadow-[var(--shadow-rest)] focus-within:border-accent focus-within:ring-1 focus-within:ring-accent"
+      className="rounded-2xl border border-[var(--card-border)] bg-surface p-3 shadow-[var(--shadow-rest)] focus-within:border-accent focus-within:ring-1 focus-within:ring-accent"
     >
       {mode === "checklist" ? (
         <>

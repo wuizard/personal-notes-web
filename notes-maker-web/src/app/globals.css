@@ -66,8 +66,10 @@
   --ink-subtle: #948ca0; /* 3.2:1 — decorative / 14px+ only, never essential */
   --card-border: rgb(46 42 51 / 0.08);
 
-  --shadow-rest: 0 1px 2px rgb(46 42 51 / 0.06);
-  --shadow-hover: 0 4px 12px rgb(46 42 51 / 0.1);
+  /* Diffuse, two-layer shadows — docs/10 §10.3: separation comes from soft
+     elevation, not hard borders. */
+  --shadow-rest: 0 1px 2px rgb(46 42 51 / 0.04), 0 4px 14px rgb(46 42 51 / 0.05);
+  --shadow-hover: 0 2px 4px rgb(46 42 51 / 0.05), 0 8px 24px rgb(46 42 51 / 0.09);
   --shadow-modal: 0 16px 48px rgb(46 42 51 / 0.18);
 
   /* ── the ten note colours ── */
@@ -134,8 +136,8 @@
   --card-border: rgb(255 255 255 / 0.06);
 
   /* shadows are near-invisible on dark; separation comes from surface lightness */
-  --shadow-rest: 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-hover: 0 4px 14px rgb(0 0 0 / 0.5);
+  --shadow-rest: 0 1px 2px rgb(0 0 0 / 0.35), 0 4px 14px rgb(0 0 0 / 0.3);
+  --shadow-hover: 0 2px 4px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.45);
   --shadow-modal: 0 16px 48px rgb(0 0 0 / 0.6);
 
   /* hue-preserving desaturated darks, picked by hand — see docs/05 §5.2.
@@ -227,6 +229,26 @@ body {
     .group:focus-within .row-actions {
       opacity: 1;
     }
+  }
+}
+
+/* Gentle scale/fade as a card enters the list — docs/10 §10.3. Runs once on
+   mount (rows are keyed by client_id, so reorders don't replay it) and
+   collapses to nothing under prefers-reduced-motion via the rule below. */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@layer components {
+  .card-in {
+    animation: card-in 220ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
   }
 }
 

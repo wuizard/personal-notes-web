@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { CloudOff, ListChecks, ShieldCheck } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { NOTE_COLORS } from "@/features/storage/types";
 import { BrandMark } from "@/shared/ui/brand-mark";
@@ -33,7 +34,7 @@ export default async function LandingPage({
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center gap-6 px-6 py-16">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center gap-6 px-6 py-16">
         <h1 className="text-balance text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
           {t("landing.heroTitle")}
         </h1>
@@ -47,6 +48,32 @@ export default async function LandingPage({
           </Link>
           <span className="text-sm text-muted">{t("landing.noAccount")}</span>
         </div>
+
+        {/* The wedge, spelled out — docs/00 §0.9 via docs/10 §10.9: local-first
+            privacy is the differentiator, so the marketing page says exactly
+            where notes live instead of gesturing at "privacy". */}
+        <ul className="mt-12 grid gap-3 sm:grid-cols-3" role="list">
+          {(
+            [
+              { key: "privacy", icon: ShieldCheck },
+              { key: "checklist", icon: ListChecks },
+              { key: "offline", icon: CloudOff },
+            ] as const
+          ).map(({ key, icon: Icon }) => (
+            <li
+              key={key}
+              className="rounded-2xl border border-[var(--card-border)] bg-surface p-4 shadow-[var(--shadow-rest)]"
+            >
+              <Icon size={18} strokeWidth={1.75} className="text-accent" aria-hidden />
+              <h2 className="mt-2.5 text-[14px] font-semibold">
+                {t(`landing.features.${key}Title`)}
+              </h2>
+              <p className="mt-1 text-[13px] leading-relaxed text-muted">
+                {t(`landing.features.${key}Body`)}
+              </p>
+            </li>
+          ))}
+        </ul>
 
         {/* The palette, shown rather than described — and each swatch starts a
             note in that colour. Anything that looks this much like a button

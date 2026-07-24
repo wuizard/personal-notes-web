@@ -111,7 +111,15 @@
     "cta": "Start writing",
     "noAccount": "No sign-up required.",
     "startInColor": "Start a note in {color}",
-    "pickColorLabel": "Or start in a colour"
+    "pickColorLabel": "Or start in a colour",
+    "features": {
+      "privacyTitle": "Private by default",
+      "privacyBody": "Your notes live in your own browser's storage. They never touch a server unless you one day pay us to sync them.",
+      "checklistTitle": "To-dos in one tap",
+      "checklistBody": "Capture starts as a checklist, and checklists are unlimited — on every plan.",
+      "offlineTitle": "Works offline",
+      "offlineBody": "Install it like an app and write anywhere. No connection needed, ever."
+    }
   },
   "settings": {
     "title": "Settings",
