@@ -184,6 +184,48 @@ export async function searchNotes(query: string): Promise<LocalNote[]> {
   );
 }
 
+/** Trash retention — docs/10 §10.8. After this, purge is automatic. */
+export const TRASH_RETENTION_DAYS = 30;
+const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+
+/** Whole days before a trashed note is purged. Never negative. */
+export function trashDaysLeft(deletedAt: number, at = Date.now()): number {
+  return Math.max(0, Math.ceil((deletedAt + TRASH_RETENTION_MS - at) / (24 * 60 * 60 * 1000)));
+}
+
+/**
+ * Deletes trashed notes past retention, with their attachments. Runs
+ * opportunistically on app open (docs/10 §10.8) — with no server, opening the
+ * app is the only moment local code is guaranteed to execute.
+ */
+export async function purgeExpiredTrash(): Promise<number> {
+  const db = getDb();
+  const cutoff = now() - TRASH_RETENTION_MS;
+  return db.transaction("rw", db.notes, db.files, async () => {
+    const expired = await db.notes
+      .filter((n) => n.deleted_at !== null && n.deleted_at < cutoff)
+      .toArray();
+    if (!expired.length) return 0;
+    const ids = expired.map((n) => n.client_id);
+    await db.files.where("note_id").anyOf(ids).delete();
+    await db.notes.bulkDelete(ids);
+    return ids.length;
+  });
+}
+
+/**
+ * Permanently deletes ONE trashed note, now. Irreversible — the UI must
+ * confirm first (docs/10 §10.8: a snackbar-undo is wrong for an action that
+ * cannot be undone).
+ */
+export async function deleteForever(clientId: string): Promise<void> {
+  const db = getDb();
+  await db.transaction("rw", db.notes, db.files, async () => {
+    await db.files.where("note_id").equals(clientId).delete();
+    await db.notes.delete(clientId);
+  });
+}
+
 /** Permanently deletes trashed notes and their attachments. Irreversible. */
 export async function emptyTrash(): Promise<number> {
   const db = getDb();

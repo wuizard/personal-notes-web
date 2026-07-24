@@ -1,11 +1,12 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useToast } from "@/shared/ui/toast";
+import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { useNotes } from "../hooks/use-notes";
-import { emptyTrash, restoreNote } from "../repo/note-repo";
+import { deleteForever, emptyTrash, restoreNote, trashDaysLeft } from "../repo/note-repo";
 import { NoteRow, rowActionClass } from "./note-row";
 import { EmptyState } from "./archive-view";
 
@@ -13,7 +14,9 @@ export function TrashView() {
   const t = useTranslations();
   const notes = useNotes("trash");
   const toast = useToast();
-  const [confirming, setConfirming] = useState(false);
+  const [confirmingAll, setConfirmingAll] = useState(false);
+  // Note id awaiting "delete forever" confirmation, or null.
+  const [confirmingOne, setConfirmingOne] = useState<string | null>(null);
 
   return (
     <div className="mx-auto w-full max-w-2xl overflow-y-auto p-4 md:p-6">
@@ -22,7 +25,7 @@ export function TrashView() {
         {notes && notes.length > 0 && (
           <button
             type="button"
-            onClick={() => setConfirming(true)}
+            onClick={() => setConfirmingAll(true)}
             className="ml-auto rounded-xl border border-border px-3 py-1.5 text-[13px] font-medium text-danger transition-colors hover:bg-danger-soft"
           >
             {t("trash.emptyAction")}
@@ -49,18 +52,30 @@ export function TrashView() {
             <NoteRow
               key={note.client_id}
               note={note}
+              // deleted_at is always set for a row the trash filter returned.
+              meta={t("trash.daysLeft", { count: trashDaysLeft(note.deleted_at ?? 0) })}
               actions={
-                <button
-                  type="button"
-                  aria-label={t("trash.restore")}
-                  className={rowActionClass}
-                  onClick={async () => {
-                    await restoreNote(note.client_id);
-                    toast.show({ message: t("note.restored") });
-                  }}
-                >
-                  <RotateCcw size={14} strokeWidth={1.75} aria-hidden />
-                </button>
+                <>
+                  <button
+                    type="button"
+                    aria-label={t("trash.restore")}
+                    className={rowActionClass}
+                    onClick={async () => {
+                      await restoreNote(note.client_id);
+                      toast.show({ message: t("note.restored") });
+                    }}
+                  >
+                    <RotateCcw size={14} strokeWidth={1.75} aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={t("trash.deleteForever")}
+                    className={rowActionClass}
+                    onClick={() => setConfirmingOne(note.client_id)}
+                  >
+                    <X size={14} strokeWidth={1.75} aria-hidden />
+                  </button>
+                </>
               }
             />
           ))}
@@ -68,70 +83,42 @@ export function TrashView() {
       )}
 
       {/*
-        The ONE action in the app that confirms — docs/06 §6.5. Everything else
-        is optimistic with undo, precisely so that this dialog still carries
-        weight when it appears.
+        The only actions in the app that confirm — docs/06 §6.5, docs/10 §10.8.
+        Everything reversible is optimistic with undo, precisely so these
+        dialogs still carry weight when they appear. A snackbar-undo would be
+        wrong here: undo must only be offered for actions that CAN be undone.
       */}
-      {confirming && notes && (
-        <ConfirmEmptyTrash
-          count={notes.length}
-          onCancel={() => setConfirming(false)}
+      {confirmingAll && notes && (
+        <ConfirmDialog
+          title={t("trash.confirmTitle")}
+          body={t("trash.confirmBody", { count: notes.length })}
+          confirmLabel={t("trash.confirmCta")}
+          cancelLabel={t("trash.cancel")}
+          danger
+          onCancel={() => setConfirmingAll(false)}
           onConfirm={async () => {
-            const removed = await emptyTrash();
-            setConfirming(false);
-            toast.show({ message: t("trash.emptied", { count: removed }) });
+            await emptyTrash();
+            setConfirmingAll(false);
+            toast.show({ message: t("trash.emptied") });
           }}
         />
       )}
-    </div>
-  );
-}
 
-function ConfirmEmptyTrash({
-  count,
-  onCancel,
-  onConfirm,
-}: {
-  count: number;
-  onCancel: () => void;
-  onConfirm: () => void | Promise<void>;
-}) {
-  const t = useTranslations("trash");
-
-  return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="empty-trash-title"
-      onKeyDown={(e) => {
-        if (e.key === "Escape") onCancel();
-      }}
-    >
-      <div className="w-full max-w-sm rounded-2xl bg-surface p-5 shadow-[var(--shadow-modal)]">
-        <h2 id="empty-trash-title" className="text-[16px] font-semibold">
-          {t("confirmTitle")}
-        </h2>
-        <p className="mt-2 text-[13.5px] text-muted">{t("confirmBody", { count })}</p>
-
-        <div className="mt-5 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-xl px-3.5 py-2 text-[13px] font-medium text-muted transition-colors hover:bg-surface-secondary"
-          >
-            {t("cancel")}
-          </button>
-          <button
-            type="button"
-            autoFocus
-            onClick={() => void onConfirm()}
-            className="rounded-xl bg-danger px-3.5 py-2 text-[13px] font-semibold text-danger-foreground transition-colors hover:opacity-90"
-          >
-            {t("confirmCta")}
-          </button>
-        </div>
-      </div>
+      {confirmingOne && (
+        <ConfirmDialog
+          title={t("trash.deleteForeverTitle")}
+          body={t("trash.deleteForeverBody")}
+          confirmLabel={t("trash.confirmCta")}
+          cancelLabel={t("trash.cancel")}
+          danger
+          onCancel={() => setConfirmingOne(null)}
+          onConfirm={async () => {
+            await deleteForever(confirmingOne);
+            setConfirmingOne(null);
+            toast.show({ message: t("trash.deletedForever") });
+          }}
+        />
+      )}
     </div>
   );
 }

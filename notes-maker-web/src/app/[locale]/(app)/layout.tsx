@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { AppShell } from "@/shared/ui/app-shell";
+import { TrashAutoPurge } from "@/features/note/components/trash-auto-purge";
 
 /**
  * The app shell.
@@ -18,5 +19,10 @@ export default async function AppLayout({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  return <AppShell>{children}</AppShell>;
+  return (
+    <AppShell>
+      <TrashAutoPurge />
+      {children}
+    </AppShell>
+  );
 }

@@ -19,6 +19,7 @@ export function NoteRow({
   onOpen,
   actions,
   highlight,
+  meta,
 }: {
   note: LocalNote;
   selected?: boolean;
@@ -26,6 +27,8 @@ export function NoteRow({
   actions?: ReactNode;
   /** Search term to mark within the title and preview. */
   highlight?: string;
+  /** Small line under the preview — e.g. the trash view's days-left counter. */
+  meta?: ReactNode;
 }) {
   const t = useTranslations("editor");
   const tChecklist = useTranslations("checklist");
@@ -84,6 +87,7 @@ export function NoteRow({
             </p>
           )
         )}
+        {meta && <p className="mt-1 text-[11.5px] opacity-55">{meta}</p>}
       </div>
       {note.pinned && (
         <Pin size={13} strokeWidth={2} className="mt-0.5 shrink-0 opacity-50" aria-hidden />
