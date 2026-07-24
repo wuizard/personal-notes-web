@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import {
   Archive,
   ArrowLeft,
+  Bell,
+  BellRing,
   Check,
   ListChecks,
   NotepadText,
@@ -28,14 +30,17 @@ import { AttachmentStrip } from "@/features/file/components/attachment-strip";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { noteKind } from "../model/convert";
 import {
+  clearReminder,
   convertNoteKind,
   getNote,
   setArchived,
   setPinned,
+  setReminder,
   trashNote,
   updateNote,
 } from "../repo/note-repo";
 import { ChecklistEditor } from "./checklist-editor";
+import { ReminderDialog } from "./reminder-dialog";
 
 const RichTextEditor = dynamic(() => import("@/features/editor/rich-text-editor"), {
   ssr: false,
@@ -78,6 +83,7 @@ export function NoteEditor({
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saved, setSaved] = useState(true);
   const [confirmConvert, setConfirmConvert] = useState(false);
+  const [editingReminder, setEditingReminder] = useState(false);
 
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pending = useRef<(() => void) | null>(null);
@@ -205,6 +211,20 @@ export function NoteEditor({
         </span>
 
         <div className="ml-auto flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => setEditingReminder(true)}
+            aria-label={t("reminders.set")}
+            title={t("reminders.set")}
+            aria-pressed={note.reminder !== null}
+            className="grid size-9 place-items-center rounded-xl opacity-70 hover:opacity-100"
+          >
+            {note.reminder ? (
+              <BellRing size={17} strokeWidth={1.75} className="text-accent" aria-hidden />
+            ) : (
+              <Bell size={17} strokeWidth={1.75} aria-hidden />
+            )}
+          </button>
           {kind === "checklist" ? (
             <>
               {/* Notes get this button in the editor toolbar; a checklist has
@@ -363,6 +383,15 @@ export function NoteEditor({
           </button>
         ))}
       </div>
+
+      {editingReminder && (
+        <ReminderDialog
+          reminder={note.reminder}
+          onSave={(spec) => setReminder(noteId, spec)}
+          onClear={() => clearReminder(noteId)}
+          onClose={() => setEditingReminder(false)}
+        />
+      )}
 
       {/* note → checklist flattens formatting, so it asks first — the other
           direction is lossless and converts immediately (docs/10 §10.1). */}

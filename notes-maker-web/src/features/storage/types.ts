@@ -26,11 +26,27 @@ export type NoteColor = (typeof NOTE_COLORS)[number];
 export type RepeatRule = "none" | "daily" | "weekly" | "monthly";
 export type ReminderState = "scheduled" | "fired" | "dismissed";
 
+/**
+ * A recurring reminder — docs/10 §10.4.
+ *
+ * The source of truth is WALL-CLOCK time plus an IANA timezone (`time`,
+ * `weekday`, `tz`), never a UTC instant: "start of my day" must survive DST
+ * and travel. `remind_at` is a derived cache of the next occurrence as an
+ * epoch instant, recomputed locally, kept so the overdue list can compare
+ * against Date.now() without timezone math. The wall-clock fields are optional
+ * because rows written before docs/10 carried only `remind_at`.
+ */
 export interface LocalReminder {
-  remind_at: number; // epoch ms, absolute
+  remind_at: number; // epoch ms — derived next occurrence, see above
   repeat: RepeatRule;
   state: ReminderState;
   fired_at: number | null;
+  /** "HH:mm", user's local wall clock. */
+  time?: string;
+  /** 0 (Sunday) – 6 (Saturday). Weekly only. */
+  weekday?: number;
+  /** IANA zone captured when the reminder was set, for Phase 2 server-side computation. */
+  tz?: string;
 }
 
 export interface ChecklistItem {
@@ -135,6 +151,20 @@ export interface LocalFile {
  */
 export const MAX_FILE_BYTES = 25 * 1024 * 1024;
 
+/**
+ * One row per distinct capture phrase — docs/10 §10.2. Entirely local: this
+ * table is the entire "smart suggestions" feature, and nothing in it ever
+ * leaves the device.
+ */
+export interface CapturePhrase {
+  /** Normalized (trimmed, single-spaced, lowercased) — the primary key. */
+  text: string;
+  /** As the user last typed it — what a suggestion chip displays. */
+  display: string;
+  count: number;
+  last_used_at: number;
+}
+
 export interface MetaRow {
   key: string;
   value: unknown;
@@ -148,6 +178,8 @@ export const META = {
   lastExportAt: "lastExportAt",
   persistencePrompted: "persistencePrompted",
   backupNudgedAt: "backupNudgedAt",
+  /** `true` disables capture suggestions (docs/10 §10.2). Absent means enabled. */
+  suggestionsDisabled: "suggestionsDisabled",
 } as const;
 
 export interface InstallMeta {

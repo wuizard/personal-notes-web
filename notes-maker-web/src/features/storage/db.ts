@@ -1,5 +1,12 @@
 import Dexie, { type Table } from "dexie";
-import type { FileKind, LocalFile, LocalImage, LocalNote, MetaRow } from "./types";
+import type {
+  CapturePhrase,
+  FileKind,
+  LocalFile,
+  LocalImage,
+  LocalNote,
+  MetaRow,
+} from "./types";
 
 /**
  * The local database — docs/08 §8.2.
@@ -18,6 +25,7 @@ export class NotesDB extends Dexie {
   /** Superseded by `files` in v2. Declared so the store is never dropped. */
   images!: Table<LocalImage, string>;
   files!: Table<LocalFile, string>;
+  capture_phrases!: Table<CapturePhrase, string>;
   meta!: Table<MetaRow, string>;
 
   constructor() {
@@ -73,6 +81,19 @@ export class NotesDB extends Dexie {
         await tx.table<LocalFile, string>("files").bulkAdd(migrated);
         await tx.table("images").clear();
       });
+
+    /**
+     * v3 — capture-phrase history for quick-capture suggestions (docs/10
+     * §10.2). Purely additive: a brand-new store, no upgrade callback, no
+     * existing row touched.
+     */
+    this.version(3).stores({
+      notes: "client_id, updated_at, [archived+pinned], deleted_at, _dirty",
+      images: "id, note_id",
+      files: "id, note_id, kind",
+      capture_phrases: "text, last_used_at",
+      meta: "key",
+    });
   }
 }
 

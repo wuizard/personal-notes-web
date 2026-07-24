@@ -4,6 +4,7 @@ import { markHadNotes } from "@/features/storage/persistence";
 import type { ChecklistItem, LocalNote, NoteColor, NoteDoc, NoteKind } from "@/features/storage/types";
 import { buildBodyText } from "../model/body-text";
 import { checklistToDoc, docToChecklist, noteKind } from "../model/convert";
+import { currentTimezone, nextOccurrence, type ReminderSpec } from "../model/reminder";
 
 /**
  * The only module that reads or writes notes.
@@ -182,6 +183,70 @@ export async function searchNotes(query: string): Promise<LocalNote[]> {
   return all.filter(
     (n) => n.title.toLowerCase().includes(q) || n.body_text.toLowerCase().includes(q),
   );
+}
+
+/** Sets (or replaces) a note's recurring reminder — docs/10 §10.4. */
+export async function setReminder(clientId: string, spec: ReminderSpec): Promise<void> {
+  return updateNote(clientId, {
+    reminder: {
+      remind_at: nextOccurrence(spec),
+      repeat: spec.repeat,
+      state: "scheduled",
+      fired_at: null,
+      time: spec.time,
+      weekday: spec.repeat === "weekly" ? spec.weekday ?? new Date().getDay() : undefined,
+      tz: currentTimezone(),
+    },
+  });
+}
+
+export async function clearReminder(clientId: string): Promise<void> {
+  return updateNote(clientId, { reminder: null });
+}
+
+/**
+ * "Done for today" on a due reminder: rolls remind_at to the next occurrence.
+ * Legacy one-shot reminders (repeat "none"/"monthly", pre-docs/10) are
+ * dismissed outright since there is no wall-clock spec to roll forward.
+ */
+export async function dismissReminderOccurrence(clientId: string): Promise<void> {
+  const db = getDb();
+  await db.transaction("rw", db.notes, async () => {
+    const note = await db.notes.get(clientId);
+    const r = note?.reminder;
+    if (!note || !r) return;
+
+    const reminder =
+      r.repeat === "daily" || r.repeat === "weekly"
+        ? {
+            ...r,
+            remind_at: nextOccurrence({ repeat: r.repeat, time: r.time, weekday: r.weekday }),
+            state: "scheduled" as const,
+            fired_at: now(),
+          }
+        : { ...r, state: "dismissed" as const, fired_at: now() };
+
+    await db.notes.put({ ...note, reminder, updated_at: now(), _dirty: 1 });
+  });
+}
+
+/** Marks the current occurrence as notified WITHOUT rolling it forward. */
+export async function markReminderNotified(clientId: string): Promise<void> {
+  const db = getDb();
+  await db.transaction("rw", db.notes, async () => {
+    const note = await db.notes.get(clientId);
+    if (!note?.reminder) return;
+    await db.notes.put({ ...note, reminder: { ...note.reminder, fired_at: now() } });
+  });
+}
+
+/** Live notes (not trashed) that carry a reminder, soonest occurrence first. */
+export async function listReminderNotes(): Promise<LocalNote[]> {
+  const db = getDb();
+  const all = await db.notes.toArray();
+  return all
+    .filter((n) => n.deleted_at === null && n.reminder !== null)
+    .sort((a, b) => (a.reminder?.remind_at ?? 0) - (b.reminder?.remind_at ?? 0));
 }
 
 /** Trash retention — docs/10 §10.8. After this, purge is automatic. */

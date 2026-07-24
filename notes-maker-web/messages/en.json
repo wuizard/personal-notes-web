@@ -209,8 +209,29 @@
   },
   "reminders": {
     "title": "Reminders",
-    "soonTitle": "Reminders are coming soon.",
-    "soonBody": "You will be able to set a time on any note and be reminded when you open the app."
+    "set": "Set reminder",
+    "dialogTitle": "Remind me",
+    "repeatLabel": "Repeat",
+    "repeatDaily": "Daily",
+    "repeatWeekly": "Weekly",
+    "weekdayLabel": "Day of the week",
+    "timeLabel": "Time",
+    "bestEffortNote": "Without an account, reminders fire only while the app is open. Reliable notifications on every device arrive with sync.",
+    "remove": "Remove reminder",
+    "cancel": "Cancel",
+    "save": "Save",
+    "dueSection": "Due",
+    "upcomingSection": "Upcoming",
+    "done": "Done for today",
+    "emptyTitle": "No reminders yet.",
+    "emptyBody": "Open any note and tap the bell to get a daily or weekly nudge."
+  },
+  "suggestions": {
+    "title": "Capture suggestions",
+    "explain": "Quick suggestions come from what you capture often. Everything is computed and stored on this device only.",
+    "enable": "Show suggestions",
+    "clear": "Clear suggestion history",
+    "cleared": "Suggestion history cleared"
   },
   "search": {
     "noResults": "No notes match “{query}”."

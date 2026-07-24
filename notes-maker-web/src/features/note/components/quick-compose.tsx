@@ -15,9 +15,11 @@ import { usePersistencePrompt } from "@/features/storage/hooks/use-persistence-p
 import { addFile } from "@/features/file/repo";
 import { useFileInput } from "@/features/file/use-file-input";
 import { PendingAttachmentStrip } from "@/features/file/components/attachment-strip";
+import { useLiveQuery } from "dexie-react-hooks";
 import { splitTitle } from "../model/body-text";
 import { checklistToDoc, docToChecklist, newChecklistItem } from "../model/convert";
 import { createNote } from "../repo/note-repo";
+import { recordCapturePhrases, topSuggestions } from "../repo/suggestions";
 import { ChecklistEditor } from "./checklist-editor";
 
 // Tiptap and ProseMirror are ~90KB gzipped. Loading them lazily keeps them off
@@ -73,6 +75,25 @@ export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }
     mode === "checklist"
       ? itemsFilled || title.trim().length > 0 || pending.length > 0
       : text.trim().length > 0 || pending.length > 0;
+
+  // One-tap suggestions from the user's own history — docs/10 §10.2. Shown
+  // only while the capture surface is still empty; a chip pre-fills, never
+  // auto-saves. useLiveQuery re-runs when the phrase table or setting change.
+  const showSuggestions = expanded && mode === "checklist" && !hasContent;
+  const suggestions = useLiveQuery(
+    () => (showSuggestions ? topSuggestions() : Promise.resolve([] as string[])),
+    [showSuggestions],
+  );
+
+  function applySuggestion(phrase: string) {
+    setItems((current) => {
+      const list = current.length ? current.slice() : [newChecklistItem(0)];
+      const at = list.findIndex((i) => !i.text.trim());
+      if (at === -1) list.push(newChecklistItem(list.length, phrase));
+      else list[at] = { ...list[at], text: phrase };
+      return list.map((item, order) => ({ ...item, order }));
+    });
+  }
 
   function open(next: Mode) {
     setMode(next);
@@ -131,6 +152,9 @@ export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }
           body: EMPTY_DOC,
           color: initialColor,
         });
+        // Feeds the suggestion history (docs/10 §10.2). Fire-and-forget: a
+        // failure here must never make a successful save look failed.
+        void recordCapturePhrases(cleaned.map((i) => i.text)).catch(() => {});
       } else {
         // The first block becomes the title and is removed from the body.
         // Keeping it in both is what made a new note show its title twice.
@@ -202,6 +226,20 @@ export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }
             autoFocus
             className="mt-1 text-[14px] leading-6"
           />
+          {showSuggestions && (suggestions?.length ?? 0) > 0 && (
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {suggestions?.map((phrase) => (
+                <button
+                  key={phrase}
+                  type="button"
+                  onClick={() => applySuggestion(phrase)}
+                  className="max-w-full truncate rounded-full bg-surface-secondary px-3 py-1 text-[12.5px] text-muted transition-colors hover:bg-accent-soft hover:text-accent-soft-foreground"
+                >
+                  {phrase}
+                </button>
+              ))}
+            </div>
+          )}
         </>
       ) : (
         <RichTextEditor

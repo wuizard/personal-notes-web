@@ -209,8 +209,29 @@
   },
   "reminders": {
     "title": "Pengingat",
-    "soonTitle": "Pengingat segera hadir.",
-    "soonBody": "Anda akan bisa menyetel waktu pada catatan mana pun dan diingatkan saat membuka aplikasi."
+    "set": "Setel pengingat",
+    "dialogTitle": "Ingatkan saya",
+    "repeatLabel": "Ulangi",
+    "repeatDaily": "Harian",
+    "repeatWeekly": "Mingguan",
+    "weekdayLabel": "Hari dalam minggu",
+    "timeLabel": "Waktu",
+    "bestEffortNote": "Tanpa akun, pengingat hanya berbunyi saat aplikasi terbuka. Notifikasi yang andal di setiap perangkat hadir bersama sinkronisasi.",
+    "remove": "Hapus pengingat",
+    "cancel": "Batal",
+    "save": "Simpan",
+    "dueSection": "Jatuh tempo",
+    "upcomingSection": "Akan datang",
+    "done": "Selesai untuk hari ini",
+    "emptyTitle": "Belum ada pengingat.",
+    "emptyBody": "Buka catatan mana pun dan ketuk ikon lonceng untuk pengingat harian atau mingguan."
+  },
+  "suggestions": {
+    "title": "Saran pencatatan",
+    "explain": "Saran cepat berasal dari apa yang sering Anda catat. Semuanya dihitung dan disimpan hanya di perangkat ini.",
+    "enable": "Tampilkan saran",
+    "clear": "Hapus riwayat saran",
+    "cleared": "Riwayat saran dihapus"
   },
   "search": {
     "noResults": "Tidak ada catatan yang cocok dengan “{query}”."
