@@ -16,6 +16,13 @@ next-env.d.ts
 build/
 dist/
 
+# secrets — the Firebase admin SDK key lives at the repo root, untracked by
+# design (docs/10 §10.12); never commit any service-account key
+*firebase-adminsdk*.json
+*.serviceaccount.json
+.env
+.env*.local
+
 # misc
 .DS_Store
 *.pem

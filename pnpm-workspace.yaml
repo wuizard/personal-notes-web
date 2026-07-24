@@ -11,9 +11,11 @@ packages:
 #   esbuild          — bundler used by wrangler (native binary)
 #   workerd          — the Cloudflare Workers runtime, for local dev + deploy
 allowBuilds:
+  '@firebase/util': false
   "@parcel/watcher": true
   "@swc/core": true
   esbuild: true
+  protobufjs: false
   sharp: true
   unrs-resolver: true
   workerd: true

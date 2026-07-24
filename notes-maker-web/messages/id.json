@@ -236,6 +236,33 @@
   "search": {
     "noResults": "Tidak ada catatan yang cocok dengan “{query}”."
   },
+  "auth": {
+    "signIn": "Masuk",
+    "profile": "Profil",
+    "signOut": "Keluar",
+    "signedInAs": "Masuk sebagai",
+    "dialogTitle": "Masuk",
+    "google": "Lanjutkan dengan Google",
+    "or": "atau",
+    "email": "Email",
+    "password": "Kata sandi",
+    "submitSignIn": "Masuk",
+    "submitCreate": "Buat akun",
+    "toggleToCreate": "Baru di sini? Buat akun",
+    "toggleToSignIn": "Sudah punya akun? Masuk",
+    "localFirstNote": "Masuk tidak pernah mengunggah catatan Anda. Catatan tetap di perangkat ini kecuali Anda mengaktifkan sinkronisasi.",
+    "close": "Tutup",
+    "error": {
+      "invalid_credential": "Email atau kata sandi salah.",
+      "invalid_email": "Alamat email itu tampak tidak valid.",
+      "email_in_use": "Akun dengan email itu sudah ada.",
+      "weak_password": "Gunakan minimal 6 karakter untuk kata sandi.",
+      "popup_blocked": "Peramban Anda memblokir jendela masuk. Izinkan pop-up lalu coba lagi.",
+      "network": "Tidak dapat menghubungi layanan masuk. Periksa koneksi Anda.",
+      "too_many": "Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.",
+      "unknown": "Gagal masuk. Silakan coba lagi."
+    }
+  },
   "checklist": {
     "itemPlaceholder": "Butir daftar",
     "addItem": "Tambah butir",

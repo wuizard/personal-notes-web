@@ -4,6 +4,7 @@ import { Archive, Bell, NotebookText, Settings, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
+import { AuthMenu } from "@/features/auth/auth-menu";
 import { ThemeToggle } from "./theme-toggle";
 import { LocaleSwitcher } from "./locale-switcher";
 import { BrandMark } from "./brand-mark";
@@ -87,6 +88,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-1 px-1 pb-1">
             <LocaleSwitcher />
             <ThemeToggle />
+            <AuthMenu direction="up" />
           </div>
         </div>
       </aside>
@@ -100,6 +102,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="ml-auto flex items-center gap-1">
             <LocaleSwitcher />
             <ThemeToggle />
+            <AuthMenu />
           </div>
         </header>
 

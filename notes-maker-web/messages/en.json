@@ -236,6 +236,33 @@
   "search": {
     "noResults": "No notes match “{query}”."
   },
+  "auth": {
+    "signIn": "Sign in",
+    "profile": "Profile",
+    "signOut": "Sign out",
+    "signedInAs": "Signed in as",
+    "dialogTitle": "Sign in",
+    "google": "Continue with Google",
+    "or": "or",
+    "email": "Email",
+    "password": "Password",
+    "submitSignIn": "Sign in",
+    "submitCreate": "Create account",
+    "toggleToCreate": "New here? Create an account",
+    "toggleToSignIn": "Already have an account? Sign in",
+    "localFirstNote": "Signing in never uploads your notes. They stay on this device unless you turn on sync.",
+    "close": "Close",
+    "error": {
+      "invalid_credential": "Wrong email or password.",
+      "invalid_email": "That email address doesn't look right.",
+      "email_in_use": "An account with that email already exists.",
+      "weak_password": "Use at least 6 characters for the password.",
+      "popup_blocked": "Your browser blocked the sign-in popup. Allow popups and try again.",
+      "network": "Couldn't reach the sign-in service. Check your connection.",
+      "too_many": "Too many attempts. Wait a moment and try again.",
+      "unknown": "Sign-in failed. Please try again."
+    }
+  },
   "checklist": {
     "itemPlaceholder": "List item",
     "addItem": "Add item",
