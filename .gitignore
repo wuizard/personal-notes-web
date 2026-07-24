@@ -34,6 +34,10 @@ yarn-error.log*
 .env*.local
 !.env.example
 
+# secrets — service account keys must never be committed
+*firebase-adminsdk*.json
+*service-account*.json
+
 # typescript
 *.tsbuildinfo
 

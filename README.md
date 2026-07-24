@@ -68,6 +68,7 @@ folder.
 | [07 — Roadmap](docs/07-roadmap.md) | v1 stages, then the gate into Phase 2 |
 | [08 — Local storage](docs/08-local-storage.md) | Dexie, persistence, eviction, images, export |
 | [09 — Deployment](docs/09-deployment.md) | Cloudflare Workers (configured) and Pages |
+| [10 — Plan change v2](docs/10-plan-change-v2.md) | **Supersedes parts of 00–09** — checklists-first, English-first, accounts, FCM push |
 
 ## Getting started
 
