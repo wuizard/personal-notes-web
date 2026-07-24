@@ -13,7 +13,7 @@
 
 const LOCALES = ["id", "en"] as const;
 type Locale = (typeof LOCALES)[number];
-const DEFAULT_LOCALE: Locale = "id";
+const DEFAULT_LOCALE: Locale = "en";
 
 interface Env {
   ASSETS: { fetch: (request: Request) => Promise<Response> };
