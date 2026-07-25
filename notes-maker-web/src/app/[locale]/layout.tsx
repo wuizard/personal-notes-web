@@ -5,6 +5,8 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import { AdSense } from "@/shared/ads/adsense";
+import { appColorBootScript } from "@/shared/app-color";
 import { Providers } from "@/shared/providers";
 import { RegisterServiceWorker } from "@/shared/pwa/register-sw";
 import "../globals.css";
@@ -71,10 +73,14 @@ export default async function LocaleLayout({
       className={`${GeistSans.variable} ${GeistMono.variable} h-full`}
     >
       <body className="min-h-full">
+        {/* Applies the stored app colour wash before first paint — the same
+            no-flash trick next-themes uses for the dark class. */}
+        <script dangerouslySetInnerHTML={{ __html: appColorBootScript }} />
         <NextIntlClientProvider>
           <Providers locale={locale}>{children}</Providers>
         </NextIntlClientProvider>
         <RegisterServiceWorker />
+        <AdSense />
       </body>
     </html>
   );

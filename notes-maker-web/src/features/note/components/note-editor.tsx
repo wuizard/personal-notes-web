@@ -3,7 +3,6 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import dynamic from "next/dynamic";
 import {
-  Archive,
   ArrowLeft,
   Bell,
   BellRing,
@@ -11,9 +10,6 @@ import {
   ListChecks,
   NotepadText,
   Paperclip,
-  Pin,
-  PinOff,
-  Trash2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -28,15 +24,16 @@ import { addFile } from "@/features/file/repo";
 import { useFileInput } from "@/features/file/use-file-input";
 import { AttachmentStrip } from "@/features/file/components/attachment-strip";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import { noteKind } from "../model/convert";
+import { useToast } from "@/shared/ui/toast";
+import { usePlan } from "@/features/plan/use-plan";
+import { isChecklistComplete, noteKind } from "../model/convert";
+import { autoCompleteEnabled } from "../repo/completion";
 import {
   clearReminder,
   convertNoteKind,
   getNote,
-  setArchived,
-  setPinned,
+  setCompleted,
   setReminder,
-  trashNote,
   updateNote,
 } from "../repo/note-repo";
 import { ChecklistEditor } from "./checklist-editor";
@@ -75,7 +72,12 @@ export function NoteEditor({
   showBack: boolean;
 }) {
   const t = useTranslations();
+  const toast = useToast();
+  const { plan } = usePlan();
   const note = useLiveQuery(() => getNote(noteId), [noteId]);
+  // "Absent means enabled" — undefined only while the meta read is in
+  // flight, and defaulting to on matches every other read of this setting.
+  const autoComplete = useLiveQuery(() => autoCompleteEnabled(), []) ?? true;
 
   // Draft is null until the user types. Until then the rendered value is
   // derived straight from the stored note, which avoids initialising state in
@@ -84,6 +86,16 @@ export function NoteEditor({
   const [saved, setSaved] = useState(true);
   const [confirmConvert, setConfirmConvert] = useState(false);
   const [editingReminder, setEditingReminder] = useState(false);
+
+  // ── Completed flow — docs/10 §10.13a, Premium ──
+  // The item id currently prompting "add a completion note?", or null.
+  const [completePrompt, setCompletePrompt] = useState<string | null>(null);
+  // The item id whose note the prompt sent the user to write, so the note
+  // field's onBlur knows whether ITS commit is the one that should finally
+  // settle the note as complete.
+  const [pendingNoteItemId, setPendingNoteItemId] = useState<string | null>(null);
+  // Controlled hand-off into ChecklistEditor's own note-editing UI.
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
 
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pending = useRef<(() => void) | null>(null);
@@ -142,6 +154,69 @@ export function NoteEditor({
     [flush, noteId],
   );
 
+  /** Settles the checklist as complete — the "skip" path, and where the
+   *  "add a note" path lands too once that note is committed. */
+  const finalizeComplete = useCallback(async () => {
+    await setCompleted(noteId, true);
+    toast.show({ message: t("checklist.completedToast") });
+  }, [noteId, toast, t]);
+
+  /** Fired once, the moment a checklist's last real item gets checked. */
+  const handleJustCompleted = useCallback(
+    (itemId: string | null) => {
+      if (plan !== "premium") {
+        toast.show({ message: t("checklist.upsell") });
+        return;
+      }
+      if (!autoComplete) return; // feature turned off in Settings — leave it as a fully-checked list, no move.
+      if (itemId) setCompletePrompt(itemId);
+      else void finalizeComplete(); // no single item to attach a note to — just settle it.
+    },
+    [plan, autoComplete, finalizeComplete, toast, t],
+  );
+
+  // Detects two transitions in the saved note, reacting rather than
+  // intercepting the checklist's own onChange — the write is debounced, so
+  // `note.checklist` only reflects a change once it actually lands, and
+  // reacting to the settled value means every write path (this editor, a
+  // future sync pull, anything) is covered by one rule instead of several
+  // copies of the same logic. Seeded on the first sighting of a real note so
+  // opening an already-complete or already-settled note is never mistaken
+  // for something "just happening" (docs/10 §10.13a).
+  const seeded = useRef(false);
+  const prevChecklist = useRef<ChecklistItem[]>([]);
+  const prevCompleted = useRef(false);
+  useEffect(() => {
+    if (!note) return;
+    const checklist = note.checklist ?? [];
+    const completed = Boolean(note.completed_at);
+
+    if (!seeded.current) {
+      seeded.current = true;
+      prevChecklist.current = checklist;
+      prevCompleted.current = completed;
+      return;
+    }
+
+    // Any item unchecked while marked complete auto-restores at the data
+    // layer (note-repo.ts's updateNote) — this only announces it, regardless
+    // of which caller triggered the write.
+    if (prevCompleted.current && !completed) {
+      toast.show({ message: t("checklist.uncompleted") });
+    } else if (!completed) {
+      const wasComplete = isChecklistComplete(prevChecklist.current);
+      const nowComplete = isChecklistComplete(checklist);
+      if (!wasComplete && nowComplete) {
+        const wasChecked = new Map(prevChecklist.current.map((i) => [i.id, i.checked]));
+        const justChecked = checklist.find((i) => i.checked && wasChecked.get(i.id) === false);
+        handleJustCompleted(justChecked?.id ?? null);
+      }
+    }
+
+    prevChecklist.current = checklist;
+    prevCompleted.current = completed;
+  }, [note, handleJustCompleted, t, toast]);
+
   // Flush on the events that actually precede a tab being killed.
   // `beforeunload` is deliberately absent: it does not fire reliably on mobile
   // Safari, which is precisely where the tab gets discarded (docs/06 §6.4).
@@ -199,7 +274,8 @@ export function NoteEditor({
               onClose();
             }}
             aria-label={t("editor.back")}
-            className="grid size-9 place-items-center rounded-xl opacity-70 hover:opacity-100"
+            title={t("editor.back")}
+            className="grid size-9 place-items-center rounded-xl opacity-70 transition-opacity hover:opacity-100"
           >
             <ArrowLeft size={18} strokeWidth={1.75} aria-hidden />
           </button>
@@ -217,7 +293,7 @@ export function NoteEditor({
             aria-label={t("reminders.set")}
             title={t("reminders.set")}
             aria-pressed={note.reminder !== null}
-            className="grid size-9 place-items-center rounded-xl opacity-70 hover:opacity-100"
+            className="grid size-9 place-items-center rounded-xl opacity-70 transition-opacity hover:opacity-100"
           >
             {note.reminder ? (
               <BellRing size={17} strokeWidth={1.75} className="text-accent" aria-hidden />
@@ -233,7 +309,8 @@ export function NoteEditor({
                 type="button"
                 onClick={attach.openPicker}
                 aria-label={t("editor.addFile")}
-                className="grid size-9 place-items-center rounded-xl opacity-70 hover:opacity-100"
+                title={t("editor.addFile")}
+                className="grid size-9 place-items-center rounded-xl opacity-70 transition-opacity hover:opacity-100"
               >
                 <Paperclip size={16} strokeWidth={1.75} aria-hidden />
               </button>
@@ -258,41 +335,6 @@ export function NoteEditor({
               <ListChecks size={17} strokeWidth={1.75} aria-hidden />
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => void setPinned(noteId, !note.pinned)}
-            aria-label={note.pinned ? t("note.actions.unpin") : t("note.actions.pin")}
-            aria-pressed={note.pinned}
-            className="grid size-9 place-items-center rounded-xl opacity-70 hover:opacity-100"
-          >
-            {note.pinned ? (
-              <PinOff size={17} strokeWidth={1.75} aria-hidden />
-            ) : (
-              <Pin size={17} strokeWidth={1.75} aria-hidden />
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              flush();
-              void setArchived(noteId, true).then(onClose);
-            }}
-            aria-label={t("note.actions.archive")}
-            className="grid size-9 place-items-center rounded-xl opacity-70 hover:opacity-100"
-          >
-            <Archive size={17} strokeWidth={1.75} aria-hidden />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              flush();
-              void trashNote(noteId).then(onClose);
-            }}
-            aria-label={t("note.actions.delete")}
-            className="grid size-9 place-items-center rounded-xl opacity-70 hover:opacity-100"
-          >
-            <Trash2 size={17} strokeWidth={1.75} aria-hidden />
-          </button>
         </div>
       </div>
 
@@ -322,6 +364,16 @@ export function NoteEditor({
             onChange={(items) =>
               schedule({ title, doc: draft?.doc ?? note.body, checklist: items })
             }
+            editingNoteId={editingNoteId}
+            onEditingNoteIdChange={setEditingNoteId}
+            onNoteCommitted={(id) => {
+              // Only the note the completion prompt sent the user to write
+              // should settle the checklist — committing some other item's
+              // note along the way must not trigger it.
+              if (id !== pendingNoteItemId) return;
+              setPendingNoteItemId(null);
+              void finalizeComplete();
+            }}
             className="mt-3 flex-1 text-[16px] leading-[1.65]"
           />
         ) : (
@@ -341,6 +393,7 @@ export function NoteEditor({
                 type="button"
                 onClick={attach.openPicker}
                 aria-label={t("editor.addFile")}
+                title={t("editor.addFile")}
                 className="grid size-7 place-items-center rounded-md opacity-60 transition-opacity hover:opacity-100"
               >
                 <Paperclip size={14} strokeWidth={2} aria-hidden />
@@ -370,13 +423,20 @@ export function NoteEditor({
             type="button"
             onClick={() => void updateNote(noteId, { color: c })}
             aria-label={t(`color.${c}`)}
+            title={t(`color.${c}`)}
             aria-pressed={note.color === c}
             // Visually 22px, but padded to a 44px touch target (docs/05 §5.9).
             className="grid size-11 place-items-center rounded-full"
           >
             <span
               className={`block size-[22px] rounded-full border border-[var(--card-border)] ${
-                note.color === c ? "ring-2 ring-accent ring-offset-1" : ""
+                // A coloured ring can vanish against a similar pastel (accent
+                // purple over periwinkle, white over paper); a dark stroke
+                // plus a drop shadow stays legible against every swatch,
+                // including "paper", in both themes.
+                note.color === c
+                  ? "shadow-[0_1px_4px_rgba(0,0,0,0.4)] ring-2 ring-foreground ring-offset-2 ring-offset-[var(--editor-surface)]"
+                  : ""
               }`}
               style={{ background: `var(--note-${c})` }}
             />
@@ -405,6 +465,29 @@ export function NoteEditor({
           onConfirm={async () => {
             setConfirmConvert(false);
             await convert("checklist");
+          }}
+        />
+      )}
+
+      {/* Fires once, the moment the last item is checked (docs/10 §10.13a).
+          Both paths settle the note as complete — "Skip" does it immediately,
+          "Add a note" opens that item's note field first and settles once it
+          commits (see onNoteCommitted above). */}
+      {completePrompt && (
+        <ConfirmDialog
+          title={t("checklist.completePromptTitle")}
+          body={t("checklist.completePromptBody")}
+          confirmLabel={t("checklist.completePromptAdd")}
+          cancelLabel={t("checklist.completePromptSkip")}
+          onCancel={() => {
+            setCompletePrompt(null);
+            void finalizeComplete();
+          }}
+          onConfirm={() => {
+            const itemId = completePrompt;
+            setCompletePrompt(null);
+            setPendingNoteItemId(itemId);
+            setEditingNoteId(itemId);
           }}
         />
       )}

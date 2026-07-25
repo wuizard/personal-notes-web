@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import { useHotkeys } from "@/shared/hooks/use-hotkeys";
 import { useToast } from "@/shared/ui/toast";
+import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import type { LocalNote } from "@/features/storage";
 import { QuickCompose } from "./quick-compose";
 import { EmptyNotes } from "./empty-notes";
@@ -58,6 +59,11 @@ export function NoteList({
     [selectedId, onSelect, toast, t],
   );
 
+  // The only optimistic-with-undo action in this list that also confirms —
+  // deliberately, at the user's request: undo alone wasn't reassuring enough
+  // for a delete, even though it's fully reversible for 30 days.
+  const [confirmingDelete, setConfirmingDelete] = useState<LocalNote | null>(null);
+
   const remove = useCallback(
     async (note: LocalNote) => {
       await trashNote(note.client_id);
@@ -98,10 +104,10 @@ export function NoteList({
       j: () => step(1),
       k: () => step(-1),
       e: () => current && void archive(current),
-      "#": () => current && void remove(current),
+      "#": () => current && setConfirmingDelete(current),
       p: () => current && togglePin(current),
     };
-  }, [visible, selectedId, onSelect, archive, remove, togglePin]);
+  }, [visible, selectedId, onSelect, archive, togglePin]);
 
   useHotkeys(hotkeys);
 
@@ -129,7 +135,8 @@ export function NoteList({
               type="button"
               onClick={() => setQuery("")}
               aria-label={t("note.cancel")}
-              className="shrink-0 rounded-md p-0.5 text-ink-subtle hover:text-foreground"
+              title={t("note.cancel")}
+              className="shrink-0 rounded-md p-0.5 text-ink-subtle transition-colors hover:text-foreground"
             >
               <X size={14} strokeWidth={2} aria-hidden />
             </button>
@@ -176,6 +183,7 @@ export function NoteList({
                       // way archive and delete do.
                       onClick={() => togglePin(note)}
                       aria-label={note.pinned ? t("note.actions.unpin") : t("note.actions.pin")}
+                      title={note.pinned ? t("note.actions.unpin") : t("note.actions.pin")}
                       aria-pressed={note.pinned}
                       className={rowActionClass}
                     >
@@ -184,6 +192,7 @@ export function NoteList({
                     <button
                       type="button"
                       aria-label={t("note.actions.archive")}
+                      title={t("note.actions.archive")}
                       className={rowActionClass}
                       onClick={() => void archive(note)}
                     >
@@ -192,8 +201,9 @@ export function NoteList({
                     <button
                       type="button"
                       aria-label={t("note.actions.delete")}
+                      title={t("note.actions.delete")}
                       className={rowActionClass}
-                      onClick={() => void remove(note)}
+                      onClick={() => setConfirmingDelete(note)}
                     >
                       <Trash2 size={14} strokeWidth={1.75} aria-hidden />
                     </button>
@@ -204,6 +214,22 @@ export function NoteList({
           </ul>
         )}
       </div>
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          title={t("note.deleteConfirmTitle")}
+          body={t("note.deleteConfirmBody")}
+          confirmLabel={t("note.deleteConfirmCta")}
+          cancelLabel={t("note.cancel")}
+          danger
+          onCancel={() => setConfirmingDelete(null)}
+          onConfirm={async () => {
+            const note = confirmingDelete;
+            setConfirmingDelete(null);
+            await remove(note);
+          }}
+        />
+      )}
     </>
   );
 }

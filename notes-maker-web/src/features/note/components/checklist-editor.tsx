@@ -18,14 +18,32 @@ export function ChecklistEditor({
   onChange,
   autoFocus,
   className,
+  editingNoteId,
+  onEditingNoteIdChange,
+  onNoteCommitted,
 }: {
   items: ChecklistItem[];
   onChange: (items: ChecklistItem[]) => void;
   autoFocus?: boolean;
   className?: string;
+  /** Controlled override for which item's completion note is open for
+   *  editing — lets NoteEditor pre-open one right after the "add a note?"
+   *  completion prompt (docs/10 §10.13a). Omit for the normal uncontrolled
+   *  behaviour (compose has no use for this). */
+  editingNoteId?: string | null;
+  onEditingNoteIdChange?: (id: string | null) => void;
+  /** Fires when a note field is committed (blurred) — how the caller learns
+   *  the prompted-for note is done, so it can finish settling the item. */
+  onNoteCommitted?: (id: string) => void;
 }) {
   const t = useTranslations("checklist");
   const [showDone, setShowDone] = useState(false);
+  // The id of the completed item currently showing its note as an editable
+  // field, or null. Only one at a time — matches pendingFocus's single-slot
+  // shape below. Uncontrolled unless the caller passes editingNoteId.
+  const [internalEditingNote, setInternalEditingNote] = useState<string | null>(null);
+  const editingNote = editingNoteId !== undefined ? editingNoteId : internalEditingNote;
+  const setEditingNote = onEditingNoteIdChange ?? setInternalEditingNote;
   const root = useRef<HTMLDivElement>(null);
   // The id of the input to focus once the item it belongs to has rendered —
   // a new row's input does not exist yet on the click that creates it.
@@ -34,6 +52,10 @@ export function ChecklistEditor({
   const ordered = useMemo(() => items.slice().sort((a, b) => a.order - b.order), [items]);
   const active = ordered.filter((i) => !i.checked);
   const done = ordered.filter((i) => i.checked);
+  // A controlled editingNoteId pointing at a completed item forces the
+  // section open — e.g. the completion prompt sending the user straight to a
+  // note field they couldn't otherwise see (docs/10 §10.13a).
+  const doneVisible = showDone || done.some((i) => i.id === editingNote);
 
   useEffect(() => {
     const id = pendingFocus.current;
@@ -57,6 +79,23 @@ export function ChecklistEditor({
 
   const toggle = (id: string) =>
     emit(ordered.map((i) => (i.id === id ? { ...i, checked: !i.checked } : i)));
+
+  // Stores exactly what was typed — no trimming here. Trimming on every
+  // keystroke strips a trailing space the instant it's typed (the field is
+  // controlled, so the next render shows the already-trimmed value and the
+  // space silently never appears), which is why words ran together before
+  // this was split from the commit step below.
+  const setNote = (id: string, note: string) =>
+    emit(ordered.map((i) => (i.id === id ? { ...i, note } : i)));
+
+  /** Normalises on the way out of edit mode: trims, and empty clears the note. */
+  const commitNote = (id: string) => {
+    const item = ordered.find((i) => i.id === id);
+    if (!item) return;
+    const trimmed = (item.note ?? "").trim();
+    if (trimmed === (item.note ?? "")) return;
+    emit(ordered.map((i) => (i.id === id ? { ...i, note: trimmed || undefined } : i)));
+  };
 
   const remove = (id: string) => emit(ordered.filter((i) => i.id !== id));
 
@@ -83,56 +122,150 @@ export function ChecklistEditor({
     }
   };
 
-  const row = (item: ChecklistItem) => (
-    <div key={item.id} className="group/item flex items-center gap-2.5 py-0.5">
-      <button
-        type="button"
-        onClick={() => toggle(item.id)}
-        aria-label={item.checked ? t("uncheck") : t("check")}
-        aria-pressed={item.checked}
-        className="grid size-6 shrink-0 place-items-center"
-      >
-        <span
-          className={`grid size-[17px] place-items-center rounded-[5px] border transition-colors ${
-            item.checked
-              ? "border-accent bg-accent text-accent-foreground"
-              : "border-[var(--card-border)] bg-transparent"
-          }`}
+  /**
+   * The optional line under a completed item — docs/06's "completed part"
+   * shows whatever note was attached when it was checked off. Not present
+   * for active items; the note only means something once the task is done.
+   */
+  const noteLine = (item: ChecklistItem) => {
+    if (editingNote === item.id) {
+      return (
+        <textarea
+          autoFocus
+          rows={1}
+          // Grows to fit content on every mount/keystroke rather than
+          // scrolling internally — a fixed single row would hide anything
+          // typed past the first line.
+          ref={(el) => {
+            if (!el) return;
+            el.style.height = "auto";
+            el.style.height = `${el.scrollHeight}px`;
+          }}
+          value={item.note ?? ""}
+          onChange={(e) => {
+            setNote(item.id, e.target.value);
+            e.target.style.height = "auto";
+            e.target.style.height = `${e.target.scrollHeight}px`;
+          }}
+          onBlur={() => {
+            commitNote(item.id);
+            setEditingNote(null);
+            onNoteCommitted?.(item.id);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              e.preventDefault();
+              (e.target as HTMLTextAreaElement).blur();
+            } else if (e.key === "Enter" && e.altKey) {
+              // Inserted by hand rather than left to the textarea's own
+              // default action: a held modifier makes that default fire
+              // inconsistently across browsers/hardware — sometimes no
+              // newline appears at all, sometimes it appears and the field
+              // still ends up committing right after. Owning the edit
+              // outright removes that race entirely.
+              e.preventDefault();
+              const el = e.target as HTMLTextAreaElement;
+              const { selectionStart, selectionEnd, value } = el;
+              const next = `${value.slice(0, selectionStart)}\n${value.slice(selectionEnd)}`;
+              setNote(item.id, next);
+              // React resets the caret to the end when it rewrites a
+              // controlled value; restore it once that commit lands.
+              requestAnimationFrame(() => {
+                el.selectionStart = el.selectionEnd = selectionStart + 1;
+              });
+            } else if (e.key === "Enter") {
+              // Plain Enter commits and closes.
+              e.preventDefault();
+              (e.target as HTMLTextAreaElement).blur();
+            }
+          }}
+          placeholder={t("notePlaceholder")}
+          className="ml-8 -mt-0.5 block w-[calc(100%-2rem)] resize-none overflow-hidden bg-transparent pb-1 text-[0.85em] italic text-muted outline-none placeholder:opacity-50"
+        />
+      );
+    }
+
+    if (item.note) {
+      return (
+        <button
+          type="button"
+          onClick={() => setEditingNote(item.id)}
+          title={t("editNote")}
+          className="ml-8 -mt-0.5 block max-w-[calc(100%-2rem)] whitespace-pre-line text-left text-[0.85em] italic text-muted underline decoration-dotted underline-offset-2 opacity-80 transition-opacity hover:opacity-100"
         >
-          {item.checked && (
-            <svg viewBox="0 0 12 12" className="size-3" aria-hidden>
-              <path
-                d="M2.5 6.5 5 9l4.5-5.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          )}
-        </span>
-      </button>
+          {item.note}
+        </button>
+      );
+    }
 
-      <input
-        data-item-id={item.id}
-        value={item.text}
-        onChange={(e) => setText(item.id, e.target.value)}
-        onKeyDown={(e) => onKeyDown(e, item)}
-        placeholder={t("itemPlaceholder")}
-        className={`min-w-0 flex-1 bg-transparent py-0.5 outline-none placeholder:opacity-40 ${
-          item.checked ? "line-through opacity-50" : ""
-        }`}
-      />
-
+    return (
       <button
         type="button"
-        onClick={() => remove(item.id)}
-        aria-label={t("removeItem")}
-        className="grid size-6 shrink-0 place-items-center rounded-md opacity-0 transition-opacity hover:bg-black/5 focus-visible:opacity-100 group-hover/item:opacity-50 group-hover/item:hover:opacity-100 dark:hover:bg-white/10"
+        onClick={() => setEditingNote(item.id)}
+        title={t("addNote")}
+        className="ml-8 -mt-0.5 block pb-1 text-[0.85em] text-ink-subtle opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 group-hover/item:opacity-70"
       >
-        <X size={13} strokeWidth={2} aria-hidden />
+        + {t("addNote")}
       </button>
+    );
+  };
+
+  const row = (item: ChecklistItem) => (
+    <div key={item.id} className="group/item">
+      <div className="flex items-center gap-2.5 py-0.5">
+        <button
+          type="button"
+          onClick={() => toggle(item.id)}
+          aria-label={item.checked ? t("uncheck") : t("check")}
+          aria-pressed={item.checked}
+          title={item.checked ? t("uncheck") : t("check")}
+          className="grid size-6 shrink-0 place-items-center rounded-md transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+        >
+          <span
+            className={`grid size-[17px] place-items-center rounded-[5px] border transition-colors ${
+              item.checked
+                ? "border-accent bg-accent text-accent-foreground"
+                : "border-[var(--card-border)] bg-transparent"
+            }`}
+          >
+            {item.checked && (
+              <svg viewBox="0 0 12 12" className="size-3" aria-hidden>
+                <path
+                  d="M2.5 6.5 5 9l4.5-5.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            )}
+          </span>
+        </button>
+
+        <input
+          data-item-id={item.id}
+          value={item.text}
+          onChange={(e) => setText(item.id, e.target.value)}
+          onKeyDown={(e) => onKeyDown(e, item)}
+          placeholder={t("itemPlaceholder")}
+          className={`min-w-0 flex-1 bg-transparent py-0.5 outline-none placeholder:opacity-40 ${
+            item.checked ? "line-through opacity-50" : ""
+          }`}
+        />
+
+        <button
+          type="button"
+          onClick={() => remove(item.id)}
+          aria-label={t("removeItem")}
+          title={t("removeItem")}
+          className="grid size-6 shrink-0 place-items-center rounded-md opacity-0 transition-opacity hover:bg-black/5 focus-visible:opacity-100 group-hover/item:opacity-50 group-hover/item:hover:opacity-100 dark:hover:bg-white/10"
+        >
+          <X size={13} strokeWidth={2} aria-hidden />
+        </button>
+      </div>
+
+      {item.checked && noteLine(item)}
     </div>
   );
 
@@ -156,18 +289,18 @@ export function ChecklistEditor({
           <button
             type="button"
             onClick={() => setShowDone((s) => !s)}
-            aria-expanded={showDone}
+            aria-expanded={doneVisible}
             className="flex items-center gap-1 py-1 text-[0.88em] opacity-60 transition-opacity hover:opacity-100"
           >
             <ChevronRight
               size={14}
               strokeWidth={2}
-              className={`transition-transform ${showDone ? "rotate-90" : ""}`}
+              className={`transition-transform ${doneVisible ? "rotate-90" : ""}`}
               aria-hidden
             />
             {t("completed", { count: done.length })}
           </button>
-          {showDone && done.map(row)}
+          {doneVisible && done.map(row)}
         </div>
       )}
     </div>

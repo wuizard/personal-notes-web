@@ -72,7 +72,7 @@ export function NoteRow({
               {openItems.length > 4 && <p className="opacity-60">…</p>}
               {doneCount > 0 && (
                 <p className="mt-0.5 opacity-60">
-                  {tChecklist("completedCount", { count: doneCount })}
+                  {tChecklist("completedFraction", { done: doneCount, total: items.length })}
                 </p>
               )}
             </div>

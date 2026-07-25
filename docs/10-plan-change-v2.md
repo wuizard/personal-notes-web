@@ -276,3 +276,47 @@ Roughly in dependency order; stages 1–4 are pure client work and shippable wit
   100-note cap (§10.7). Supersedes docs/00's "up to 10 per note".
 - ~~Feedback server~~ — the **real Go API**, stood up minimally at stage 5 (auth verify +
   feedback only); no Worker/KV stopgap (§10.6).
+
+## 10.13 Plan verification and offline grace (client scaffolding, ahead of stage 6 billing)
+
+Client-side scaffolding for §10.7's tier gating, built ahead of the real billing backend so the
+seam is ready the day stage 6 (§10.5, §10.10) ships. Lives under `src/features/plan/`.
+
+**The "data variable."** `usePlan()` (`src/features/plan/use-plan.ts`) is the single source of
+truth the rest of the app reads: `{ plan: "free" | "premium", graceExpired: boolean }`. Every
+future paid gate (note cap, image cap, sync UI) should read this hook rather than re-deriving
+plan state.
+
+**Where the verdict comes from.**
+
+- **Signed out → always `"free"`.** Premium requires an account (§10.7's "Sign-in: Required" row),
+  so there is nothing to check.
+- **Signed in → `checkRemotePlan(uid)`** (`src/features/plan/remote.ts`), called on mount and on
+  every `online` event. **This is currently a stub that always returns `"free"`** — there is no
+  billing backend yet; Phase 2 (Go + MongoDB + Polar, §10.5/§10.10) is sequenced at stage 6, and
+  this project is at stage 5. Wiring the real endpoint later is a one-function change, the same
+  seam shape as `src/features/storage/remote.ts` for sync.
+- A successful check **overwrites** the cache (tier + `verifiedAt`, in `localStorage` under
+  `nm-plan-cache`); a **failed** check (offline, or a transient error) changes nothing — the
+  existing cache and its grace window keep standing. One flaky request must never bounce a paying
+  user back to the ad-supported experience.
+
+**Offline grace — the "stays premium for a week" rule.** A cached `"premium"` verdict keeps
+working while offline. Once more than **7 days** pass since the last successful verification
+(`GRACE_PERIOD_MS` in `plan-cache.ts`) without reconnecting, it silently reads as `"free"` until
+the next successful check succeeds — an unreachable backend cannot rule out a lapsed subscription
+forever, so trust decays rather than persisting indefinitely. A cached `"free"` verdict never
+expires; there is no harm in continuing to withhold premium.
+
+Signing out, or "Delete all data" (§0's storage panel), clears `localStorage` and with it the plan
+cache — both correctly fall back to `"free"` on the next check rather than resurrecting a stale
+verdict.
+
+**Ads.** `src/shared/ads/adsense.tsx` loads the AdSense script (`adsbygoogle.js`) only when
+**all** of: `plan === "free"`, the browser is currently online, and
+`NEXT_PUBLIC_ADSENSE_CLIENT_ID` is configured — matching §10.7's "shown when online... the offline
+app never holds a blank ad slot" exactly. Publisher ID is not a secret (it's public in every
+served page), so it lives in `.env.local.example` with a real default rather than blank like the
+Firebase keys; unset in any environment, the component renders nothing. Ad *unit* placement
+(where `<ins class="adsbygoogle">` slots actually sit on the page) is not decided yet — this stage
+only wires the loader.

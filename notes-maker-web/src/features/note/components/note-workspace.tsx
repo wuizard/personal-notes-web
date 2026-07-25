@@ -67,15 +67,18 @@ export function NoteWorkspace() {
   const showList = isDesktop || selectedId === null;
 
   return (
-    <div className="flex h-full min-h-0">
+    // Rounded card frame on desktop, where both panes sit side by side with
+    // room to breathe — mobile shows one full-bleed pane at a time, where a
+    // card inset would just eat width for no benefit.
+    <div className="flex h-full min-h-0 md:gap-3 md:p-3">
       {showList && (
-        <div className="flex min-h-0 w-full flex-col border-border md:w-[21rem] md:shrink-0 md:border-r">
+        <div className="flex min-h-0 w-full flex-col md:w-[21rem] md:shrink-0 md:overflow-hidden md:rounded-2xl md:border md:border-[var(--card-border)] md:bg-surface md:shadow-[var(--shadow-rest)]">
           <NoteList selectedId={selectedId} onSelect={select} />
         </div>
       )}
 
       {showEditor && (
-        <div className="flex min-h-0 w-full flex-col">
+        <div className="flex min-h-0 w-full flex-col md:overflow-hidden md:rounded-2xl md:border md:border-[var(--card-border)] md:bg-surface md:shadow-[var(--shadow-rest)]">
           {selectedId ? (
             <NoteEditor
               key={selectedId}

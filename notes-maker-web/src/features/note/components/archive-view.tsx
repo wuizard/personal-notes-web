@@ -38,6 +38,7 @@ export function ArchiveView() {
                   <button
                     type="button"
                     aria-label={t("archive.unarchive")}
+                    title={t("archive.unarchive")}
                     className={rowActionClass}
                     onClick={async () => {
                       await setArchived(note.client_id, false);
@@ -53,6 +54,7 @@ export function ArchiveView() {
                   <button
                     type="button"
                     aria-label={t("note.actions.delete")}
+                    title={t("note.actions.delete")}
                     className={rowActionClass}
                     onClick={async () => {
                       await trashNote(note.client_id);

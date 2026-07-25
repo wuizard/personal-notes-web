@@ -54,6 +54,11 @@ export interface ChecklistItem {
   text: string;
   checked: boolean;
   order: number;
+  /** Optional note attached when the item was checked off — e.g. where or how
+   *  it was done. Shown under the item in the "Completed" section. Absent on
+   *  every item written before this field existed and on items never
+   *  annotated; adding it is additive, not a migration (docs/08 §8.1). */
+  note?: string;
 }
 
 /**
@@ -92,6 +97,15 @@ export interface LocalNote {
   updated_at: number;
   /** Tombstone. Trash in v1; sync correctness in Phase 2. */
   deleted_at: number | null;
+  /**
+   * Set when every item on a checklist is checked and the user has settled
+   * that (dismissed or answered the completion-note prompt) — Premium,
+   * docs/10 §10.13a. Absent/null on every note before this field existed and
+   * on anything that isn't a settled-complete checklist; additive, not a
+   * migration (docs/08 §8.1). Cleared automatically the moment any item is
+   * unchecked again — see note-repo.ts's updateNote.
+   */
+  completed_at?: number | null;
 
   // ── Phase 2 sync fields, unused in v1 ──
   rev: number;
@@ -180,6 +194,9 @@ export const META = {
   backupNudgedAt: "backupNudgedAt",
   /** `true` disables capture suggestions (docs/10 §10.2). Absent means enabled. */
   suggestionsDisabled: "suggestionsDisabled",
+  /** `true` disables auto-moving fully-checked checklists to Completed
+   *  (docs/10 §10.13a, Premium). Absent means enabled. */
+  autoCompleteDisabled: "autoCompleteDisabled",
 } as const;
 
 export interface InstallMeta {

@@ -5,8 +5,10 @@
   },
   "nav": {
     "notes": "Catatan",
+    "myNotes": "Catatan Saya",
     "reminders": "Pengingat",
     "archive": "Arsip",
+    "completed": "Selesai",
     "trash": "Sampah",
     "settings": "Pengaturan",
     "labels": "Label",
@@ -44,13 +46,20 @@
     "deleted": "Catatan dipindahkan ke sampah",
     "undo": "Urungkan",
     "restored": "Catatan dipulihkan",
-    "unarchived": "Catatan dikeluarkan dari arsip"
+    "unarchived": "Catatan dikeluarkan dari arsip",
+    "deleteConfirmTitle": "Hapus catatan ini?",
+    "deleteConfirmBody": "Catatan akan dipindahkan ke Sampah dan dihapus permanen setelah 30 hari. Anda bisa membatalkan segera setelahnya, atau memulihkannya dari Sampah kapan saja sebelum itu.",
+    "deleteConfirmCta": "Hapus"
   },
   "theme": {
     "label": "Tema",
     "light": "Terang",
     "dark": "Gelap",
     "system": "Ikuti sistem"
+  },
+  "appColor": {
+    "label": "Warna tema",
+    "default": "Bawaan"
   },
   "locale": {
     "label": "Bahasa"
@@ -67,9 +76,20 @@
     "persistenceExplain": "Peramban terkadang menghapus data tersimpan untuk mengosongkan ruang. Melindungi situs ini mencegah hal itu.",
     "protect": "Lindungi catatan saya",
     "quotaWarning": "Ruang penyimpanan Anda hampir penuh. Ekspor cadangan, lalu hapus beberapa gambar untuk melegakan ruang.",
-    "reset": "Atur ulang data lokal",
-    "resetExplain": "Menghapus semua catatan di perangkat ini. Tindakan ini tidak dapat dibatalkan.",
+    "reset": "Hapus semua data",
+    "resetExplain": "Menghapus permanen semua catatan, lampiran, dan pengaturan dari perangkat ini. Tindakan ini tidak dapat dibatalkan.",
     "resetConfirm": "Ketik DELETE untuk mengonfirmasi",
+    "resetTitle": "Hapus semua data?",
+    "resetBackupHint": "Tips: ekspor cadangan dulu jika suatu saat masih memerlukan catatan ini.",
+    "resetSignOutNote": "Anda juga akan dikeluarkan dari akun.",
+    "resetRemoteFound": "{count, plural, other {# catatan}} tersimpan di akun Anda.",
+    "resetRemoteKeep": "Simpan di akun saya",
+    "resetRemoteKeepHint": "Catatan akan kembali saat Anda masuk lagi.",
+    "resetRemoteDelete": "Hapus juga dari akun saya",
+    "resetRemoteWarn": "Catatan di akun Anda juga akan dihapus permanen. Tidak ada salinan yang tersisa di mana pun.",
+    "resetCta": "Hapus semuanya",
+    "resetDeleting": "Menghapus…",
+    "resetError": "Ada yang gagal dihapus. Muat ulang halaman lalu coba lagi.",
     "yourData": "Catatan dan lampiran",
     "siteTotal": "Data situs",
     "siteTotalHint": "Termasuk berkas aplikasi yang disimpan peramban agar bisa dibuka offline — bukan catatan Anda."
@@ -110,8 +130,8 @@
     "heroBody": "Gratis, tanpa akun, dan tersimpan di peramban Anda sendiri. Tidak ada yang dikirim ke server mana pun.",
     "cta": "Mulai menulis",
     "noAccount": "Tanpa perlu mendaftar.",
-    "startInColor": "Tulis catatan warna {color}",
-    "pickColorLabel": "Atau mulai dengan warna",
+    "useTheme": "Gunakan tema warna {color}",
+    "themeLabel": "Pilih warna tema",
     "features": {
       "privacyTitle": "Privat sejak awal",
       "privacyBody": "Catatan Anda tersimpan di penyimpanan peramban Anda sendiri. Tidak pernah menyentuh server — kecuali kelak Anda membayar kami untuk menyinkronkannya.",
@@ -268,8 +288,30 @@
     "addItem": "Tambah butir",
     "removeItem": "Hapus butir",
     "completed": "Selesai ({count})",
-    "completedCount": "{count, plural, other {# selesai}}",
+    "completedFraction": "{done}/{total} selesai",
     "check": "Tandai selesai",
-    "uncheck": "Batalkan selesai"
+    "uncheck": "Batalkan selesai",
+    "addNote": "Tambah catatan",
+    "editNote": "Edit catatan",
+    "notePlaceholder": "Tambahkan catatan tentang cara ini diselesaikan…",
+    "completePromptTitle": "Checklist selesai!",
+    "completePromptBody": "Tambahkan catatan tentang cara Anda menyelesaikannya? Catatan akan tampil di butir yang selesai, lalu ini akan pindah ke Selesai.",
+    "completePromptAdd": "Tambah catatan",
+    "completePromptSkip": "Lewati",
+    "completedToast": "Checklist selesai — dipindahkan ke Selesai",
+    "uncompleted": "Tidak lagi selesai sepenuhnya — dikembalikan ke Catatan",
+    "upsell": "Otomatis memindahkan checklist yang selesai adalah fitur Premium. Tingkatkan untuk membukanya.",
+    "autoCompleteTitle": "Checklist selesai",
+    "autoCompleteExplain": "Saat semua butir pada checklist dicentang, tanyakan untuk menambah catatan lalu pindahkan ke Selesai. Premium.",
+    "autoCompleteEnable": "Pindahkan checklist yang selesai ke bagian Selesai"
+  },
+  "completed": {
+    "title": "Selesai",
+    "emptyTitle": "Belum ada yang selesai.",
+    "emptyBody": "Checklist akan pindah ke sini setelah semua butirnya dicentang dan disetujui.",
+    "lockedTitle": "Selesai adalah fitur Premium.",
+    "lockedBody": "Tingkatkan agar checklist yang sudah selesai dikumpulkan di sini secara otomatis.",
+    "restore": "Kembalikan ke Catatan",
+    "restored": "Catatan tidak selesai — dikembalikan ke Catatan"
   }
 }

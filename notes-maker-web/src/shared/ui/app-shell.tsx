@@ -1,31 +1,39 @@
 "use client";
 
-import { Archive, Bell, NotebookText, Settings, Trash2 } from "lucide-react";
+import { Archive, Bell, CheckCheck, NotebookText, Settings, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { AuthMenu } from "@/features/auth/auth-menu";
 import { ThemeToggle } from "./theme-toggle";
 import { LocaleSwitcher } from "./locale-switcher";
+import { AppColorPicker } from "./app-color-picker";
 import { BrandMark } from "./brand-mark";
 
 const NAV = [
   { href: "/notes", key: "notes", icon: NotebookText },
   { href: "/reminders", key: "reminders", icon: Bell },
   { href: "/archive", key: "archive", icon: Archive },
+  // Premium (docs/10 §10.13a) — visible to everyone as an upgrade surface,
+  // functional only once a checklist has actually been settled complete.
+  { href: "/completed", key: "completed", icon: CheckCheck },
   { href: "/trash", key: "trash", icon: Trash2 },
   { href: "/settings", key: "settings", icon: Settings },
 ] as const;
 
 /**
- * App chrome — docs/06 §6.1.
+ * App chrome — docs/06 §6.1, amended: horizontal top bar on desktop instead
+ * of the original sidebar (user request, 2026-07). Primary navigation sits
+ * left of the bar with labels; every control that is an icon — palette,
+ * locale, theme, settings, profile — clusters on the right. Mobile keeps the
+ * bottom tab bar: thumbs still reach the bottom of a phone far more easily
+ * than the top corners.
  *
- * Persistent sidebar on desktop, bottom tab bar on mobile. No drawer: a
- * hamburger hides the primary navigation behind an extra tap for the exact
- * users who have the least screen patience, and thumbs reach the bottom of a
- * phone far more easily than the top-left corner.
+ * The bar stays visible above both workspace panes, so the palette and theme
+ * controls remain reachable while a note is open.
  *
- * Chrome stays near-neutral so notes carry all the colour (docs/05 §5.1).
+ * Chrome stays near-neutral so notes carry the colour (docs/05 §5.1); the
+ * one sanctioned exception is the app-wide wash behind it (app-color.ts).
  */
 export function AppShell({ children }: { children: ReactNode }) {
   const t = useTranslations();
@@ -36,82 +44,80 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     // h-dvh + overflow-hidden so the list and editor panes scroll
     // independently instead of the whole document scrolling as one.
-    <div className="flex h-dvh flex-col overflow-hidden md:flex-row">
-      {/* ── desktop sidebar ── */}
-      <aside className="sticky top-0 hidden h-dvh w-52 shrink-0 flex-col gap-0.5 border-r border-border bg-background p-2.5 md:flex">
-        <Link
-          href="/notes"
-          className="flex items-center gap-2.5 rounded-lg px-2.5 pb-4 pt-1"
-        >
+    <div className="flex h-dvh flex-col overflow-hidden">
+      {/* ── top bar ── */}
+      <header className="flex items-center gap-1 border-b border-border bg-background px-3 py-2 md:px-4">
+        {/* Brand click goes to the marketing landing page, not deeper into the
+            app — logo-as-home is the standard convention, and "/notes" is
+            already one click away via primary nav. */}
+        <Link href="/" className="flex items-center gap-2.5 rounded-lg px-1.5 py-1">
           <BrandMark size={26} className="shrink-0" />
           <span className="text-[14.5px] font-semibold tracking-tight">{t("app.name")}</span>
         </Link>
 
-        <nav className="flex flex-col gap-0.5">
-          {NAV.filter((n) => n.key !== "settings").map(({ href, key, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              aria-current={isActive(href) ? "page" : undefined}
-              className={`flex items-center gap-2.5 rounded-[10px] px-2.5 py-1.5 text-[13.5px] transition-colors ${
-                isActive(href)
-                  ? "bg-accent-soft font-semibold text-accent-soft-foreground"
-                  : "text-muted hover:bg-surface-secondary hover:text-foreground"
-              }`}
-            >
-              <Icon size={16} strokeWidth={1.75} aria-hidden />
-              {t(`nav.${key}`)}
-            </Link>
-          ))}
+        {/* Primary navigation: desktop only — mobile navigates at the bottom.
+            "Notes" is where people live, so it alone keeps a text label;
+            everything else is an icon revealed by hover/tooltip, so the bar
+            doesn't read as a wall of equally-weighted words. */}
+        <nav className="ml-3 hidden items-center gap-0.5 md:flex">
+          {NAV.filter((n) => n.key !== "settings").map(({ href, key, icon: Icon }) => {
+            const label = key === "notes" ? t("nav.myNotes") : t(`nav.${key}`);
+            return (
+              <Link
+                key={href}
+                href={href}
+                aria-current={isActive(href) ? "page" : undefined}
+                aria-label={label}
+                title={key === "notes" ? undefined : label}
+                className={`flex items-center gap-2 rounded-[10px] transition-colors ${
+                  key === "notes" ? "px-2.5 py-1.5 text-[13.5px]" : "size-9 justify-center"
+                } ${
+                  isActive(href)
+                    ? "bg-accent-soft font-semibold text-accent-soft-foreground"
+                    : "text-muted hover:bg-surface-secondary hover:text-foreground"
+                }`}
+              >
+                <Icon size={16} strokeWidth={1.75} aria-hidden />
+                {key === "notes" && label}
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="mt-auto flex flex-col gap-0.5">
-          <Link
-            href="/settings"
-            aria-current={isActive("/settings") ? "page" : undefined}
-            className={`flex items-center gap-2.5 rounded-[10px] px-2.5 py-1.5 text-[13.5px] transition-colors ${
-              isActive("/settings")
-                ? "bg-accent-soft font-semibold text-accent-soft-foreground"
-                : "text-muted hover:bg-surface-secondary hover:text-foreground"
-            }`}
-          >
-            <Settings size={16} strokeWidth={1.75} aria-hidden />
-            {t("nav.settings")}
-          </Link>
-
+        <div className="ml-auto flex items-center gap-1">
           {/* Local-only storage is a promise, not a limitation — say so. */}
-          <p className="flex items-center gap-2 px-2.5 py-2 text-xs text-muted">
+          <p className="mr-1 hidden items-center gap-2 text-xs text-muted lg:flex">
             <span className="size-1.5 shrink-0 rounded-full bg-success" aria-hidden />
             {t("storage.local")}
           </p>
 
-          <div className="flex items-center gap-1 px-1 pb-1">
-            <LocaleSwitcher />
-            <ThemeToggle />
-            <AuthMenu direction="up" />
-          </div>
+          <AppColorPicker />
+          <LocaleSwitcher />
+          <ThemeToggle />
+          {/* Settings joins the icon cluster on desktop; on mobile it is a
+              bottom tab, and a second entrance would just be noise. */}
+          <Link
+            href="/settings"
+            aria-label={t("nav.settings")}
+            title={t("nav.settings")}
+            aria-current={isActive("/settings") ? "page" : undefined}
+            className={`hidden size-9 place-items-center rounded-xl transition-colors md:grid ${
+              isActive("/settings")
+                ? "bg-accent-soft text-accent-soft-foreground"
+                : "text-muted hover:bg-surface-secondary hover:text-foreground"
+            }`}
+          >
+            <Settings size={18} strokeWidth={1.75} aria-hidden />
+          </Link>
+          <AuthMenu />
         </div>
-      </aside>
+      </header>
 
-      {/* ── content ── */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        {/* Mobile top bar: brand + controls only. Navigation lives at the bottom. */}
-        <header className="flex items-center gap-2 border-b border-border px-4 py-2.5 md:hidden">
-          <BrandMark size={26} className="shrink-0" />
-          <span className="text-[14.5px] font-semibold tracking-tight">{t("app.name")}</span>
-          <div className="ml-auto flex items-center gap-1">
-            <LocaleSwitcher />
-            <ThemeToggle />
-            <AuthMenu />
-          </div>
-        </header>
-
-        {/* pb-16 on mobile keeps content clear of the fixed tab bar.
-            Pages own their own scrolling. */}
-        <main className="flex min-h-0 flex-1 flex-col overflow-hidden pb-16 md:pb-0">
-          {children}
-        </main>
-      </div>
+      {/* pb-16 on mobile keeps content clear of the fixed tab bar.
+          Pages own their own scrolling. */}
+      <main className="flex min-h-0 flex-1 flex-col overflow-hidden pb-16 md:pb-0">
+        {children}
+      </main>
 
       {/* ── mobile bottom tab bar ── */}
       <nav

@@ -5,8 +5,10 @@
   },
   "nav": {
     "notes": "Notes",
+    "myNotes": "My Notes",
     "reminders": "Reminders",
     "archive": "Archive",
+    "completed": "Completed",
     "trash": "Trash",
     "settings": "Settings",
     "labels": "Labels",
@@ -44,13 +46,20 @@
     "deleted": "Note moved to trash",
     "undo": "Undo",
     "restored": "Note restored",
-    "unarchived": "Note unarchived"
+    "unarchived": "Note unarchived",
+    "deleteConfirmTitle": "Delete this note?",
+    "deleteConfirmBody": "It moves to Trash and is deleted permanently after 30 days. You can undo right after, or restore it from Trash any time before then.",
+    "deleteConfirmCta": "Delete"
   },
   "theme": {
     "label": "Theme",
     "light": "Light",
     "dark": "Dark",
     "system": "Match system"
+  },
+  "appColor": {
+    "label": "Theme colour",
+    "default": "Default"
   },
   "locale": {
     "label": "Language"
@@ -67,9 +76,20 @@
     "persistenceExplain": "Browsers sometimes clear stored data to free up space. Protecting this site prevents that.",
     "protect": "Protect my notes",
     "quotaWarning": "You're running low on space. Export a backup, and remove some images to free room.",
-    "reset": "Reset local data",
-    "resetExplain": "Deletes every note on this device. This cannot be undone.",
+    "reset": "Delete all data",
+    "resetExplain": "Permanently removes every note, attachment, and setting from this device. This cannot be undone.",
     "resetConfirm": "Type DELETE to confirm",
+    "resetTitle": "Delete all data?",
+    "resetBackupHint": "Tip: export a backup first if you might want these notes later.",
+    "resetSignOutNote": "You will also be signed out of your account.",
+    "resetRemoteFound": "{count, plural, one {# note is} other {# notes are}} stored in your account.",
+    "resetRemoteKeep": "Keep them in my account",
+    "resetRemoteKeepHint": "They sync back the next time you sign in.",
+    "resetRemoteDelete": "Delete them from my account too",
+    "resetRemoteWarn": "The notes in your account will also be permanently deleted. No copy will remain anywhere.",
+    "resetCta": "Delete everything",
+    "resetDeleting": "Deleting…",
+    "resetError": "Something couldn't be deleted. Reload the page and try again.",
     "yourData": "Notes and attachments",
     "siteTotal": "Site data",
     "siteTotalHint": "Includes the app files your browser caches so it works offline — not your notes."
@@ -110,8 +130,8 @@
     "heroBody": "Free, no account, and stored in your own browser. Nothing is sent to any server.",
     "cta": "Start writing",
     "noAccount": "No sign-up required.",
-    "startInColor": "Start a note in {color}",
-    "pickColorLabel": "Or start in a colour",
+    "useTheme": "Use the {color} theme",
+    "themeLabel": "Pick a theme colour",
     "features": {
       "privacyTitle": "Private by default",
       "privacyBody": "Your notes live in your own browser's storage. They never touch a server unless you one day pay us to sync them.",
@@ -268,8 +288,30 @@
     "addItem": "Add item",
     "removeItem": "Remove item",
     "completed": "Completed ({count})",
-    "completedCount": "{count, plural, one {# completed} other {# completed}}",
+    "completedFraction": "{done}/{total} completed",
     "check": "Mark done",
-    "uncheck": "Mark not done"
+    "uncheck": "Mark not done",
+    "addNote": "Add a note",
+    "editNote": "Edit note",
+    "notePlaceholder": "Add a note about how this was done…",
+    "completePromptTitle": "Checklist complete!",
+    "completePromptBody": "Add a note about how you finished it? It'll show with the completed item, then this moves to Completed.",
+    "completePromptAdd": "Add a note",
+    "completePromptSkip": "Skip",
+    "completedToast": "Checklist complete — moved to Completed",
+    "uncompleted": "Not fully checked anymore — moved back to Notes",
+    "upsell": "Auto-completing checklists is a Premium feature. Upgrade to unlock.",
+    "autoCompleteTitle": "Completed checklists",
+    "autoCompleteExplain": "When every item on a checklist is checked, ask to add a note and move it to Completed. Premium.",
+    "autoCompleteEnable": "Move finished checklists to Completed"
+  },
+  "completed": {
+    "title": "Completed",
+    "emptyTitle": "Nothing completed yet.",
+    "emptyBody": "Checklists move here once every item is checked and settled.",
+    "lockedTitle": "Completed is a Premium feature.",
+    "lockedBody": "Upgrade to have fully-checked checklists collect here automatically.",
+    "restore": "Move back to Notes",
+    "restored": "Note not completed — moved back to Notes"
   }
 }

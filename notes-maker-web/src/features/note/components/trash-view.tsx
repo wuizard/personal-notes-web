@@ -59,6 +59,7 @@ export function TrashView() {
                   <button
                     type="button"
                     aria-label={t("trash.restore")}
+                    title={t("trash.restore")}
                     className={rowActionClass}
                     onClick={async () => {
                       await restoreNote(note.client_id);
@@ -70,6 +71,7 @@ export function TrashView() {
                   <button
                     type="button"
                     aria-label={t("trash.deleteForever")}
+                    title={t("trash.deleteForever")}
                     className={rowActionClass}
                     onClick={() => setConfirmingOne(note.client_id)}
                   >

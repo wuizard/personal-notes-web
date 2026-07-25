@@ -258,6 +258,7 @@ export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }
               type="button"
               onClick={attach.openPicker}
               aria-label={t("editor.addFile")}
+              title={t("editor.addFile")}
               className="grid size-7 place-items-center rounded-md opacity-60 transition-opacity hover:opacity-100"
             >
               <Paperclip size={14} strokeWidth={2} aria-hidden />
@@ -302,6 +303,7 @@ export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }
             type="button"
             onClick={attach.openPicker}
             aria-label={t("editor.addFile")}
+            title={t("editor.addFile")}
             className="grid size-7 place-items-center rounded-md opacity-60 transition-opacity hover:opacity-100"
           >
             <Paperclip size={14} strokeWidth={2} aria-hidden />

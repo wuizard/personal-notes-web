@@ -1,12 +1,9 @@
-import { defineRouting } from "next-intl/routing";
+﻿import { defineRouting } from "next-intl/routing";
 
 /**
- * Indonesia first, global after — docs/00 §0.1.
- *
- * `id` is the default and therefore un-prefixed (`/notes`), while English
- * lives under `/en`. Marketing pages need real URLs per locale for SEO and
- * AdSense approval (docs/00 §0.4), which is why locale routing exists at all
- * rather than a cookie-only setup.
+ * English is the default; Indonesian lives under `/id`. Marketing pages need
+ * real URLs per locale for SEO and AdSense approval (docs/00 Â§0.4), which is
+ * why locale routing exists at all rather than a cookie-only setup.
  */
 export const routing = defineRouting({
   locales: ["id", "en"],
@@ -15,7 +12,7 @@ export const routing = defineRouting({
    * `always`, not `as-needed`.
    *
    * `as-needed` leaves the default locale un-prefixed and relies on middleware
-   * to negotiate at request time — which a static export has no way to do.
+   * to negotiate at request time â€” which a static export has no way to do.
    * With `always`, `/id/notes` and `/en/notes` are both prerendered at build
    * time and nothing has to be decided at runtime.
    *

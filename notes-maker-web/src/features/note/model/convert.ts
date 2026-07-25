@@ -77,3 +77,13 @@ export function docToChecklist(doc: NoteDoc): ChecklistItem[] {
 export function newChecklistItem(order: number, text = ""): ChecklistItem {
   return { id: uuidv7(), text, checked: false, order };
 }
+
+/**
+ * True once every real item (blank placeholder rows don't count) is checked
+ * — the trigger for the Completed flow, docs/10 §10.13a. A checklist with no
+ * real items yet is never "complete".
+ */
+export function isChecklistComplete(items: ChecklistItem[]): boolean {
+  const real = items.filter((i) => i.text.trim().length > 0);
+  return real.length > 0 && real.every((i) => i.checked);
+}

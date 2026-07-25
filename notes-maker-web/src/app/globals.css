@@ -156,6 +156,39 @@
   --note-ink: #ede9f2;
 }
 
+/* ── app colour wash ──
+   The note palette applied to the whole canvas. Set as `data-app-color` on
+   <html> by src/shared/app-color.ts (persisted; applied pre-paint by an
+   inline boot script in the locale layout).
+
+   Implementation: mix the note colour into the neutral canvas rather than
+   using it raw — full-strength pastel behind white cards is loud, and the
+   dark variants would crush contrast. Both inputs of the mix flip with the
+   theme, so one rule per colour serves light and dark. The selector's
+   specificity (0,1,1) intentionally beats `.dark` (0,1,0), which is what
+   lets the wash override --background in either mode. */
+
+:root,
+[data-theme="light"] {
+  --app-wash-base: #faf9fb;
+}
+
+.dark,
+[data-theme="dark"] {
+  --app-wash-base: #141118;
+}
+
+html[data-app-color="paper"] { --background: color-mix(in srgb, var(--note-paper) 60%, var(--app-wash-base)); }
+html[data-app-color="blush"] { --background: color-mix(in srgb, var(--note-blush) 60%, var(--app-wash-base)); }
+html[data-app-color="peach"] { --background: color-mix(in srgb, var(--note-peach) 60%, var(--app-wash-base)); }
+html[data-app-color="butter"] { --background: color-mix(in srgb, var(--note-butter) 60%, var(--app-wash-base)); }
+html[data-app-color="sage"] { --background: color-mix(in srgb, var(--note-sage) 60%, var(--app-wash-base)); }
+html[data-app-color="mint"] { --background: color-mix(in srgb, var(--note-mint) 60%, var(--app-wash-base)); }
+html[data-app-color="sky"] { --background: color-mix(in srgb, var(--note-sky) 60%, var(--app-wash-base)); }
+html[data-app-color="periwinkle"] { --background: color-mix(in srgb, var(--note-periwinkle) 60%, var(--app-wash-base)); }
+html[data-app-color="lilac"] { --background: color-mix(in srgb, var(--note-lilac) 60%, var(--app-wash-base)); }
+html[data-app-color="clay"] { --background: color-mix(in srgb, var(--note-clay) 60%, var(--app-wash-base)); }
+
 /* Register project-owned tokens as Tailwind utilities.
    `inline` keeps the var() reference, so utilities follow the theme. */
 @theme inline {

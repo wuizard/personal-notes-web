@@ -66,6 +66,7 @@ function AttachmentTile({ file, onOpen }: { file: LocalFile; onOpen: () => void 
         type="button"
         onClick={onOpen}
         aria-label={`${t("openFile")}: ${file.name}`}
+        title={`${t("openFile")}: ${file.name}`}
         className="block overflow-hidden rounded-lg border border-[var(--card-border)] transition-transform hover:scale-[1.03]"
       >
         {file.kind === "image" ? (
@@ -93,7 +94,8 @@ function AttachmentTile({ file, onOpen }: { file: LocalFile; onOpen: () => void 
           type="button"
           onClick={() => downloadBlob(file.blob, file.name)}
           aria-label={`${t("download")}: ${file.name}`}
-          className="grid size-6 place-items-center rounded-full bg-background-inverse text-background"
+          title={t("download")}
+          className="grid size-6 place-items-center rounded-full bg-background-inverse text-background transition-opacity hover:opacity-80"
         >
           <Download size={11} strokeWidth={2.5} aria-hidden />
         </button>
@@ -101,7 +103,8 @@ function AttachmentTile({ file, onOpen }: { file: LocalFile; onOpen: () => void 
           type="button"
           onClick={() => void deleteFile(file.id)}
           aria-label={`${t("removeFile")}: ${file.name}`}
-          className="grid size-6 place-items-center rounded-full bg-background-inverse text-background"
+          title={t("removeFile")}
+          className="grid size-6 place-items-center rounded-full bg-background-inverse text-background transition-opacity hover:opacity-80"
         >
           <X size={11} strokeWidth={2.5} aria-hidden />
         </button>
@@ -168,7 +171,8 @@ function PendingTile({
         type="button"
         onClick={onRemove}
         aria-label={removeLabel}
-        className="absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-background-inverse text-background opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+        title={removeLabel}
+        className="absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-background-inverse text-background opacity-0 transition-opacity hover:opacity-80 focus-visible:opacity-100 group-hover:opacity-100"
       >
         <X size={11} strokeWidth={2.5} aria-hidden />
       </button>

@@ -1,13 +1,12 @@
 import { setRequestLocale } from "next-intl/server";
-import { ArchiveView } from "@/features/note/components/archive-view";
+import { CompletedView } from "@/features/note/components/completed-view";
 
-
-export default async function ArchivePage({
+export default async function CompletedPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <ArchiveView />;
+  return <CompletedView />;
 }

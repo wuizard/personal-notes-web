@@ -3,7 +3,7 @@ import { getDb } from "@/features/storage/db";
 import { markHadNotes } from "@/features/storage/persistence";
 import type { ChecklistItem, LocalNote, NoteColor, NoteDoc, NoteKind } from "@/features/storage/types";
 import { buildBodyText } from "../model/body-text";
-import { checklistToDoc, docToChecklist, noteKind } from "../model/convert";
+import { checklistToDoc, docToChecklist, isChecklistComplete, noteKind } from "../model/convert";
 import { currentTimezone, nextOccurrence, type ReminderSpec } from "../model/reminder";
 
 /**
@@ -13,7 +13,7 @@ import { currentTimezone, nextOccurrence, type ReminderSpec } from "../model/rem
  * server, this file changes and nothing above it learns that a network exists.
  */
 
-export type NoteFilter = "active" | "archived" | "trash";
+export type NoteFilter = "active" | "archived" | "trash" | "completed";
 
 export interface CreateNoteInput {
   title?: string;
@@ -61,7 +61,10 @@ export async function createNote(input: CreateNoteInput = {}): Promise<LocalNote
 
 /** Fields a caller may change. Everything else is derived or managed here. */
 export type NotePatch = Partial<
-  Pick<LocalNote, "title" | "body" | "color" | "pinned" | "archived" | "checklist" | "reminder">
+  Pick<
+    LocalNote,
+    "title" | "body" | "color" | "pinned" | "archived" | "checklist" | "reminder" | "completed_at"
+  >
 >;
 
 export async function updateNote(clientId: string, patch: NotePatch): Promise<void> {
@@ -76,6 +79,13 @@ export async function updateNote(clientId: string, patch: NotePatch): Promise<vo
     // it can never drift from the content it indexes.
     if (patch.body !== undefined || patch.checklist !== undefined) {
       next.body_text = buildBodyText(next.body, next.checklist);
+    }
+
+    // A note marked complete stops being complete the instant any item is
+    // unchecked — enforced here, not per-caller, so it can never be forgotten
+    // (docs/10 §10.13a). The UI reacts to the drop by watching completed_at.
+    if (patch.checklist !== undefined && next.completed_at && !isChecklistComplete(next.checklist ?? [])) {
+      next.completed_at = null;
     }
 
     await db.notes.put(next);
@@ -141,6 +151,16 @@ export async function setPinned(clientId: string, pinned: boolean): Promise<void
   return updateNote(clientId, { pinned });
 }
 
+/**
+ * Settles a fully-checked checklist into (or out of) the Completed section —
+ * docs/10 §10.13a, Premium. The caller (NoteEditor) decides whether this may
+ * happen at all — plan tier and the auto-complete setting — this function
+ * just writes the timestamp.
+ */
+export async function setCompleted(clientId: string, completed: boolean): Promise<void> {
+  return updateNote(clientId, { completed_at: completed ? now() : null });
+}
+
 export async function getNote(clientId: string): Promise<LocalNote | undefined> {
   return getDb().notes.get(clientId);
 }
@@ -157,7 +177,13 @@ export async function listNotes(filter: NoteFilter = "active"): Promise<LocalNot
   const visible = all.filter((n) => {
     if (filter === "trash") return n.deleted_at !== null;
     if (n.deleted_at !== null) return false;
-    return filter === "archived" ? n.archived : !n.archived;
+    if (filter === "archived") return n.archived;
+    if (n.archived) return false;
+    // Completed is its own view, carved out of "active" — docs/10 §10.13a.
+    // An archived checklist stays in Archive rather than Completed; the
+    // check above already sent it there.
+    if (filter === "completed") return Boolean(n.completed_at);
+    return !n.completed_at;
   });
 
   return visible.sort((a, b) => {

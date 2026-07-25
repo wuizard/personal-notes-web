@@ -6,6 +6,8 @@
  * (docs/01 §1.5).
  */
 export { getDb, isStorageAvailable, wipeDatabase } from "./db";
+export { wipeDevice } from "./wipe";
+export { countRemoteNotes, deleteRemoteNotes } from "./remote";
 export {
   QUOTA_WARN_RATIO,
   acknowledgeEviction,
