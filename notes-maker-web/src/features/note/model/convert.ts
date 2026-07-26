@@ -79,11 +79,15 @@ export function newChecklistItem(order: number, text = ""): ChecklistItem {
 }
 
 /**
- * True once every real item (blank placeholder rows don't count) is checked
- * — the trigger for the Completed flow, docs/10 §10.13a. A checklist with no
- * real items yet is never "complete".
+ * True once every item — including a just-inserted blank row — is checked,
+ * and at least one item has real text. A blank row starts unchecked, so
+ * adding one to an otherwise fully-checked list immediately makes it
+ * incomplete again: the trigger for the Completed flow, docs/10 §10.13a,
+ * would otherwise fire (or a note would stay stuck completed) while the user
+ * is still mid-add, since the debounced save can bundle "checked the last
+ * item" and "inserted a new row" into a single snapshot before any text
+ * lands in it.
  */
 export function isChecklistComplete(items: ChecklistItem[]): boolean {
-  const real = items.filter((i) => i.text.trim().length > 0);
-  return real.length > 0 && real.every((i) => i.checked);
+  return items.length > 0 && items.every((i) => i.checked) && items.some((i) => i.text.trim().length > 0);
 }
