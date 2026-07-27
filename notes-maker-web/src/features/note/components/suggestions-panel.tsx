@@ -1,13 +1,9 @@
 "use client";
 
-import { useLiveQuery } from "dexie-react-hooks";
-import { useTranslations } from "next-intl";
-import { useToast } from "@/shared/ui/toast";
-import {
-  clearSuggestionHistory,
-  setSuggestionsEnabled,
-  suggestionsEnabled,
-} from "../repo/suggestions";
+import {useLiveQuery} from "dexie-react-hooks";
+import {useTranslations} from "next-intl";
+import {useToast} from "@/shared/ui/toast";
+import {clearSuggestionHistory, setSuggestionsEnabled, suggestionsEnabled,} from "../repo/suggestions";
 
 /**
  * The §10.2 escape hatch: suggestions can be turned off, and turning them off

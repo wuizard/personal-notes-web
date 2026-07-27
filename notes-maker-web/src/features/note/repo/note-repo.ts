@@ -1,10 +1,10 @@
-import { uuidv7 } from "uuidv7";
-import { getDb } from "@/features/storage/db";
-import { markHadNotes } from "@/features/storage/persistence";
-import type { ChecklistItem, LocalNote, NoteColor, NoteDoc, NoteKind } from "@/features/storage/types";
-import { buildBodyText } from "../model/body-text";
-import { checklistToDoc, docToChecklist, isChecklistComplete, noteKind } from "../model/convert";
-import { currentTimezone, nextOccurrence, type ReminderSpec } from "../model/reminder";
+import {uuidv7} from "uuidv7";
+import {getDb} from "@/features/storage/db";
+import {markHadNotes} from "@/features/storage/persistence";
+import type {ChecklistItem, LocalNote, NoteColor, NoteDoc, NoteKind} from "@/features/storage/types";
+import {buildBodyText} from "../model/body-text";
+import {checklistToDoc, docToChecklist, isChecklistComplete, noteKind} from "../model/convert";
+import {currentTimezone, nextOccurrence, type ReminderSpec} from "../model/reminder";
 
 /**
  * The only module that reads or writes notes.

@@ -1,9 +1,9 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
-import { useId, useMemo, useState } from "react";
-import type { LocalReminder } from "@/features/storage";
-import { DEFAULT_REMINDER_TIME, type ReminderSpec } from "../model/reminder";
+import {useLocale, useTranslations} from "next-intl";
+import {useId, useMemo, useState} from "react";
+import type {LocalReminder} from "@/features/storage";
+import {DEFAULT_REMINDER_TIME, type ReminderSpec} from "../model/reminder";
 
 /**
  * Sets a daily/weekly reminder on a note — docs/10 §10.4 (free half).

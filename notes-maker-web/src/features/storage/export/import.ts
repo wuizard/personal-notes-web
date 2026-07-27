@@ -1,13 +1,13 @@
-import { unzip } from "fflate";
-import { getDb } from "../db";
-import { markHadNotes } from "../persistence";
-import type { FileKind, LocalFile, LocalNote } from "../types";
+import {unzip} from "fflate";
+import {getDb} from "../db";
+import {markHadNotes} from "../persistence";
+import type {FileKind, LocalFile, LocalNote} from "../types";
 import {
-  BACKUP_FORMAT_VERSION,
-  BackupError,
-  type BackupFileMeta,
-  type BackupImageMeta,
-  type BackupManifest,
+    BACKUP_FORMAT_VERSION,
+    BackupError,
+    type BackupFileMeta,
+    type BackupImageMeta,
+    type BackupManifest,
 } from "./format";
 
 /**

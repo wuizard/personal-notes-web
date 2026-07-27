@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import {useEffect} from "react";
 
 /**
  * Registers the service worker in production only.

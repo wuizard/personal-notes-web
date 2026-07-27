@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import {useTranslations} from "next-intl";
 
 /**
  * Empty state — docs/06 §6.9. Illustration, a sentence, and the action that

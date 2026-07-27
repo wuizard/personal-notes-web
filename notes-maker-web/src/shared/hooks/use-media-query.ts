@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import {useSyncExternalStore} from "react";
 
 /**
  * Reads a CSS media query reactively.

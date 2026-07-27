@@ -1,7 +1,7 @@
 "use client";
 
-import { useLiveQuery } from "dexie-react-hooks";
-import { listNotes, type NoteFilter } from "../repo/note-repo";
+import {useLiveQuery} from "dexie-react-hooks";
+import {listNotes, type NoteFilter} from "../repo/note-repo";
 
 /**
  * Live note list.

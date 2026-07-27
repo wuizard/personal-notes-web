@@ -1,11 +1,11 @@
 "use client";
 
-import { Languages } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import { useParams } from "next/navigation";
-import { useTransition } from "react";
-import { usePathname, useRouter } from "@/i18n/navigation";
-import { routing, type Locale } from "@/i18n/routing";
+import {Languages} from "lucide-react";
+import {useLocale, useTranslations} from "next-intl";
+import {useParams} from "next/navigation";
+import {useTransition} from "react";
+import {usePathname, useRouter} from "@/i18n/navigation";
+import {type Locale, routing} from "@/i18n/routing";
 
 export function LocaleSwitcher() {
   const t = useTranslations("locale");

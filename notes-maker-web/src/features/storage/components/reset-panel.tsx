@@ -1,11 +1,11 @@
 "use client";
 
-import { AlertTriangle, Trash2 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import { useId, useState } from "react";
-import { signOutUser } from "@/features/auth/firebase";
-import { useAuth } from "@/features/auth/use-auth";
-import { countRemoteNotes, deleteRemoteNotes, wipeDevice } from "..";
+import {AlertTriangle, Trash2} from "lucide-react";
+import {useLocale, useTranslations} from "next-intl";
+import {useId, useState} from "react";
+import {signOutUser} from "@/features/auth/firebase";
+import {useAuth} from "@/features/auth/use-auth";
+import {countRemoteNotes, deleteRemoteNotes, wipeDevice} from "..";
 
 /**
  * The word the user must type, identical in both locales on purpose: it is a

@@ -1,5 +1,5 @@
-import { getDb } from "./db";
-import { META, type InstallMeta } from "./types";
+import {getDb} from "./db";
+import {type InstallMeta, META} from "./types";
 
 /**
  * Storage durability — docs/08 §8.3.

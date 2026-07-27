@@ -1,10 +1,10 @@
 "use client";
 
-import { Pin } from "lucide-react";
-import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
-import type { LocalNote } from "@/features/storage";
-import { noteKind } from "../model/convert";
+import {Pin} from "lucide-react";
+import {useTranslations} from "next-intl";
+import type {ReactNode} from "react";
+import type {LocalNote} from "@/features/storage";
+import {noteKind} from "../model/convert";
 
 /**
  * One row in any note list — active, archive, or trash.

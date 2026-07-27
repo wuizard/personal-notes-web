@@ -1,4 +1,4 @@
-import type { PlanTier } from "./types";
+import type {PlanTier} from "./types";
 
 /**
  * Backend plan check — docs/10 §10.13, stage 6 seam.

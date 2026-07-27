@@ -1,6 +1,6 @@
-import { Suspense } from "react";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { NoteWorkspace } from "@/features/note/components/note-workspace";
+import {Suspense} from "react";
+import {getTranslations, setRequestLocale} from "next-intl/server";
+import {NoteWorkspace} from "@/features/note/components/note-workspace";
 
 export default async function NotesPage({
   params,

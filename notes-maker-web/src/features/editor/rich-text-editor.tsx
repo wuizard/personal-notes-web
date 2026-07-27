@@ -1,12 +1,12 @@
 "use client";
 
-import { EditorContent, useEditor, type Content, type Editor } from "@tiptap/react";
+import {type Content, type Editor, EditorContent, useEditor} from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
-import { Bold, Code, Italic, List, ListOrdered, Strikethrough } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useEffect, type ReactNode } from "react";
-import type { NoteDoc } from "@/features/storage";
+import {Bold, Code, Italic, List, ListOrdered, Strikethrough} from "lucide-react";
+import {useTranslations} from "next-intl";
+import {type ReactNode, useEffect} from "react";
+import type {NoteDoc} from "@/features/storage";
 
 /**
  * The rich-text surface, shared by compose and the editor pane.

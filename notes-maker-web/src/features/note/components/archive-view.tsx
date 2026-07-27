@@ -1,11 +1,11 @@
 "use client";
 
-import { ArchiveRestore, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useToast } from "@/shared/ui/toast";
-import { useNotes } from "../hooks/use-notes";
-import { setArchived, trashNote } from "../repo/note-repo";
-import { NoteRow, rowActionClass } from "./note-row";
+import {ArchiveRestore, Trash2} from "lucide-react";
+import {useTranslations} from "next-intl";
+import {useToast} from "@/shared/ui/toast";
+import {useNotes} from "../hooks/use-notes";
+import {setArchived, trashNote} from "../repo/note-repo";
+import {NoteRow, rowActionClass} from "./note-row";
 
 export function ArchiveView() {
   const t = useTranslations();

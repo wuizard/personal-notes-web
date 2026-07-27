@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
-import { isStorageAvailable } from "@/features/storage";
-import { purgeExpiredTrash } from "../repo/note-repo";
+import {useEffect} from "react";
+import {isStorageAvailable} from "@/features/storage";
+import {purgeExpiredTrash} from "../repo/note-repo";
 
 /**
  * Runs the 30-day trash purge once per app load — docs/10 §10.8.

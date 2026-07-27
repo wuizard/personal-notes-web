@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import {useId} from "react";
 
 /**
  * Blocking confirmation — reserved for actions that cannot be undone or that

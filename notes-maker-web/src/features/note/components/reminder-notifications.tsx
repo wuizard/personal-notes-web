@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
-import { isStorageAvailable } from "@/features/storage";
-import { needsNotification } from "../model/reminder";
-import { listReminderNotes, markReminderNotified } from "../repo/note-repo";
+import {useEffect} from "react";
+import {isStorageAvailable} from "@/features/storage";
+import {needsNotification} from "../model/reminder";
+import {listReminderNotes, markReminderNotified} from "../repo/note-repo";
 
 const SWEEP_INTERVAL_MS = 60 * 1000;
 

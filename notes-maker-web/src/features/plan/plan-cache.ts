@@ -1,4 +1,4 @@
-import type { CachedPlan, PlanTier } from "./types";
+import type {CachedPlan, PlanTier} from "./types";
 
 /**
  * Local cache of the last-verified plan — docs/10 §10.13.

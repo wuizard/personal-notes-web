@@ -1,13 +1,13 @@
 "use client";
 
-import { useLiveQuery } from "dexie-react-hooks";
-import { Bell, Check } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
-import type { LocalNote } from "@/features/storage";
-import { isDue } from "../model/reminder";
-import { dismissReminderOccurrence, listReminderNotes } from "../repo/note-repo";
-import { NoteRow, rowActionClass } from "./note-row";
+import {useLiveQuery} from "dexie-react-hooks";
+import {Bell, Check} from "lucide-react";
+import {useLocale, useTranslations} from "next-intl";
+import {useRouter} from "@/i18n/navigation";
+import type {LocalNote} from "@/features/storage";
+import {isDue} from "../model/reminder";
+import {dismissReminderOccurrence, listReminderNotes} from "../repo/note-repo";
+import {NoteRow, rowActionClass} from "./note-row";
 
 /**
  * The Reminders screen — docs/10 §10.4, the free (local) half.

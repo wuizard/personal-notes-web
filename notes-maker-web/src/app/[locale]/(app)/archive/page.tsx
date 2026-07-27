@@ -1,5 +1,5 @@
-import { setRequestLocale } from "next-intl/server";
-import { ArchiveView } from "@/features/note/components/archive-view";
+import {setRequestLocale} from "next-intl/server";
+import {ArchiveView} from "@/features/note/components/archive-view";
 
 
 export default async function ArchivePage({

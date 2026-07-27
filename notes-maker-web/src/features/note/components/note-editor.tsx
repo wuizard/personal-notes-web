@@ -1,43 +1,22 @@
 "use client";
 
-import { useLiveQuery } from "dexie-react-hooks";
+import {useLiveQuery} from "dexie-react-hooks";
 import dynamic from "next/dynamic";
-import {
-  ArrowLeft,
-  Bell,
-  BellRing,
-  Check,
-  ListChecks,
-  NotepadText,
-  Paperclip,
-} from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  NOTE_COLORS,
-  type ChecklistItem,
-  type NoteColor,
-  type NoteDoc,
-  type NoteKind,
-} from "@/features/storage";
-import { addFile } from "@/features/file/repo";
-import { useFileInput } from "@/features/file/use-file-input";
-import { AttachmentStrip } from "@/features/file/components/attachment-strip";
-import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import { useToast } from "@/shared/ui/toast";
-import { usePlan } from "@/features/plan/use-plan";
-import { isChecklistComplete, noteKind } from "../model/convert";
-import { autoCompleteEnabled } from "../repo/completion";
-import {
-  clearReminder,
-  convertNoteKind,
-  getNote,
-  setCompleted,
-  setReminder,
-  updateNote,
-} from "../repo/note-repo";
-import { ChecklistEditor } from "./checklist-editor";
-import { ReminderDialog } from "./reminder-dialog";
+import {ArrowLeft, Bell, BellRing, Check, ListChecks, NotepadText, Paperclip,} from "lucide-react";
+import {useTranslations} from "next-intl";
+import {useCallback, useEffect, useRef, useState} from "react";
+import {type ChecklistItem, NOTE_COLORS, type NoteColor, type NoteDoc, type NoteKind,} from "@/features/storage";
+import {addFile} from "@/features/file/repo";
+import {useFileInput} from "@/features/file/use-file-input";
+import {AttachmentStrip} from "@/features/file/components/attachment-strip";
+import {ConfirmDialog} from "@/shared/ui/confirm-dialog";
+import {useToast} from "@/shared/ui/toast";
+import {usePlan} from "@/features/plan/use-plan";
+import {isChecklistComplete, noteKind} from "../model/convert";
+import {autoCompleteEnabled} from "../repo/completion";
+import {clearReminder, convertNoteKind, getNote, setCompleted, setReminder, updateNote,} from "../repo/note-repo";
+import {ChecklistEditor} from "./checklist-editor";
+import {ReminderDialog} from "./reminder-dialog";
 
 const RichTextEditor = dynamic(() => import("@/features/editor/rich-text-editor"), {
   ssr: false,

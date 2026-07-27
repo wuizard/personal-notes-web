@@ -1,14 +1,14 @@
-import type { Metadata, Viewport } from "next";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
-import { NextIntlClientProvider, hasLocale } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
-import { routing } from "@/i18n/routing";
-import { AdSense } from "@/shared/ads/adsense";
-import { appColorBootScript } from "@/shared/app-color";
-import { Providers } from "@/shared/providers";
-import { RegisterServiceWorker } from "@/shared/pwa/register-sw";
+import type {Metadata, Viewport} from "next";
+import {GeistSans} from "geist/font/sans";
+import {GeistMono} from "geist/font/mono";
+import {hasLocale, NextIntlClientProvider} from "next-intl";
+import {setRequestLocale} from "next-intl/server";
+import {notFound} from "next/navigation";
+import {routing} from "@/i18n/routing";
+import {AdSense} from "@/shared/ads/adsense";
+import {appColorBootScript} from "@/shared/app-color";
+import {Providers} from "@/shared/providers";
+import {RegisterServiceWorker} from "@/shared/pwa/register-sw";
 import "../globals.css";
 
 /**

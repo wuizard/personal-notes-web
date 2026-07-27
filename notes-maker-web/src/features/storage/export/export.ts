@@ -1,12 +1,7 @@
-import { zip } from "fflate";
-import { getDb } from "../db";
-import { setLastExportAt } from "../persistence";
-import {
-  BACKUP_FORMAT_VERSION,
-  backupFilename,
-  type BackupFileMeta,
-  type BackupManifest,
-} from "./format";
+import {zip} from "fflate";
+import {getDb} from "../db";
+import {setLastExportAt} from "../persistence";
+import {BACKUP_FORMAT_VERSION, type BackupFileMeta, backupFilename, type BackupManifest,} from "./format";
 
 /**
  * Export — docs/08 §8.6.

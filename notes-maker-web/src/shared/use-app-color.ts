@@ -1,8 +1,8 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-import type { NoteColor } from "@/features/storage/types";
-import { APP_COLOR_KEY } from "./app-color";
+import {useSyncExternalStore} from "react";
+import type {NoteColor} from "@/features/storage/types";
+import {APP_COLOR_KEY} from "./app-color";
 
 /** Client half of the app colour wash — see app-color.ts for the design. */
 

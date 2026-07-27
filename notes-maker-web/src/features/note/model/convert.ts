@@ -1,6 +1,6 @@
-import { uuidv7 } from "uuidv7";
-import type { ChecklistItem, LocalNote, NoteDoc, NoteKind } from "@/features/storage/types";
-import { flattenDoc } from "./body-text";
+import {uuidv7} from "uuidv7";
+import type {ChecklistItem, LocalNote, NoteDoc, NoteKind} from "@/features/storage/types";
+import {flattenDoc} from "./body-text";
 
 /**
  * Conversions between the two capture kinds — docs/10 §10.1.

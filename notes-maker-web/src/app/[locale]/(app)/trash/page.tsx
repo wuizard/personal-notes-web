@@ -1,5 +1,5 @@
-import { setRequestLocale } from "next-intl/server";
-import { TrashView } from "@/features/note/components/trash-view";
+import {setRequestLocale} from "next-intl/server";
+import {TrashView} from "@/features/note/components/trash-view";
 
 export default async function TrashPage({
   params,

@@ -1,16 +1,10 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
-import { useAuth } from "@/features/auth/use-auth";
-import { checkRemotePlan } from "./remote";
-import {
-  clearCachedPlan,
-  effectiveTier,
-  getCachedPlan,
-  PLAN_CHANGE_EVENT,
-  setCachedPlan,
-} from "./plan-cache";
-import type { PlanTier } from "./types";
+import {useEffect, useSyncExternalStore} from "react";
+import {useAuth} from "@/features/auth/use-auth";
+import {checkRemotePlan} from "./remote";
+import {clearCachedPlan, effectiveTier, getCachedPlan, PLAN_CHANGE_EVENT, setCachedPlan,} from "./plan-cache";
+import type {PlanTier} from "./types";
 
 export interface PlanState {
   /** The plan the rest of the app should treat as active right now. */

@@ -1,4 +1,4 @@
-import type { LocalReminder } from "@/features/storage/types";
+import type {LocalReminder} from "@/features/storage/types";
 
 /**
  * Reminder occurrence math — docs/10 §10.4.

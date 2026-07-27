@@ -1,9 +1,9 @@
 "use client";
 
-import { Monitor, Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
-import { useTranslations } from "next-intl";
-import { useSyncExternalStore } from "react";
+import {Monitor, Moon, Sun} from "lucide-react";
+import {useTheme} from "next-themes";
+import {useTranslations} from "next-intl";
+import {useSyncExternalStore} from "react";
 
 const ORDER = ["system", "light", "dark"] as const;
 const ICONS = { system: Monitor, light: Sun, dark: Moon };

@@ -1,11 +1,7 @@
 "use client";
 
-import { useCallback } from "react";
-import {
-  markPersistencePrompted,
-  requestPersistence,
-  wasPersistencePrompted,
-} from "../persistence";
+import {useCallback} from "react";
+import {markPersistencePrompted, requestPersistence, wasPersistencePrompted,} from "../persistence";
 
 /**
  * Requests storage persistence at the right moment — docs/08 §8.3.

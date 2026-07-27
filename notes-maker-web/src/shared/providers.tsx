@@ -1,9 +1,9 @@
 "use client";
 
-import { I18nProvider } from "@heroui/react";
-import { ThemeProvider } from "next-themes";
-import type { ReactNode } from "react";
-import { ToastProvider } from "./ui/toast";
+import {I18nProvider} from "@heroui/react";
+import {ThemeProvider} from "next-themes";
+import type {ReactNode} from "react";
+import {ToastProvider} from "./ui/toast";
 
 /**
  * HeroUI v3 needs no provider of its own — it is built on

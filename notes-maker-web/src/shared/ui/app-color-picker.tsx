@@ -1,10 +1,10 @@
 "use client";
 
-import { Palette } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { NOTE_COLORS, type NoteColor } from "@/features/storage/types";
-import { setAppColor, useAppColor } from "@/shared/use-app-color";
+import {Palette} from "lucide-react";
+import {useTranslations} from "next-intl";
+import {useState} from "react";
+import {NOTE_COLORS, type NoteColor} from "@/features/storage/types";
+import {setAppColor, useAppColor} from "@/shared/use-app-color";
 
 /**
  * Top-bar palette: picks the app-wide colour wash (see shared/app-color.ts).

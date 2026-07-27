@@ -1,4 +1,4 @@
-import type { FileKind } from "@/features/storage/types";
+import type {FileKind} from "@/features/storage/types";
 
 /**
  * Classifies an attachment for preview purposes.

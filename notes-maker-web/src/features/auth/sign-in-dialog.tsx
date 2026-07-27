@@ -1,14 +1,8 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { useId, useState } from "react";
-import {
-  authErrorKey,
-  isUserCancelled,
-  registerWithEmail,
-  signInWithEmail,
-  signInWithGoogle,
-} from "./firebase";
+import {useTranslations} from "next-intl";
+import {useId, useState} from "react";
+import {authErrorKey, isUserCancelled, registerWithEmail, signInWithEmail, signInWithGoogle,} from "./firebase";
 
 type Mode = "signIn" | "create";
 

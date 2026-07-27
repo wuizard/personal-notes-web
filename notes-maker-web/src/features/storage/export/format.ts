@@ -1,4 +1,4 @@
-import type { LocalNote } from "../types";
+import type {LocalNote} from "../types";
 
 /**
  * Backup file format — docs/08 §8.6.

@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-import { StrictMode } from "react";
-import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { useObjectUrl } from "./use-object-url";
+import {StrictMode} from "react";
+import {cleanup, render, screen} from "@testing-library/react";
+import {afterEach, beforeEach, describe, expect, it} from "vitest";
+import {useObjectUrl} from "./use-object-url";
 
 /**
  * Guards the StrictMode double-mount bug.

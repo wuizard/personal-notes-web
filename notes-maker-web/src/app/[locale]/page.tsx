@@ -1,10 +1,10 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { CloudOff, ListChecks, ShieldCheck } from "lucide-react";
-import { Link } from "@/i18n/navigation";
-import { AppColorSwatches } from "@/shared/ui/app-color-swatches";
-import { BrandMark } from "@/shared/ui/brand-mark";
-import { ThemeToggle } from "@/shared/ui/theme-toggle";
-import { LocaleSwitcher } from "@/shared/ui/locale-switcher";
+import {getTranslations, setRequestLocale} from "next-intl/server";
+import {CloudOff, ListChecks, ShieldCheck} from "lucide-react";
+import {Link} from "@/i18n/navigation";
+import {AppColorSwatches} from "@/shared/ui/app-color-swatches";
+import {BrandMark} from "@/shared/ui/brand-mark";
+import {ThemeToggle} from "@/shared/ui/theme-toggle";
+import {LocaleSwitcher} from "@/shared/ui/locale-switcher";
 
 /**
  * Marketing landing page.

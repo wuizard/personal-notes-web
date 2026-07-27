@@ -1,11 +1,11 @@
 "use client";
 
-import { CircleUserRound, LogOut } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { isFirebaseConfigured, signOutUser } from "./firebase";
-import { useAuth } from "./use-auth";
-import { SignInDialog } from "./sign-in-dialog";
+import {CircleUserRound, LogOut} from "lucide-react";
+import {useTranslations} from "next-intl";
+import {useState} from "react";
+import {isFirebaseConfigured, signOutUser} from "./firebase";
+import {useAuth} from "./use-auth";
+import {SignInDialog} from "./sign-in-dialog";
 
 /**
  * The profile icon — docs/10 §10.6. Signed-out it opens the sign-in dialog;

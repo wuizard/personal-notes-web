@@ -1,11 +1,11 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Download, X } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useEffect, useRef } from "react";
-import type { LocalFile } from "@/features/storage";
-import { downloadBlob, formatBytes } from "../kind";
-import { FilePreview } from "./file-preview";
+import {ChevronLeft, ChevronRight, Download, X} from "lucide-react";
+import {useTranslations} from "next-intl";
+import {useEffect, useRef} from "react";
+import type {LocalFile} from "@/features/storage";
+import {downloadBlob, formatBytes} from "../kind";
+import {FilePreview} from "./file-preview";
 
 /**
  * Full-size attachment viewer.

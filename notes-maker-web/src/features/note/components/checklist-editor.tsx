@@ -1,10 +1,10 @@
 "use client";
 
-import { ChevronRight, Plus, X } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { ChecklistItem } from "@/features/storage";
-import { newChecklistItem } from "../model/convert";
+import {ChevronRight, Plus, X} from "lucide-react";
+import {useTranslations} from "next-intl";
+import {useEffect, useMemo, useRef, useState} from "react";
+import type {ChecklistItem} from "@/features/storage";
+import {newChecklistItem} from "../model/convert";
 
 /**
  * The checklist surface, shared by compose and the editor pane — docs/10 §10.1.

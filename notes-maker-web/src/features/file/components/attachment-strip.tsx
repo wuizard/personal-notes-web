@@ -1,14 +1,14 @@
 "use client";
 
-import { useLiveQuery } from "dexie-react-hooks";
-import { Download, FileText, FileType, Film, X } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { useObjectUrl } from "@/features/image/use-object-url";
-import type { FileKind, LocalFile } from "@/features/storage";
-import { deleteFile, listFiles } from "../repo";
-import { downloadBlob, formatBytes } from "../kind";
-import { FileViewer } from "./file-viewer";
+import {useLiveQuery} from "dexie-react-hooks";
+import {Download, FileText, FileType, Film, X} from "lucide-react";
+import {useTranslations} from "next-intl";
+import {useState} from "react";
+import {useObjectUrl} from "@/features/image/use-object-url";
+import type {FileKind, LocalFile} from "@/features/storage";
+import {deleteFile, listFiles} from "../repo";
+import {downloadBlob, formatBytes} from "../kind";
+import {FileViewer} from "./file-viewer";
 
 const KIND_ICON: Record<Exclude<FileKind, "image">, typeof FileText> = {
   video: Film,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 
 /**
  * Turns a Blob into an object URL and revokes it when it is no longer needed.

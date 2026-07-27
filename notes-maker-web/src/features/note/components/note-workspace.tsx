@@ -1,13 +1,13 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useCallback, useMemo } from "react";
-import { usePathname, useRouter } from "@/i18n/navigation";
-import { useIsDesktop } from "@/shared/hooks/use-media-query";
-import { useHotkeys } from "@/shared/hooks/use-hotkeys";
-import { NoteList } from "./note-list";
-import { NoteEditor } from "./note-editor";
-import { NoNoteSelected } from "./no-note-selected";
+import {useSearchParams} from "next/navigation";
+import {useCallback, useMemo} from "react";
+import {usePathname, useRouter} from "@/i18n/navigation";
+import {useIsDesktop} from "@/shared/hooks/use-media-query";
+import {useHotkeys} from "@/shared/hooks/use-hotkeys";
+import {NoteList} from "./note-list";
+import {NoteEditor} from "./note-editor";
+import {NoNoteSelected} from "./no-note-selected";
 
 /**
  * Master-detail workspace — the desktop layout of Evernote / Apple Notes

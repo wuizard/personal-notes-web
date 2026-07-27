@@ -1,9 +1,9 @@
-import { uuidv7 } from "uuidv7";
-import { getDb } from "@/features/storage/db";
-import { estimateStorage, isQuotaCritical } from "@/features/storage/persistence";
-import { MAX_FILE_BYTES, type LocalFile } from "@/features/storage/types";
-import { processImage } from "@/features/image/pipeline";
-import { classify } from "./kind";
+import {uuidv7} from "uuidv7";
+import {getDb} from "@/features/storage/db";
+import {estimateStorage, isQuotaCritical} from "@/features/storage/persistence";
+import {type LocalFile, MAX_FILE_BYTES} from "@/features/storage/types";
+import {processImage} from "@/features/image/pipeline";
+import {classify} from "./kind";
 
 /**
  * Attachment storage — docs/08 §8.4.

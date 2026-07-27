@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import {useTranslations} from "next-intl";
 
 /**
  * The editor pane before anything is open.

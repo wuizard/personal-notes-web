@@ -1,14 +1,14 @@
 "use client";
 
-import { Archive, Bell, CheckCheck, NotebookText, Settings, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
-import { Link, usePathname } from "@/i18n/navigation";
-import { AuthMenu } from "@/features/auth/auth-menu";
-import { ThemeToggle } from "./theme-toggle";
-import { LocaleSwitcher } from "./locale-switcher";
-import { AppColorPicker } from "./app-color-picker";
-import { BrandMark } from "./brand-mark";
+import {Archive, Bell, CheckCheck, NotebookText, Settings, Trash2} from "lucide-react";
+import {useTranslations} from "next-intl";
+import type {ReactNode} from "react";
+import {Link, usePathname} from "@/i18n/navigation";
+import {AuthMenu} from "@/features/auth/auth-menu";
+import {ThemeToggle} from "./theme-toggle";
+import {LocaleSwitcher} from "./locale-switcher";
+import {AppColorPicker} from "./app-color-picker";
+import {BrandMark} from "./brand-mark";
 
 const NAV = [
   { href: "/notes", key: "notes", icon: NotebookText },

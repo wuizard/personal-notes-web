@@ -1,7 +1,7 @@
-import { setRequestLocale } from "next-intl/server";
-import { AppShell } from "@/shared/ui/app-shell";
-import { TrashAutoPurge } from "@/features/note/components/trash-auto-purge";
-import { ReminderNotifications } from "@/features/note/components/reminder-notifications";
+import {setRequestLocale} from "next-intl/server";
+import {AppShell} from "@/shared/ui/app-shell";
+import {TrashAutoPurge} from "@/features/note/components/trash-auto-purge";
+import {ReminderNotifications} from "@/features/note/components/reminder-notifications";
 
 /**
  * The app shell.

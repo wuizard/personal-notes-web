@@ -1,9 +1,9 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
-import { NOTE_COLORS } from "@/features/storage/types";
-import { setAppColor } from "@/shared/use-app-color";
+import {useTranslations} from "next-intl";
+import {useRouter} from "@/i18n/navigation";
+import {NOTE_COLORS} from "@/features/storage/types";
+import {setAppColor} from "@/shared/use-app-color";
 
 /**
  * Landing-page palette: each swatch sets the app-wide colour wash

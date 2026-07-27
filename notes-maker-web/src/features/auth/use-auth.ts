@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getFirebaseAuth, isFirebaseConfigured, type AuthUser } from "./firebase";
+import {useEffect, useState} from "react";
+import {type AuthUser, getFirebaseAuth, isFirebaseConfigured} from "./firebase";
 
 export interface AuthState {
   user: AuthUser | null;

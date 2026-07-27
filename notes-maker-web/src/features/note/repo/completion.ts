@@ -1,5 +1,5 @@
-import { getDb } from "@/features/storage/db";
-import { META } from "@/features/storage/types";
+import {getDb} from "@/features/storage/db";
+import {META} from "@/features/storage/types";
 
 /**
  * Settings for the Completed flow — docs/10 §10.13a, Premium.

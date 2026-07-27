@@ -1,14 +1,14 @@
 "use client";
 
-import { RotateCcw, X } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { useToast } from "@/shared/ui/toast";
-import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import { useNotes } from "../hooks/use-notes";
-import { deleteForever, emptyTrash, restoreNote, trashDaysLeft } from "../repo/note-repo";
-import { NoteRow, rowActionClass } from "./note-row";
-import { EmptyState } from "./archive-view";
+import {RotateCcw, X} from "lucide-react";
+import {useTranslations} from "next-intl";
+import {useState} from "react";
+import {useToast} from "@/shared/ui/toast";
+import {ConfirmDialog} from "@/shared/ui/confirm-dialog";
+import {useNotes} from "../hooks/use-notes";
+import {deleteForever, emptyTrash, restoreNote, trashDaysLeft} from "../repo/note-repo";
+import {NoteRow, rowActionClass} from "./note-row";
+import {EmptyState} from "./archive-view";
 
 export function TrashView() {
   const t = useTranslations();

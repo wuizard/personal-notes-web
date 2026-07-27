@@ -1,4 +1,4 @@
-import { wipeDatabase } from "./db";
+import {wipeDatabase} from "./db";
 
 /**
  * Erases every trace of the app from this browser: the database (notes,

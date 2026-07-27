@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
-import type { LocalReminder } from "@/features/storage/types";
-import { isDue, needsNotification, nextOccurrence } from "./reminder";
+import {describe, expect, it} from "vitest";
+import type {LocalReminder} from "@/features/storage/types";
+import {isDue, needsNotification, nextOccurrence} from "./reminder";
 
 // A fixed local reference: Wednesday 2026-07-22, 10:30 local time.
 const WED = new Date(2026, 6, 22, 10, 30);

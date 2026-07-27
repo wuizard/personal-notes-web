@@ -1,16 +1,16 @@
 "use client";
 
-import { RotateCcw, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { useToast } from "@/shared/ui/toast";
-import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import { usePlan } from "@/features/plan/use-plan";
-import type { LocalNote } from "@/features/storage";
-import { useNotes } from "../hooks/use-notes";
-import { setCompleted, trashNote } from "../repo/note-repo";
-import { NoteRow, rowActionClass } from "./note-row";
-import { EmptyState } from "./archive-view";
+import {RotateCcw, Trash2} from "lucide-react";
+import {useTranslations} from "next-intl";
+import {useState} from "react";
+import {useToast} from "@/shared/ui/toast";
+import {ConfirmDialog} from "@/shared/ui/confirm-dialog";
+import {usePlan} from "@/features/plan/use-plan";
+import type {LocalNote} from "@/features/storage";
+import {useNotes} from "../hooks/use-notes";
+import {setCompleted, trashNote} from "../repo/note-repo";
+import {NoteRow, rowActionClass} from "./note-row";
+import {EmptyState} from "./archive-view";
 
 /**
  * Fully-checked checklists, settled here after the completion prompt —

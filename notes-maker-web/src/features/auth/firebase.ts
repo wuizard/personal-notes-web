@@ -1,4 +1,4 @@
-import type { Auth } from "firebase/auth";
+import type {Auth} from "firebase/auth";
 
 /**
  * Firebase client bootstrap — docs/10 §10.6.

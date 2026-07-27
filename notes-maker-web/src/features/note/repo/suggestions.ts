@@ -1,5 +1,5 @@
-import { getDb } from "@/features/storage/db";
-import { META, type CapturePhrase } from "@/features/storage/types";
+import {getDb} from "@/features/storage/db";
+import {type CapturePhrase, META} from "@/features/storage/types";
 
 /**
  * Quick-capture suggestions — docs/10 §10.2.

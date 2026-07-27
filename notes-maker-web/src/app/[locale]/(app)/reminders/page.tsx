@@ -1,5 +1,5 @@
-import { setRequestLocale } from "next-intl/server";
-import { RemindersView } from "@/features/note/components/reminders-view";
+import {setRequestLocale} from "next-intl/server";
+import {RemindersView} from "@/features/note/components/reminders-view";
 
 export default async function RemindersPage({
   params,

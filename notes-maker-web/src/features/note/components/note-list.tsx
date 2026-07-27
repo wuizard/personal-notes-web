@@ -1,17 +1,17 @@
 "use client";
 
-import { Archive, Pin, Search, Trash2, X } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useCallback, useDeferredValue, useMemo, useState } from "react";
-import { useHotkeys } from "@/shared/hooks/use-hotkeys";
-import { useToast } from "@/shared/ui/toast";
-import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import type { LocalNote } from "@/features/storage";
-import { QuickCompose } from "./quick-compose";
-import { EmptyNotes } from "./empty-notes";
-import { NoteRow, rowActionClass } from "./note-row";
-import { useNotes } from "../hooks/use-notes";
-import { restoreNote, setArchived, setPinned, trashNote } from "../repo/note-repo";
+import {Archive, Pin, Search, Trash2, X} from "lucide-react";
+import {useTranslations} from "next-intl";
+import {useCallback, useDeferredValue, useMemo, useState} from "react";
+import {useHotkeys} from "@/shared/hooks/use-hotkeys";
+import {useToast} from "@/shared/ui/toast";
+import {ConfirmDialog} from "@/shared/ui/confirm-dialog";
+import type {LocalNote} from "@/features/storage";
+import {QuickCompose} from "./quick-compose";
+import {EmptyNotes} from "./empty-notes";
+import {NoteRow, rowActionClass} from "./note-row";
+import {useNotes} from "../hooks/use-notes";
+import {restoreNote, setArchived, setPinned, trashNote} from "../repo/note-repo";
 
 /**
  * The list pane. Capture sits at its top — not centred in the page — so the

@@ -1,5 +1,5 @@
-import { setRequestLocale } from "next-intl/server";
-import { CompletedView } from "@/features/note/components/completed-view";
+import {setRequestLocale} from "next-intl/server";
+import {CompletedView} from "@/features/note/components/completed-view";
 
 export default async function CompletedPage({
   params,

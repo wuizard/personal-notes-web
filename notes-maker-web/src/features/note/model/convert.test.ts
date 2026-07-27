@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
-import type { ChecklistItem } from "@/features/storage/types";
-import { checklistToDoc, docToChecklist, noteKind } from "./convert";
+import {describe, expect, it} from "vitest";
+import type {ChecklistItem} from "@/features/storage/types";
+import {checklistToDoc, docToChecklist, noteKind} from "./convert";
 
 function item(text: string, order: number, checked = false): ChecklistItem {
   return { id: `id-${order}`, text, checked, order };

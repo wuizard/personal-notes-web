@@ -1,4 +1,4 @@
-import type { ChecklistItem, NoteDoc } from "@/features/storage/types";
+import type {ChecklistItem, NoteDoc} from "@/features/storage/types";
 
 interface ProseMirrorNode {
   type?: string;

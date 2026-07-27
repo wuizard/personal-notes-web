@@ -1,26 +1,21 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ListChecks, NotepadText, Paperclip } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
-import {
-  NOTE_COLORS,
-  type ChecklistItem,
-  type NoteColor,
-  type NoteDoc,
-} from "@/features/storage";
-import { usePersistencePrompt } from "@/features/storage/hooks/use-persistence-prompt";
-import { addFile } from "@/features/file/repo";
-import { useFileInput } from "@/features/file/use-file-input";
-import { PendingAttachmentStrip } from "@/features/file/components/attachment-strip";
-import { useLiveQuery } from "dexie-react-hooks";
-import { splitTitle } from "../model/body-text";
-import { checklistToDoc, docToChecklist, newChecklistItem } from "../model/convert";
-import { createNote } from "../repo/note-repo";
-import { recordCapturePhrases, topSuggestions } from "../repo/suggestions";
-import { ChecklistEditor } from "./checklist-editor";
+import {ListChecks, NotepadText, Paperclip} from "lucide-react";
+import {useTranslations} from "next-intl";
+import {useSearchParams} from "next/navigation";
+import {useCallback, useState} from "react";
+import {type ChecklistItem, NOTE_COLORS, type NoteColor, type NoteDoc,} from "@/features/storage";
+import {usePersistencePrompt} from "@/features/storage/hooks/use-persistence-prompt";
+import {addFile} from "@/features/file/repo";
+import {useFileInput} from "@/features/file/use-file-input";
+import {PendingAttachmentStrip} from "@/features/file/components/attachment-strip";
+import {useLiveQuery} from "dexie-react-hooks";
+import {splitTitle} from "../model/body-text";
+import {checklistToDoc, docToChecklist, newChecklistItem} from "../model/convert";
+import {createNote} from "../repo/note-repo";
+import {recordCapturePhrases, topSuggestions} from "../repo/suggestions";
+import {ChecklistEditor} from "./checklist-editor";
 
 // Tiptap and ProseMirror are ~90KB gzipped. Loading them lazily keeps them off
 // the initial bundle, which is what the docs/06 §6.10 budget is protecting —

@@ -14,7 +14,7 @@
  *                 icons to a circle or squircle of its choosing. Feeding it the
  *                 rounded artwork would clip the corners twice.
  */
-import { copyFile, mkdir, readFile } from "node:fs/promises";
+import {copyFile, mkdir, readFile} from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 

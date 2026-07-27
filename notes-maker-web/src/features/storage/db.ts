@@ -1,12 +1,5 @@
-import Dexie, { type Table } from "dexie";
-import type {
-  CapturePhrase,
-  FileKind,
-  LocalFile,
-  LocalImage,
-  LocalNote,
-  MetaRow,
-} from "./types";
+import Dexie, {type Table} from "dexie";
+import type {CapturePhrase, FileKind, LocalFile, LocalImage, LocalNote, MetaRow,} from "./types";
 
 /**
  * The local database — docs/08 §8.2.

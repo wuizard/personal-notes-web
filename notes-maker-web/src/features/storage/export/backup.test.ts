@@ -1,9 +1,9 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { getDb } from "../db";
-import type { LocalFile, LocalNote } from "../types";
-import { buildBackupZip } from "./export";
-import { BackupError } from "./format";
-import { applyBackup, importBackup, readBackup } from "./import";
+import {beforeEach, describe, expect, it} from "vitest";
+import {getDb} from "../db";
+import type {LocalFile, LocalNote} from "../types";
+import {buildBackupZip} from "./export";
+import {BackupError} from "./format";
+import {applyBackup, importBackup, readBackup} from "./import";
 
 /**
  * Export/import is the only recovery path the free tier has (docs/08 §8.6).

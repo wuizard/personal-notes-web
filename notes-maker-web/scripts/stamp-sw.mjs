@@ -13,8 +13,8 @@
  * The id is derived from the built asset filenames — content-hashed, so it is
  * stable when nothing changed and different the moment anything did.
  */
-import { createHash } from "node:crypto";
-import { readdir, readFile, writeFile } from "node:fs/promises";
+import {createHash} from "node:crypto";
+import {readdir, readFile, writeFile} from "node:fs/promises";
 import path from "node:path";
 
 const OUT = path.join(import.meta.dirname, "..", "out");

@@ -1,4 +1,4 @@
-﻿import { defineRouting } from "next-intl/routing";
+﻿import {defineRouting} from "next-intl/routing";
 
 /**
  * English is the default; Indonesian lives under `/id`. Marketing pages need

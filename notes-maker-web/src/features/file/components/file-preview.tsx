@@ -1,11 +1,11 @@
 "use client";
 
-import { Download, FileText } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
-import { useObjectUrl } from "@/features/image/use-object-url";
-import type { LocalFile } from "@/features/storage";
-import { downloadBlob, formatBytes } from "../kind";
+import {Download, FileText} from "lucide-react";
+import {useTranslations} from "next-intl";
+import {useEffect, useState} from "react";
+import {useObjectUrl} from "@/features/image/use-object-url";
+import type {LocalFile} from "@/features/storage";
+import {downloadBlob, formatBytes} from "../kind";
 
 /**
  * Renders one attachment at full size, by kind.

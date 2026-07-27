@@ -1,8 +1,8 @@
 "use client";
 
-import { useLiveQuery } from "dexie-react-hooks";
-import { useTranslations } from "next-intl";
-import { autoCompleteEnabled, setAutoCompleteEnabled } from "../repo/completion";
+import {useLiveQuery} from "dexie-react-hooks";
+import {useTranslations} from "next-intl";
+import {autoCompleteEnabled, setAutoCompleteEnabled} from "../repo/completion";
 
 /**
  * Settings → the Completed flow's on/off switch — docs/10 §10.13a, Premium.

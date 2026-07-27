@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
-import type { NoteDoc } from "@/features/storage/types";
-import { flattenDoc, splitTitle } from "./body-text";
+import {describe, expect, it} from "vitest";
+import type {NoteDoc} from "@/features/storage/types";
+import {flattenDoc, splitTitle} from "./body-text";
 
 const para = (text: string) => ({ type: "paragraph", content: [{ type: "text", text }] });
 const listItem = (text: string) => ({ type: "listItem", content: [para(text)] });

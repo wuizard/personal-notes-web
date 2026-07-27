@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
-import { ImageError } from "@/features/image/pipeline";
-import { FileTooLargeError, QuotaExceededError } from "./repo";
+import {useCallback, useRef, useState} from "react";
+import {useTranslations} from "next-intl";
+import {ImageError} from "@/features/image/pipeline";
+import {FileTooLargeError, QuotaExceededError} from "./repo";
 
 /**
  * The three ways a file enters a note — picker, paste, drag-drop — behind one
