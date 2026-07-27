@@ -1,0 +1,18 @@
+schema:
+  - internal/graph/schema.graphql
+
+exec:
+  filename: internal/graph/generated/generated.go
+  package: generated
+
+model:
+  filename: internal/graph/model/models_gen.go
+  package: model
+
+resolver:
+  layout: single-file
+  filename: internal/graph/resolver.go
+  package: graph
+
+omit_slice_element_pointers: true
+omit_getters: true

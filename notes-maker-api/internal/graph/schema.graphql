@@ -1,0 +1,21 @@
+# Milestone 1 subset of docs/10 §10.15's full sketch: just enough for the
+# frontend's usePlan() to verify entitlement against a real backend. Notes,
+# sync, labels, etc. are added in the next milestone.
+
+scalar DateTime
+
+enum Plan {
+  FREE
+  PREMIUM
+}
+
+type User {
+  id: ID!
+  email: String!
+  displayName: String
+  plan: Plan!
+}
+
+type Query {
+  me: User!
+}

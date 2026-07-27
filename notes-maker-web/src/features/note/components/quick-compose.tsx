@@ -11,9 +11,10 @@ import {addFile} from "@/features/file/repo";
 import {useFileInput} from "@/features/file/use-file-input";
 import {PendingAttachmentStrip} from "@/features/file/components/attachment-strip";
 import {useLiveQuery} from "dexie-react-hooks";
+import {usePlan} from "@/features/plan/use-plan";
 import {splitTitle} from "../model/body-text";
 import {checklistToDoc, docToChecklist, newChecklistItem} from "../model/convert";
-import {createNote} from "../repo/note-repo";
+import {countActiveNotes, createNote, FREE_ITEM_CAP, PREMIUM_ITEM_CAP} from "../repo/note-repo";
 import {recordCapturePhrases, topSuggestions} from "../repo/suggestions";
 import {ChecklistEditor} from "./checklist-editor";
 
@@ -49,6 +50,14 @@ export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }
   const [pending, setPending] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const { maybePrompt } = usePersistencePrompt();
+
+  // Combined note+checklist limit — docs/10 §10.14. Read live so hitting the
+  // cap in one tab (or one browser action) is reflected immediately, without
+  // a stale count letting someone slip one more item past it.
+  const { plan } = usePlan();
+  const itemCount = useLiveQuery(() => countActiveNotes(), []);
+  const itemCap = plan === "premium" ? PREMIUM_ITEM_CAP : FREE_ITEM_CAP;
+  const atCap = (itemCount ?? 0) >= itemCap;
 
   // Files can't be stored before the note exists (they key off note_id), so
   // they're held here and written immediately after the note is created.
@@ -131,7 +140,10 @@ export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }
 
   async function submit() {
     // An empty capture is discarded silently — the user knows (docs/06 §6.2).
-    if (!hasContent || busy) return;
+    // The cap itself is checked reactively (see `atCap` and the message
+    // below) rather than only here, so nothing typed is ever lost to a
+    // surprise block at save time (docs/10 §10.14).
+    if (!hasContent || busy || atCap) return;
 
     setBusy(true);
     try {
@@ -279,6 +291,12 @@ export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }
         </p>
       )}
 
+      {atCap && (
+        <p role="alert" className="mt-2 rounded-lg bg-warning-soft px-2.5 py-1.5 text-[12.5px] text-warning-soft-foreground">
+          {t(plan === "premium" ? "note.capReachedPremium" : "note.capReachedFree", { cap: itemCap })}
+        </p>
+      )}
+
       <div className="mt-2 flex items-center gap-2 border-t border-[var(--card-border)] pt-2">
         <button
           type="button"
@@ -321,7 +339,7 @@ export function QuickCompose({ onCreated }: { onCreated?: (id: string) => void }
         <button
           type="button"
           onClick={() => void submit()}
-          disabled={busy || !hasContent}
+          disabled={busy || !hasContent || atCap}
           className="rounded-lg bg-accent px-3 py-1.5 text-[12.5px] font-semibold text-accent-foreground transition-colors hover:bg-accent-hover disabled:opacity-50"
         >
           {t("note.save")}

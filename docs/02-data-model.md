@@ -22,12 +22,23 @@ and it is small enough to embed as an ID array on the note.
 
 ## 2.1 `users`
 
+> **Partially superseded (2026-07-27) — see [docs/10 §10.17](10-plan-change-v2.md).**
+> `email_verified_at` and `password_hash` don't exist — the backend verifies Firebase ID tokens
+> instead of issuing its own credentials, so `firebase_uid` (unique-indexed) is the identity key
+> and `email` is denormalized (display/lookup, and what the Polar webhook matches against — never
+> the auth credential). Also, **every signed-in user gets a document now**, not just paid ones —
+> `GetOrCreateByFirebaseUID` creates one on first sign-in regardless of tier, because the document
+> is how `me.plan` gets answered at all; "free users have no document" (below) no longer holds.
+> `settings`, `avatar_color`, `storage_bytes`, `note_count`, and the full `subscription` shape
+> below are not built yet — milestone 1 only has
+> `subscription { status, polar_customer_id, polar_subscription_id, current_period_end }`. This
+> section otherwise still describes the intended eventual shape once Notes sync (P2.3–P2.4) lands.
+
 ```jsonc
 {
   "_id": ObjectId,
-  "email": "ana@example.com",        // lowercased, unique
-  "email_verified_at": ISODate | null,
-  "password_hash": "$argon2id$v=19$m=65536,t=3,p=2$...",
+  "firebase_uid": "…",               // unique; the identity key
+  "email": "ana@example.com",        // denormalised display/lookup field, not a credential
   "display_name": "Ana",
   "avatar_color": "lilac",           // pastel token, generated at signup
   "settings": {
@@ -198,6 +209,11 @@ live labels at read time, and the worker cleans up stale references lazily.
 **Indexes**: `{ user_id: 1, name_lower: 1 }` unique · `{ user_id: 1, updated_at: 1, _id: 1 }`
 
 ## 2.4 `sessions`
+
+> **Superseded (2026-07-27) — see [docs/10 §10.17](10-plan-change-v2.md).** This collection is not
+> built and will not be. Refresh-token rotation is Firebase Auth's job on the client; the backend
+> only verifies short-lived ID tokens per request (`internal/platform/firebaseauth/`) and holds no
+> session state of its own.
 
 Refresh tokens. One document per active device.
 

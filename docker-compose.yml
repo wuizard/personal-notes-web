@@ -1,0 +1,52 @@
+# Local dev only (docs/01 §1.9). Brings up a single-node MongoDB replica
+# set — required even with one node because multi-document transactions
+# (used later for sync/conflict handling) don't work on a standalone mongod
+# — plus Mongo Express for poking at data by hand.
+#
+# Usage: docker compose up -d mongo mongo-express
+services:
+  mongo:
+    image: mongo:7
+    container_name: notes-maker-mongo
+    restart: unless-stopped
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-shot: initiates the replica set on first boot. Safe to re-run — it
+  # checks rs.status() first and does nothing if already initiated.
+  mongo-init-replica:
+    image: mongo:7
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: "no"
+    entrypoint:
+      - bash
+      - -c
+      - >
+        mongosh --host mongo:27017 --quiet --eval
+        'try { rs.status() } catch (e) { rs.initiate({_id: "rs0", members: [{_id: 0, host: "mongo:27017"}]}) }'
+
+  mongo-express:
+    image: mongo-express:1
+    container_name: notes-maker-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongo:27017/?replicaSet=rs0
+      ME_CONFIG_BASICAUTH: "false"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo-data:

@@ -11,14 +11,15 @@
 | Primary language | Indonesian first, `/id` default | **English first, `/en` default**, `id` secondary (already landed in code) |
 | Market framing | Indonesia-first, global after | **International from day one** |
 | Default capture | Rich-text note | **Checklist (task list) by default**, convertible to a note |
-| Checklists | Not a distinct type | First-class type, **unlimited on both tiers** |
+| Checklists | Not a distinct type | First-class type (later **folded into the combined item cap, §10.14** — not unlimited after all) |
 | Quick capture | Blank input | **Suggestions ranked by the user's own frequent entries** |
 | Reminders | Free = in-app only | **Daily/weekly local notifications offline** (best-effort, see §10.4); paid = **guaranteed via FCM** |
 | Backend | Go 1.26 + MongoDB (Phase 2) | **Unchanged** — Go + MongoDB confirmed (a Django switch was considered and rejected, §10.5) |
-| Auth | Deferred entirely | **Profile/login now**, Google Sign-In via Firebase Auth |
+| API transport | *(not yet decided in docs 00–09)* | **GraphQL, not REST** — supersedes docs/03 in full, §10.15 |
+| Auth | Deferred entirely | **Profile/login now**, Google Sign-In via Firebase Auth; backend verifies Firebase ID tokens, no custom JWT system (§10.17, supersedes docs/01 §1.4, docs/02 §2.1/§2.4, docs/03 §3.2) |
 | Pricing | Rp 15–20k monthly / Rp 150k annual recommended | **Fixed $2/month per user** |
-| Free note cap | 20–25 recommended (§0.8) | **5 notes** (checklists uncapped) |
-| Paid note cap | Unlimited | **100 notes**, 5 images |
+| Free item cap | 20–25 notes recommended (§0.8) | **5 items — notes and checklists combined** (§10.14, supersedes the "checklists uncapped" line above) |
+| Paid item cap | Unlimited | **100 items combined**, 5 images per note |
 | Landing page | App shell + SEO pages later | **Reworked theme + new marketing introduction now** |
 
 ---
@@ -34,8 +35,9 @@ dominant capture pattern.
   note → checklist (top-level bullets/lines become items). Conversion is lossless in the
   checklist → note direction; note → checklist flattens formatting and says so before converting.
 - Checked items sink to a collapsed "Completed (n)" section at the bottom of the card, Keep-style.
-- **Checklists are unlimited on both tiers.** Only *notes* count against the note cap (§10.7).
-  This keeps the free tier genuinely useful as a to-do app while notes remain the upgrade lever.
+- ~~Checklists are unlimited on both tiers.~~ **Superseded by §10.14**: checklists now count
+  against the same combined item cap as notes. Left struck through rather than deleted, per this
+  doc's own rule of recording what changed instead of silently rewriting it.
 
 **Data model impact (extends docs/02):** `notes` gains `kind: "note" | "checklist"` and a
 `check_items` array (empty for notes). `body_text` mirrors item text so search works unchanged.
@@ -153,9 +155,8 @@ device (FCM token), keyed to the user.
 
 | | **Free** | **Paid — $2/month per user (fixed)** |
 | --- | --- | --- |
-| Notes | **5** | **100** |
-| Checklists | **Unlimited** | **Unlimited** |
-| Images | **1 per note** | **5 per note** — at the 100-note cap that is a hard ceiling of **500 images per account** |
+| Notes + checklists (combined) | **5** — see §10.14, this table originally split them and called checklists unlimited; that's superseded | **100** |
+| Images | **1 per note** | **5 per note** — at the 100-item cap that is a hard ceiling of **500 images per account** |
 | Ads | **Shown when online** (never inside notes — docs/00 §0.4 rules stand) | **None** |
 | Sync / multi-device | No | Yes |
 | Reminders | Local best-effort (§10.4) | Guaranteed via FCM, per-device |
@@ -168,7 +169,9 @@ Overriding two explicit recommendations in docs/00, recorded here so the reasoni
 
 - **§0.8 argued 5 notes is too tight** (cap should bite after the habit forms). Decision: keep 5 —
   the unlimited-checklist tier is the habit-forming surface now, which materially weakens the old
-  objection. The cap stays a single config constant so real data can still move it.
+  objection. The cap stays a single config constant so real data can still move it. *(Note: §10.14
+  later folds checklists into this same cap, which weakens the rebuttal above — recorded there
+  rather than rewritten here, per this doc's own "supersede, don't erase" rule.)*
 - **§0.5 argued $2/month is fee-eroded** (~18% lost to a $0.30 processor fee) and proposed annual
   billing. Decision: $2/month fixed. Revisit annual as an *addition* (not a replacement) once
   billing exists; the fee math in §0.5 remains true and unrebutted.
@@ -320,3 +323,294 @@ served page), so it lives in `.env.local.example` with a real default rather tha
 Firebase keys; unset in any environment, the component renders nothing. Ad *unit* placement
 (where `<ins class="adsbygoogle">` slots actually sit on the page) is not decided yet — this stage
 only wires the loader.
+
+## 10.13a Completed checklists (Premium)
+
+A checklist settles into a dedicated **Completed** view (tick icon in nav, `src/features/note/
+components/completed-view.tsx`) once every real item on it is checked — Premium, gated the same
+way as §10.13a's ads/plan machinery. Free users see the nav entry (an upgrade surface per docs/00
+§0.6) but nothing ever lands in it, since nothing can settle as complete without the plan.
+
+**The moment of completion.** Checking a checklist's last item does not move it immediately — the
+user is asked first (`ChecklistEditor`'s completion prompt, driven from `note-editor.tsx`):
+"Checklist complete! Add a note about how you finished it?" — **Add a note** opens that exact
+item's completion-note field (the same per-item note UI every checked item already has) and only
+settles the note once that field is committed; **Skip** settles it immediately. Either path ends
+by writing `completed_at` (`src/features/storage/types.ts`) and showing a toast.
+
+**Un-completing is automatic, not a button.** The moment any item on a completed checklist is
+unchecked, it silently returns to the main list with a toast ("moved back to Notes") — enforced
+centrally in `note-repo.ts`'s `updateNote`, not by each call site, so no future caller can forget
+the invariant.
+
+**The Settings toggle.** "Move finished checklists to Completed" (Settings → `AutoCompletePanel`)
+defaults on; turning it off makes a fully-checked checklist behave exactly as it did before this
+feature existed — no prompt, no move, just a checklist sitting fully checked in the main list.
+
+**Free tier count.** Completed checklists still count toward the item cap (§10.14) exactly like
+any other live, non-archived checklist — Completed is a filtered *view*, not a separate bucket
+exempt from the limit.
+
+## 10.14 Combined note/checklist cap (supersedes §10.7's "checklists uncapped" clause)
+
+§10.7 originally capped only plain notes (5 free / 100 paid) and left checklists unlimited on
+both tiers, reasoning that unlimited checklists were the free tier's habit-forming surface. That
+is superseded: **the free tier's limit is 5 items total — notes and checklists combined** — and
+the paid tier's is 100, also combined. `countActiveNotes()` (`note-repo.ts`) counts every live,
+non-archived row regardless of `kind`.
+
+Archived items still don't count — archiving stays a legitimate way to make room without deleting
+anything, consistent with docs/00 §0.6 ("capping creation is acceptable, holding existing data
+hostage is not"). Trashed items don't count either, for the same reason: moving something to
+Trash already frees a slot the instant it happens, without waiting for the 30-day purge or an
+explicit "empty trash."
+
+Enforced in `QuickCompose` (`src/features/note/components/quick-compose.tsx`) at save time, for
+both capture modes — checking `usePlan()` against `FREE_ITEM_CAP` / `PREMIUM_ITEM_CAP`
+(`note-repo.ts`). Blocked saves keep the drafted content in the compose box (nothing is lost) and
+show an inline message pointing at either Trash/Archive or an upgrade, rather than silently
+discarding what was typed. Converting between note and checklist kind is never blocked by this —
+the combined count doesn't change either way.
+
+## 10.15 Backend API: GraphQL over Go (supersedes docs/03 in full)
+
+**Decision (2026-07-27): the Phase 2 API is GraphQL, not REST.** Docs/03's per-resource REST
+contract is superseded wholesale — every endpoint table in that doc maps to a query, mutation, or
+input type below instead. Nothing about the *data model* changes: docs/02 (schema), docs/04 (sync
+protocol invariants), and docs/08 §8.7 ("a sync is an upload, not a migration") all stand exactly
+as written. This is a transport-and-contract decision, not a data decision — **no user data is at
+risk and nothing about what gets kept changes**; `client_id`/`rev`/tombstones already exist for
+Phase 2 sync regardless of what shape the API answers in.
+
+Go stays confirmed per §10.5 (Django was rejected the same day it was proposed). The Go GraphQL
+server library is **gqlgen** — schema-first (you write `.graphql` SDL, it generates typed
+resolvers), which keeps the schema itself the source of truth and reviewable independent of Go
+code, the same reason docs/03's REST tables were written as tables rather than left implicit in
+handler code.
+
+### Why this changes the shape of the contract
+
+- **One endpoint, not forty.** `POST /graphql` (user schema) and `POST /admin/graphql` (admin
+  schema) replace every route in docs/03 §3.2–§3.8. The two-audience split stays **exactly** as
+  hard as it was — separate schemas, separate JWT audiences, separate signing keys (§3's "a token
+  minted for one audience is rejected by the other" is unchanged; it just now also means "rejected
+  by the other *schema*," enforced before either resolver runs).
+- **No URL versioning (§3.9 fully replaced).** GraphQL evolves by *adding* fields and marking
+  retired ones `@deprecated(reason: "...")`, never by standing up a parallel `/v2`. This is
+  stricter than REST's approach, not looser: an old client tolerates unknown *new* fields for
+  free (it never asked for them), so the "an installed PWA can be months stale" constraint from
+  §3.9 is satisfied by the additive-only discipline alone — there is no server-side "min client
+  version" gate to build.
+- **Errors are typed union results, not HTTP status codes.** §3.1's `{ "error": { "code": ... } }`
+  envelope and the `409` conflict-with-server-copy pattern become GraphQL result unions — see
+  `UpdateNoteResult` below. GraphQL always returns `200`; the union member the client got back
+  *is* the status code.
+- **Cursor pagination maps directly.** §3.1 already mandated cursor pagination and rejected
+  offset pagination for the same reason Relay-style connections exist — `notes(cursor:, limit:)`
+  returns `{ edges, pageInfo { endCursor, hasNextPage } }`, unchanged in spirit from the REST
+  `?cursor=&limit=` params.
+- **`/sync`'s two REST endpoints become one query + one mutation** — `syncPull(cursor:)` and
+  `syncPush(changes:)` — still the same pull/push shape as docs/04 §4.1, still the client's own
+  IndexedDB outbox draining against them exactly as documented there. Docs/04 is otherwise
+  untouched by this decision.
+
+### Schema sketch (illustrative, not final SDL)
+
+```graphql
+type Note {
+  id: ID!
+  clientId: String!
+  kind: NoteKind!
+  title: String!
+  bodyText: String!
+  checklist: [ChecklistItem!]
+  color: NoteColor!
+  pinned: Boolean!
+  archived: Boolean!
+  labels: [Label!]!
+  reminder: Reminder
+  rev: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+}
+
+type NoteConnection { edges: [NoteEdge!]! pageInfo: PageInfo! }
+type NoteEdge { node: Note! cursor: String! }
+
+# Optimistic concurrency replaces PATCH's required base_rev / 409 (docs/03 §3.3).
+input UpdateNoteInput { id: ID!, baseRev: Int!, title: String, color: NoteColor, checklist: [ChecklistItemInput!] }
+union UpdateNoteResult = Note | NoteConflict
+type NoteConflict { serverRev: Int!, serverNote: Note! }
+
+type Query {
+  notes(filter: NoteFilter = ACTIVE, label: ID, cursor: String, limit: Int = 50): NoteConnection!
+  note(id: ID!): Note
+  search(q: String!, label: ID, color: NoteColor, cursor: String, limit: Int = 50): NoteConnection!
+  syncPull(cursor: String, limit: Int = 200): SyncPage!
+  me: User!
+}
+
+type Mutation {
+  createNote(input: CreateNoteInput!): Note!          # input carries clientId; idempotent, docs/03 §3.3
+  updateNote(input: UpdateNoteInput!): UpdateNoteResult!
+  deleteNote(id: ID!): Note!                           # soft delete → trash
+  restoreNote(id: ID!): Note!
+  setArchived(id: ID!, archived: Boolean!): Note!
+  setPinned(id: ID!, pinned: Boolean!): Note!
+  emptyTrash: Int!                                     # returns count purged
+  setReminder(noteId: ID!, remindAt: DateTime!, repeat: RepeatRule!): Note!
+  clearReminder(noteId: ID!): Note!
+  syncPush(changes: [NoteChangeInput!]!): SyncPushResult!
+  createLabel(name: String!): CreateLabelResult!        # union: Label | LabelExists
+  login(email: String!, password: String!): AuthResult!
+  refresh(refreshToken: String!): AuthResult!
+  logout: Boolean!
+}
+```
+
+Everything under docs/03 §3.7 (push subscribe/unsubscribe) and §3.8 (the whole admin surface —
+`users`, `suspend`, `stats`, `audit`) follows the identical query/mutation translation and is not
+spelled out in full here; §3.8's rule that `GET /users/{id}` returns metadata only, never note
+content, becomes a resolver-level field restriction on the admin `User` type instead — the *same*
+rule, enforced one layer differently.
+
+### What stays exactly as documented
+
+- Rate limiting (§3.2's login/registration limits), password rules, and audit logging on every
+  admin mutation — transport-independent, apply identically to GraphQL mutations.
+- `remind_at` as an absolute UTC instant plus stored IANA timezone (§3.7) — a data-shape decision,
+  untouched by the API layer.
+- Mongo-backed search (§3.5) and its documented ceiling before Atlas Search/Typesense becomes
+  necessary — `search()` just resolves against the same index.
+- The billing/entitlement additions flagged at the top of docs/03 (P2.7, §10.10) — still needed,
+  now as mutations/queries instead of endpoints.
+
+### Not decided here (open questions for whoever builds this)
+
+- Whether `syncPull` should become a **GraphQL subscription** (server-pushed, replacing polling)
+  instead of a polled query — a genuine upside GraphQL offers that REST didn't, but it's a real
+  scope increase (a persistent connection, resumable subscription state) and nothing in this
+  decision requires taking it. Start with the query; revisit once P2 sync is live and real usage
+  data exists.
+- Exact gqlgen project layout, and whether admin/user schemas share a Go module or are fully
+  separate binaries. Either is compatible with everything above.
+
+## 10.16 Profile menu revamp, and real Polar checkout wired ahead of the webhook backend
+
+**Profile menu** (`src/features/auth/auth-menu.tsx`) is now a real menu regardless of sign-in
+state, not a bare avatar button — About Us and Send Feedback don't need an account, so gating the
+whole menu behind Firebase config (as it did before) hid two unrelated features because of one
+unconfigured one. Order: About Us → Send Feedback → Upgrade to Premium → account section
+(Signed in as + Sign out, or just Sign in) **last**, separated by a divider. Signed out *and*
+Firebase unconfigured, the account section is simply omitted — anonymous usage stays first-class
+(§10.6).
+
+- **About Us** → `wuebuild.com`, opens in a new tab.
+- **Send Feedback** → `mailto:wwcolaborationprojects@gmail.com`. This is deliberately simpler than
+  §10.6's planned server-stored feedback system (ticket status, one in-app reply) — that's still
+  the Phase 2 plan; this is an interim channel that needs nothing built to work today.
+- **Upgrade to Premium** → `PurchasePlanDialog` (`src/features/billing/`), the Free vs Premium
+  comparison table from §10.7/§10.14.
+
+**Payment: a real decision, made explicitly.** Asked whether the Subscribe button should be a
+waitlist capture (matches docs/00 §0.7's "payments deferred" plan, zero risk) or real Polar
+checkout — the answer was **real checkout, now**. That is what's built: `src/features/billing/
+polar.ts` redirects to a genuine Polar Checkout Link (`NEXT_PUBLIC_POLAR_CHECKOUT_URL`,
+`.env.local.example`), prefilling `customer_email` for a signed-in user. Unconfigured, the button
+is replaced with an honest "not set up yet" message rather than a dead link.
+
+**The gap this does not close, on purpose, because closing it isn't possible yet:** nothing
+verifies the payment or grants premium afterward. That requires a backend that receives and
+verifies Polar's webhook and writes the entitlement — §10.15's GraphQL API, specifically wiring a
+real implementation behind `checkRemotePlan()` (`src/features/plan/remote.ts`), which is still a
+stub that unconditionally returns `"free"`. Until that exists: a real card gets charged, the
+customer returns to the app, and **the app shows no change** — `usePlan()` still reports `"free"`.
+This is not a bug to fix in the client; it is the webhook handler that hasn't been built. Treat it
+as the blocking next step before pointing `NEXT_PUBLIC_POLAR_CHECKOUT_URL` at a real product in
+production, not optional follow-up polish.
+
+Also overrides docs/00 §0.5/§0.7's "no converted-currency pricing, wait for validation gates"
+guidance for the *English* price string specifically: §10.7 already fixed pricing at **$2/month,
+unconverted, in every locale** — the Indonesian translation shows `$2 / bulan`, not an IDR
+estimate, because that guidance was itself superseded by §10.7's fixed-price decision before this
+screen was ever built.
+
+## 10.17 Backend milestone 1: `notes-maker-api` exists, closes the Polar payment loop
+
+**The backend now exists.** `notes-maker-api/` (Go module, sibling to `notes-maker-web/`, not a
+pnpm package) implements the smallest slice that closes the gap §10.16 flagged as blocking: a real
+GraphQL `me { plan }` query, a signature-verified Polar webhook, and MongoDB-backed entitlement
+storage. Full Notes CRUD/sync (P2.3–P2.4), labels/search, images, push, and the admin app are
+still not built — see "What's still not built" below.
+
+### Auth correction (supersedes docs/01 §1.4, docs/02 §2.1 & §2.4, docs/03 §3.2)
+
+Those three docs describe a custom argon2id-password + JWT + refresh-rotation auth system. It was
+never built, and it never needs to be: the shipped client uses Firebase Auth exclusively (§10.6),
+and §10.6 already stated a later decision wins a conflict with earlier docs. Building the custom
+system now would stand up a second, unused auth stack for no reason.
+
+What's actually built instead: `notes-maker-api` verifies Firebase ID tokens server-side via
+`firebase-admin-go` (`internal/platform/firebaseauth`), using the service account key already
+provisioned at the repo root (gitignored, path given to the server via
+`FIREBASE_CREDENTIALS_FILE`, never read by anything else). No passwords, no custom JWT issuance,
+no `sessions` collection, no `login`/`refresh`/`logout` mutations from §10.15's schema sketch —
+Firebase's own SDK already handles login and token refresh on the client. `middleware.Auth`
+verifies the `Authorization: Bearer <id token>` header on every request and stashes the verified
+identity in context; it does not itself reject unauthenticated requests, since GraphQL serves
+public and authenticated fields behind one endpoint — resolvers that need a caller check for the
+identity themselves and error if it's absent (only `me` does, this milestone).
+
+### Schema change: `users` collection
+
+Drops `password_hash` and `email_verified_at` (docs/02 §2.1's fields for the unbuilt custom auth).
+Adds `firebase_uid` (unique-indexed, the identity key) and a denormalized `email` (display/lookup
+only, never the auth credential — a payment's email is what the Polar webhook matches against it).
+`subscription { status, polar_customer_id, polar_subscription_id, current_period_end }` holds
+Polar-sourced entitlement state; a nil subscription or a non-`"active"`/`"trialing"` status reads
+as free tier (`internal/feature/user`'s `User.Plan()`).
+
+### What's built
+
+- `notes-maker-api/` — `cmd/api` (public GraphQL + webhook, `:8080`) and `cmd/adminapi` (placeholder,
+  `:8081`, returns 501 — no admin frontend exists yet either, P2.8).
+- `internal/graph` — gqlgen (schema-first, §10.15's chosen library), schema is the
+  `Query.me { id, email, displayName, plan }` subset of §10.15's full sketch. Notes/sync/labels
+  fields are not implemented; adding them is the next milestone, not a rewrite of this one.
+- `internal/feature/user` — `Service.GetOrCreateByFirebaseUID` (creates a `users` doc on first
+  sign-in, returns the existing one after), `Service.SetSubscription` (applied by the webhook).
+  Tested against an in-memory fake `Repository`, not a real Mongo connection, per this project's
+  own testing philosophy.
+- `internal/feature/billing` — `POST /webhooks/polar`, plain REST (webhooks are provider-initiated,
+  outside the GraphQL schema per §10.15). Verifies the Standard Webhooks-style signature Polar
+  sends (`webhook-id`/`webhook-timestamp`/`webhook-signature` headers, HMAC-SHA256, 5-minute clock
+  skew tolerance) before touching anything. **The exact payload field names
+  (`data.customer.email`, `data.status`, etc.) are inferred, not confirmed against a real Polar
+  webhook delivery** — verify them against Polar's dashboard/docs before pointing this at a live
+  product.
+- `docker-compose.yml` (workspace root) — single-node Mongo replica set (required for later
+  multi-document transactions even with one node) + Mongo Express, local dev only.
+- Frontend: `src/features/plan/remote.ts`'s `checkRemotePlan()` is no longer a stub — it calls
+  `POST {NEXT_PUBLIC_API_URL}/graphql` with `{ me { plan } }` and a Firebase ID token
+  (`src/features/auth/firebase.ts`'s new `getIdToken()`), mapping `"PREMIUM"`/anything else to the
+  existing `PlanTier` type. Unset `NEXT_PUBLIC_API_URL`, a missing token, a non-OK response, or any
+  parse failure all resolve to `"free"` rather than throwing — `usePlan()`'s existing grace/cache
+  logic already treats a failed check as "leave the cache alone," not "downgrade now."
+
+### The linking limitation (stated honestly, not solved this pass)
+
+`SetSubscription` resolves a Polar payment to an account by matching `data.customer.email` against
+an existing `users.email`. That only works for a payer who **already has a Firebase account under
+that email** at the moment the webhook arrives. A payment from an email with no matching account
+returns `ErrNotFound`; the webhook handler acks it with `200` anyway (so Polar doesn't retry
+forever) and the payment is simply not linked to anything. There is no invite/claim flow to recover
+that case yet — a real gap, not an oversight, and it should be closed before
+`NEXT_PUBLIC_POLAR_CHECKOUT_URL` points at a live product for real customers.
+
+### What's still not built (unchanged sequencing from §10.15's "not decided here")
+
+Notes CRUD + `client_id` idempotency + `base_rev` conflicts (P2.3) → delta sync (P2.4, docs/04) →
+images/R2 (P2.5) → push/reminders (P2.6) → a real `cmd/adminapi` + `notes-maker-admin/` (P2.8). No
+production deployment target has been chosen for `notes-maker-api` — this milestone is local-dev
+only (`docker compose up -d mongo && go run ./cmd/api`), matching docs/01 §1.9.

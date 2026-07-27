@@ -1,5 +1,12 @@
 # 3. API contract
 
+> **Superseded (2026-07-27) — see [docs/10 §10.15](10-plan-change-v2.md).** The transport is
+> GraphQL over Go, not REST. Every route table below still describes the correct *behaviour*
+> (validation rules, status-code semantics translated to result types, rate limits, the
+> admin/user audience split) — only the shape of the wire contract changed. Read §10.15 first for
+> the current query/mutation surface, then use this doc for the behavioural detail it still gets
+> right.
+>
 > **Phase 2.** None of this exists in v1 — the free tier has no server ([docs/01 §1.0](01-architecture.md)).
 > This contract is built after the gate in [docs/07](07-roadmap.md), and it serves paying users only.
 > The design below is unchanged by the local-first pivot; it simply arrives later.

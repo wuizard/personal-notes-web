@@ -20,20 +20,43 @@ export const PLAN_CHANGE_EVENT = "nm-plan-change";
 /** How long a premium verdict survives without reconnecting — docs/10 §10.13. */
 export const GRACE_PERIOD_MS = 7 * 24 * 60 * 60 * 1000;
 
+// getCachedPlan is used as useSyncExternalStore's getSnapshot (use-plan.ts),
+// which requires a referentially STABLE return value when nothing has
+// actually changed — React calls it on every render to decide whether a
+// re-render is needed, via Object.is. Building a fresh `{ tier, verifiedAt }`
+// object on every call (as this originally did) made every single call look
+// like a change, which is precisely what caused the app-wide hangs: an
+// infinite synchronous render loop, "The result of getSnapshot should be
+// cached to avoid an infinite loop." use-app-color.ts's equivalent never hit
+// this because it returns a primitive string, which Object.is compares by
+// value; a plan verdict is a compound object, so it needs real memoization.
+let lastRaw: string | null = null;
+let lastParsed: CachedPlan | null = null;
+
 export function getCachedPlan(): CachedPlan | null {
+  let raw: string | null;
   try {
-    const raw = localStorage.getItem(PLAN_CACHE_KEY);
-    if (!raw) return null;
+    raw = localStorage.getItem(PLAN_CACHE_KEY);
+  } catch {
+    raw = null;
+  }
+
+  if (raw === lastRaw) return lastParsed;
+  lastRaw = raw;
+
+  if (!raw) return (lastParsed = null);
+
+  try {
     const parsed = JSON.parse(raw) as Partial<CachedPlan>;
     if (
       (parsed.tier !== "free" && parsed.tier !== "premium") ||
       typeof parsed.verifiedAt !== "number"
     ) {
-      return null;
+      return (lastParsed = null);
     }
-    return { tier: parsed.tier, verifiedAt: parsed.verifiedAt };
+    return (lastParsed = { tier: parsed.tier, verifiedAt: parsed.verifiedAt });
   } catch {
-    return null;
+    return (lastParsed = null);
   }
 }
 

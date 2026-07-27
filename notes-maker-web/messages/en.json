@@ -49,7 +49,9 @@
     "unarchived": "Note unarchived",
     "deleteConfirmTitle": "Delete this note?",
     "deleteConfirmBody": "It moves to Trash and is deleted permanently after 30 days. You can undo right after, or restore it from Trash any time before then.",
-    "deleteConfirmCta": "Delete"
+    "deleteConfirmCta": "Delete",
+    "capReachedFree": "You've reached the free limit of {cap} notes and checklists. Delete or archive one to make room, or upgrade for more.",
+    "capReachedPremium": "You've reached the {cap}-item limit. Delete or archive one to make room."
   },
   "theme": {
     "label": "Theme",
@@ -257,8 +259,12 @@
     "noResults": "No notes match “{query}”."
   },
   "auth": {
+    "menu": "Account menu",
+    "aboutUs": "About us",
+    "feedback": "Send feedback",
+    "feedbackSubject": "Notes Maker feedback",
+    "purchasePlan": "Upgrade to Premium",
     "signIn": "Sign in",
-    "profile": "Profile",
     "signOut": "Sign out",
     "signedInAs": "Signed in as",
     "dialogTitle": "Sign in",
@@ -280,8 +286,27 @@
       "popup_blocked": "Your browser blocked the sign-in popup. Allow popups and try again.",
       "network": "Couldn't reach the sign-in service. Check your connection.",
       "too_many": "Too many attempts. Wait a moment and try again.",
+      "provider_unavailable": "Sign-in isn't available right now. Please check back later.",
       "unknown": "Sign-in failed. Please try again."
     }
+  },
+  "billing": {
+    "title": "Upgrade to Premium",
+    "subtitle": "Notes and checklists together, no ads, sync across devices.",
+    "free": "Free",
+    "premium": "Premium",
+    "rows": {
+      "items": "Notes & checklists",
+      "images": "Images per note",
+      "adFree": "Ad-free",
+      "sync": "Sync across devices",
+      "reminders": "Guaranteed reminders",
+      "completed": "Completed section"
+    },
+    "price": "$2 / month",
+    "subscribe": "Subscribe",
+    "notConfigured": "Checkout isn't set up yet — check back soon.",
+    "close": "Close"
   },
   "checklist": {
     "itemPlaceholder": "List item",

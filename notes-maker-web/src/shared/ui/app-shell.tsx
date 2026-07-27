@@ -84,32 +84,43 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <div className="ml-auto flex items-center gap-1">
-          {/* Local-only storage is a promise, not a limitation — say so. */}
-          <p className="mr-1 hidden items-center gap-2 text-xs text-muted lg:flex">
+        <div className="ml-auto flex items-center gap-2">
+          {/* Local-only storage is a promise, not a limitation — say so. Its
+              own pill rather than plain text, so the green dot reads as a
+              live status badge and not just decoration on a sentence. */}
+          <p className="hidden items-center gap-2 rounded-full border border-border bg-surface-tertiary px-3 py-1.5 text-xs text-muted lg:flex">
             <span className="size-1.5 shrink-0 rounded-full bg-success" aria-hidden />
             {t("storage.local")}
           </p>
 
-          <AppColorPicker />
-          <LocaleSwitcher />
-          <ThemeToggle />
-          {/* Settings joins the icon cluster on desktop; on mobile it is a
-              bottom tab, and a second entrance would just be noise. */}
-          <Link
-            href="/settings"
-            aria-label={t("nav.settings")}
-            title={t("nav.settings")}
-            aria-current={isActive("/settings") ? "page" : undefined}
-            className={`hidden size-9 place-items-center rounded-xl transition-colors md:grid ${
-              isActive("/settings")
-                ? "bg-accent-soft text-accent-soft-foreground"
-                : "text-muted hover:bg-surface-secondary hover:text-foreground"
-            }`}
-          >
-            <Settings size={18} strokeWidth={1.75} aria-hidden />
-          </Link>
-          <AuthMenu />
+          {/* Two functional clusters, each in its own rounded pill, so the
+              bar doesn't read as one undifferentiated row of icons: pick a
+              look (colour, language) vs. manage the app (theme, settings,
+              account). */}
+          <div className="flex items-center gap-0.5 rounded-full border border-border bg-surface-tertiary p-0.5">
+            <AppColorPicker />
+            <LocaleSwitcher />
+          </div>
+
+          <div className="flex items-center gap-0.5 rounded-full border border-border bg-surface-tertiary p-0.5">
+            <ThemeToggle />
+            {/* Settings joins the icon cluster on desktop; on mobile it is a
+                bottom tab, and a second entrance would just be noise. */}
+            <Link
+              href="/settings"
+              aria-label={t("nav.settings")}
+              title={t("nav.settings")}
+              aria-current={isActive("/settings") ? "page" : undefined}
+              className={`hidden size-9 place-items-center rounded-full transition-colors md:grid ${
+                isActive("/settings")
+                  ? "bg-accent-soft text-accent-soft-foreground"
+                  : "text-muted hover:bg-surface-secondary hover:text-foreground"
+              }`}
+            >
+              <Settings size={18} strokeWidth={1.75} aria-hidden />
+            </Link>
+            <AuthMenu />
+          </div>
         </div>
       </header>
 

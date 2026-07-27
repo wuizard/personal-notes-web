@@ -29,7 +29,16 @@ export function SignInDialog({ onClose }: { onClose: () => void }) {
       await action();
       onClose();
     } catch (error) {
-      if (!isUserCancelled(error)) setErrorKey(authErrorKey(error));
+      if (!isUserCancelled(error)) {
+        const key = authErrorKey(error);
+        // Anything landing in the generic bucket is, by definition, a code
+        // we haven't mapped — usually a Firebase Console misconfiguration
+        // (provider disabled, unauthorized domain) rather than something the
+        // person in front of the dialog did. Logging it is the only way a
+        // solo maintainer finds out without a support ticket.
+        if (key === "unknown") console.error("[auth] unmapped sign-in error:", error);
+        setErrorKey(key);
+      }
     } finally {
       setBusy(false);
     }

@@ -165,6 +165,14 @@ things `app/` may do on the server are the marketing pages, which are not in the
 
 ## 1.4 Go service layout (Phase 2)
 
+> **Partially superseded (2026-07-27) — see [docs/10 §10.17](10-plan-change-v2.md).** The
+> `internal/feature/auth/` (register/login/refresh/logout) and `internal/platform/jwt/`,
+> `internal/platform/password/` packages below are not built and will not be — the shipped client
+> uses Firebase Auth exclusively, so the backend verifies Firebase ID tokens
+> (`internal/platform/firebaseauth/`) instead of issuing its own. Everything else on this page
+> (feature-folder layout, the three-layer split, `internal/platform/*` never importing
+> `internal/feature/*`) is exactly what got built.
+
 Feature folders, three layers, dependencies pointing inward.
 
 ```

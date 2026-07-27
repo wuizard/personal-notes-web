@@ -193,13 +193,21 @@ export async function listNotes(filter: NoteFilter = "active"): Promise<LocalNot
 }
 
 /**
- * Counts toward the free-tier cap: live notes only, excluding trash — and
- * excluding checklists, which are uncapped on every tier (docs/10 §10.7).
+ * The combined free/paid item cap — notes and checklists together, docs/10
+ * §10.13b (amends §10.7: checklists were originally uncapped, but the
+ * product decision is now a single combined limit for the free tier).
+ * Archived and trashed items don't count — archiving is decluttering, not
+ * deletion, and must stay a legitimate way to make room (docs/00 §0.6:
+ * capping creation is acceptable, holding existing data hostage is not).
  */
+export const FREE_ITEM_CAP = 5;
+export const PREMIUM_ITEM_CAP = 100;
+
+/** Counts toward the tier cap: live, non-archived notes AND checklists. */
 export async function countActiveNotes(): Promise<number> {
   const db = getDb();
   const all = await db.notes.toArray();
-  return all.filter((n) => n.deleted_at === null && !n.archived && noteKind(n) === "note").length;
+  return all.filter((n) => n.deleted_at === null && !n.archived).length;
 }
 
 export async function searchNotes(query: string): Promise<LocalNote[]> {

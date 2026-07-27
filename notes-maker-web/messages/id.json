@@ -49,7 +49,9 @@
     "unarchived": "Catatan dikeluarkan dari arsip",
     "deleteConfirmTitle": "Hapus catatan ini?",
     "deleteConfirmBody": "Catatan akan dipindahkan ke Sampah dan dihapus permanen setelah 30 hari. Anda bisa membatalkan segera setelahnya, atau memulihkannya dari Sampah kapan saja sebelum itu.",
-    "deleteConfirmCta": "Hapus"
+    "deleteConfirmCta": "Hapus",
+    "capReachedFree": "Anda mencapai batas gratis {cap} catatan dan checklist. Hapus atau arsipkan salah satu untuk membuat ruang, atau tingkatkan untuk lebih banyak.",
+    "capReachedPremium": "Anda mencapai batas {cap} item. Hapus atau arsipkan salah satu untuk membuat ruang."
   },
   "theme": {
     "label": "Tema",
@@ -257,8 +259,12 @@
     "noResults": "Tidak ada catatan yang cocok dengan “{query}”."
   },
   "auth": {
+    "menu": "Menu akun",
+    "aboutUs": "Tentang kami",
+    "feedback": "Kirim masukan",
+    "feedbackSubject": "Masukan Notes Maker",
+    "purchasePlan": "Tingkatkan ke Premium",
     "signIn": "Masuk",
-    "profile": "Profil",
     "signOut": "Keluar",
     "signedInAs": "Masuk sebagai",
     "dialogTitle": "Masuk",
@@ -280,8 +286,27 @@
       "popup_blocked": "Peramban Anda memblokir jendela masuk. Izinkan pop-up lalu coba lagi.",
       "network": "Tidak dapat menghubungi layanan masuk. Periksa koneksi Anda.",
       "too_many": "Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.",
+      "provider_unavailable": "Masuk belum tersedia saat ini. Silakan coba lagi nanti.",
       "unknown": "Gagal masuk. Silakan coba lagi."
     }
+  },
+  "billing": {
+    "title": "Tingkatkan ke Premium",
+    "subtitle": "Catatan dan checklist jadi satu, tanpa iklan, sinkron di semua perangkat.",
+    "free": "Gratis",
+    "premium": "Premium",
+    "rows": {
+      "items": "Catatan & checklist",
+      "images": "Gambar per catatan",
+      "adFree": "Bebas iklan",
+      "sync": "Sinkron antar perangkat",
+      "reminders": "Pengingat terjamin",
+      "completed": "Bagian Selesai"
+    },
+    "price": "$2 / bulan",
+    "subscribe": "Berlangganan",
+    "notConfigured": "Checkout belum siap — coba lagi nanti.",
+    "close": "Tutup"
   },
   "checklist": {
     "itemPlaceholder": "Butir daftar",

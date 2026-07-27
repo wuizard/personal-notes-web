@@ -72,6 +72,17 @@ export async function signOutUser(): Promise<void> {
 }
 
 /**
+ * The current user's Firebase ID token, for authenticating requests to
+ * notes-maker-api (docs/10 §10.17) — the server verifies it independently
+ * via firebase-admin-go, this is only how it's carried. Null if signed out
+ * or Firebase isn't configured.
+ */
+export async function getIdToken(): Promise<string | null> {
+  const auth = await getFirebaseAuth();
+  return (await auth.currentUser?.getIdToken()) ?? null;
+}
+
+/**
  * Maps a Firebase error to one of our message keys. The mapping is coarse on
  * purpose: for credentials, "which part was wrong" is exactly what a sign-in
  * form must not reveal.
@@ -95,6 +106,13 @@ export function authErrorKey(error: unknown): string {
       return "network";
     case "auth/too-many-requests":
       return "too_many";
+    // A Firebase Console misconfiguration (provider disabled, domain not
+    // authorized), never something the person filling in the form did — the
+    // copy for this deliberately doesn't say "try again", since retrying
+    // changes nothing until the console setting is fixed.
+    case "auth/operation-not-allowed":
+    case "auth/unauthorized-domain":
+      return "provider_unavailable";
     default:
       return "unknown";
   }
