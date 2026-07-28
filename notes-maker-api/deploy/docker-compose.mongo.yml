@@ -12,6 +12,11 @@
 #
 # One-time setup: see init-replica-and-user.sh in this directory before the
 # API can actually authenticate.
+#
+# Named explicitly (rather than defaulting to the containing directory's
+# basename, "deploy") so `docker compose ps`/volume names stay meaningful
+# regardless of which directory this is invoked from.
+name: notes-maker-api
 services:
   mongo:
     image: mongo:7
@@ -22,9 +27,18 @@ services:
       - "127.0.0.1:27017:27017"
     volumes:
       - mongo-data:/data/db
-      # Generate with: openssl rand -base64 756 > mongo-keyfile && chmod 400 mongo-keyfile
+      # Absolute path, deliberately — Compose resolves a RELATIVE bind-mount
+      # source against the compose file's own directory, not the caller's
+      # cwd. A relative `./mongo-keyfile` here silently mounted a
+      # Compose-vivified placeholder at deploy/mongo-keyfile instead of the
+      # real, correctly-permissioned file at /opt/notes-maker-api/ — mongod
+      # then refused to start ("permissions ... are too open") against that
+      # placeholder. Generate the real file with:
+      #   openssl rand -base64 756 > /opt/notes-maker-api/mongo-keyfile
+      #   chmod 400 /opt/notes-maker-api/mongo-keyfile
+      #   sudo chown 999:999 /opt/notes-maker-api/mongo-keyfile
       # Never commit this file — see .gitignore in this directory.
-      - ./mongo-keyfile:/etc/mongo-keyfile:ro
+      - /opt/notes-maker-api/mongo-keyfile:/etc/mongo-keyfile:ro
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
       interval: 5s
