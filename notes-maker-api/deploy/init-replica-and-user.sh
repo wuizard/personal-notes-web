@@ -9,8 +9,13 @@
 # connection that is actually loopback from mongod's point of view, which
 # `docker compose exec` gives you and a bridge-network hostname does not.
 #
-# Run once, right after the FIRST `docker compose up -d mongo`. Re-running is
-# safe: each step checks whether it already happened.
+# Run once, right after the FIRST `docker compose up -d mongo`. Safe to
+# re-run within that same bootstrap window (replica-set-already-initiated
+# and user-already-exists are both handled). NOT safe to re-run in a later
+# session once the localhost exception has actually closed for good — at
+# that point an unauthenticated createUser fails with "not authorized"
+# rather than "already exists", and that's surfaced as a real error rather
+# than swallowed, on purpose.
 set -euo pipefail
 
 : "${MONGO_APP_USER:?set MONGO_APP_USER, e.g. notes_maker_app}"
@@ -49,19 +54,27 @@ until docker compose -f "$COMPOSE_FILE" exec -T mongo mongosh --quiet --eval "db
   sleep 1
 done
 
+# A pre-check via countDocuments()/aggregate against system.users is NOT
+# covered by the localhost exception (only a narrow set of user-management
+# commands, createUser among them, is) — checking existence first gets
+# "not authorized" before createUser is ever attempted, even on a genuinely
+# fresh, no-users-yet deployment. Attempt createUser directly instead and
+# catch the specific duplicate-user error for the idempotent-rerun case.
 echo "==> Creating scoped app user on notes_maker (no-op if it already exists)..."
 docker compose -f "$COMPOSE_FILE" exec -T mongo mongosh --quiet --eval "
-  const admin = db.getSiblingDB('admin');
-  const existing = admin.system.users.countDocuments({ user: '${MONGO_APP_USER}' });
-  if (existing > 0) {
-    print('user ${MONGO_APP_USER} already exists');
-  } else {
+  try {
     db.getSiblingDB('notes_maker').createUser({
       user: '${MONGO_APP_USER}',
       pwd: '${MONGO_APP_PASSWORD}',
       roles: [{ role: 'readWrite', db: 'notes_maker' }],
     });
     print('user ${MONGO_APP_USER} created');
+  } catch (e) {
+    if (e.codeName === 'Location51003' || /already exists/.test(e.message)) {
+      print('user ${MONGO_APP_USER} already exists');
+    } else {
+      throw e;
+    }
   }
 "
 
