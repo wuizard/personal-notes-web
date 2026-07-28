@@ -29,6 +29,12 @@ type Config struct {
 	// deliveries (docs/10 §10.16/§10.17).
 	PolarWebhookSecret string
 
+	// PolarAPIKey is the Polar organization access token, for calling the
+	// Polar API directly (as opposed to PolarWebhookSecret, which only
+	// verifies inbound webhook deliveries). Unused until a call site needs
+	// it — kept in config now so it's never hardcoded later.
+	PolarAPIKey string
+
 	// AllowedOrigins is the CORS allowlist for the Next.js frontend, which is
 	// served from a different origin (Cloudflare Workers) than this API.
 	AllowedOrigins []string
@@ -37,12 +43,15 @@ type Config struct {
 // Load reads configuration from the environment. It returns an error rather
 // than panicking so cmd/api can log context before exiting.
 func Load() (Config, error) {
+	loadDotEnv(".env")
+
 	cfg := Config{
 		Port:                    getenvDefault("PORT", "8080"),
 		MongoURI:                getenvDefault("MONGO_URI", "mongodb://localhost:27017/?replicaSet=rs0"),
 		MongoDBName:             getenvDefault("MONGO_DB_NAME", "notes_maker"),
 		FirebaseCredentialsFile: os.Getenv("FIREBASE_CREDENTIALS_FILE"),
 		PolarWebhookSecret:      os.Getenv("POLAR_WEBHOOK_SECRET"),
+		PolarAPIKey:             os.Getenv("POLAR_API_KEY"),
 		AllowedOrigins:          splitCSV(getenvDefault("ALLOWED_ORIGINS", "http://localhost:3000")),
 	}
 
@@ -55,6 +64,33 @@ func Load() (Config, error) {
 	}
 
 	return cfg, nil
+}
+
+// loadDotEnv fills gaps in the process environment from a local .env file
+// (repo convention: gitignored, one KEY=value per line). It never overrides
+// a variable that's already set, so real environment variables — CI,
+// deployment secrets — always win; this only exists for local dev
+// convenience. Missing file is not an error: production has no .env.
+func loadDotEnv(path string) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		if _, set := os.LookupEnv(key); set {
+			continue
+		}
+		_ = os.Setenv(key, strings.TrimSpace(value))
+	}
 }
 
 func getenvDefault(key, def string) string {
