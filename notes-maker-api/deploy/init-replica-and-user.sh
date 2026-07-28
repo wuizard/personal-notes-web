@@ -35,7 +35,7 @@ docker compose -f "$COMPOSE_FILE" exec -T mongo mongosh --quiet --eval '
 '
 
 echo "==> Waiting for a primary to be elected..."
-until docker compose -f "$COMPOSE_FILE" exec -T mongo mongosh --quiet --eval "rs.isMaster().ismaster" 2>/dev/null | grep -q true; do
+until docker compose -f "$COMPOSE_FILE" exec -T mongo mongosh --quiet --eval "db.hello().isWritablePrimary" 2>/dev/null | grep -q true; do
   sleep 1
 done
 
