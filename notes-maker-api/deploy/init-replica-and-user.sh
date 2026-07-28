@@ -23,22 +23,22 @@ until docker compose -f "$COMPOSE_FILE" exec -T mongo mongosh --quiet --eval "db
   sleep 1
 done
 
+# The member is registered as 127.0.0.1, not the "mongo" Compose service
+# name: whatever host is registered here is what a driver routes ALL real
+# traffic to once it learns the replica set topology, regardless of what
+# address it originally dialed. The Go API runs bare via systemd on the
+# host, outside the Compose network, so "mongo" resolves for another
+# container but not for it. 127.0.0.1:27017 resolves correctly both from
+# inside this container (its own loopback) and from the host (via the
+# published port) — no apostrophes in this comment, deliberately: it's
+# interpolated inside a single-quoted bash string below, and one earlier
+# broke the quoting and mangled the script it was documenting.
 echo "==> Initiating replica set (no-op if already initiated)..."
 docker compose -f "$COMPOSE_FILE" exec -T mongo mongosh --quiet --eval '
   try {
     rs.status();
     print("replica set already initiated");
   } catch (e) {
-    // 127.0.0.1, not the "mongo" Compose service name: whatever host is
-    // registered here is what the driver routes ALL real traffic to once
-    // it learns the replica set's topology, regardless of what address a
-    // client originally dialed. The Go API runs bare via systemd on the
-    // host, outside the Compose network, so "mongo" would resolve for
-    // another container but not for it. 127.0.0.1:27017 resolves
-    // correctly both from inside this container (its own loopback) and
-    // from the host (via the published port), which is what makes a
-    // single-node replica set work with a client that isn't itself a
-    // Compose service.
     rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] });
     print("replica set initiated");
   }
