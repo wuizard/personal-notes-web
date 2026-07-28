@@ -44,3 +44,32 @@ jobs:
 
       - name: Build
         run: pnpm --filter notes-maker-web build
+
+  deploy-web:
+    name: deploy notes-maker-web
+    needs: web
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency: deploy-web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      # Root install, not --filter: wrangler is a root devDependency
+      # (docs/09 §9.2 — wrangler.jsonc deliberately lives at the repo root).
+      - run: pnpm install --frozen-lockfile
+
+      # Rebuilds rather than reusing the `web` job's output — `pnpm run
+      # deploy` is exactly the command docs/09 §9.2 has you run locally, so
+      # CI and a human deploying by hand never diverge.
+      - name: Build and deploy
+        run: pnpm run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

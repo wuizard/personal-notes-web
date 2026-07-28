@@ -65,3 +65,7 @@ public/workbox-*.js.map
 *.test
 *.out
 vendor/
+
+# VPS deploy secrets — generated on the server, never committed
+notes-maker-api/deploy/mongo-keyfile
+notes-maker-api/deploy/api.env

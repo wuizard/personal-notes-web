@@ -1,0 +1,27 @@
+# Reverse proxy for notes-maker-api. Caddy gets/renews the Let's Encrypt
+# cert automatically as long as api.quickchecklist.app's DNS record points
+# at this VPS and ports 80/443 are open.
+#
+# quickchecklist.app is already on Cloudflare DNS for the frontend (Workers
+# custom domain) — this record must be "DNS only" (grey cloud), NOT
+# proxied. A proxied (orange cloud) record puts Cloudflare's edge in front
+# of the ACME HTTP-01 challenge and Cloudflare's own TLS in front of
+# Caddy's, which this simple setup isn't set up to negotiate. Set it once
+# in the Cloudflare dashboard: DNS -> api -> A record -> click the cloud
+# icon to grey/"DNS only".
+#
+#   sudo cp Caddyfile /etc/caddy/Caddyfile
+#   sudo systemctl reload caddy
+
+api.quickchecklist.app {
+	reverse_proxy 127.0.0.1:8080
+
+	# Polar webhook deliveries can run a few KB of JSON; the handler itself
+	# already caps the read at 1MiB (polar_webhook.go), this just keeps
+	# Caddy from rejecting anything unusually large before it gets there.
+	request_body {
+		max_size 2MB
+	}
+
+	encode gzip
+}

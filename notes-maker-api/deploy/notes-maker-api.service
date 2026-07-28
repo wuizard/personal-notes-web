@@ -1,0 +1,41 @@
+# systemd unit for the notes-maker-api binary on the VPS.
+#
+# Install:
+#   sudo cp notes-maker-api.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now notes-maker-api
+#
+# Expects:
+#   /opt/notes-maker-api/notes-maker-api        the binary — after first
+#                                                manual setup, .github/workflows/api.yml
+#                                                keeps this current on every push to main
+#   /opt/notes-maker-api/api.env                real values, mode 600, root-owned — CI never touches this
+#   /opt/notes-maker-api/firebase-adminsdk.json  service account key, mode 600 — CI never touches this
+#
+# Binds to :8080 on all interfaces (the app has no per-interface bind config)
+# — that's fine because ufw's default-deny only opens 22/80/443, so 8080 is
+# unreachable from outside the VPS. Caddy reaches it over loopback.
+[Unit]
+Description=notes-maker-api
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=notes-maker
+Group=notes-maker
+WorkingDirectory=/opt/notes-maker-api
+EnvironmentFile=/opt/notes-maker-api/api.env
+ExecStart=/opt/notes-maker-api/notes-maker-api
+Restart=on-failure
+RestartSec=2s
+
+# Hardening — the process needs nothing outside its own directory.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/notes-maker-api
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

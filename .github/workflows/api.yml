@@ -1,0 +1,97 @@
+name: API
+
+on:
+  push:
+    branches: [main]
+    paths: ["notes-maker-api/**", ".github/workflows/api.yml"]
+  pull_request:
+    paths: ["notes-maker-api/**", ".github/workflows/api.yml"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: notes-maker-api
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: notes-maker-api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: notes-maker-api/go.mod
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build
+        run: go build ./...
+
+  deploy:
+    name: deploy notes-maker-api
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency: deploy-api
+    defaults:
+      run:
+        working-directory: notes-maker-api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: notes-maker-api/go.mod
+
+      # Flat filename, built one level up — keeps the scp step's source path
+      # trivial instead of fighting directory-structure preservation.
+      - name: Cross-compile for the VPS
+        run: GOOS=linux GOARCH=amd64 go build -o ../notes-maker-api-bin ./cmd/api
+
+      - name: Upload new binary
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: deploy
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: notes-maker-api-bin
+          target: /opt/notes-maker-api/
+          strip_components: 0
+
+      # Swaps the new binary in, restarts, health-checks, and rolls back to
+      # the previous binary on failure. `deploy` is a dedicated, non-root
+      # VPS user that owns /opt/notes-maker-api and has exactly one sudo
+      # grant (`/etc/sudoers.d/deploy-notes-maker-api`): restarting this one
+      # systemd unit. It never touches api.env or the Firebase credentials
+      # file — those are root-owned 600, set up once by hand.
+      - name: Swap in, restart, verify
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: deploy
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /opt/notes-maker-api
+            [ -f notes-maker-api ] && cp notes-maker-api notes-maker-api.prev
+            mv notes-maker-api-bin notes-maker-api
+            chmod 755 notes-maker-api
+            sudo systemctl restart notes-maker-api
+            sleep 2
+            if curl -sf http://127.0.0.1:8080/healthz > /dev/null; then
+              echo "deploy healthy"
+            else
+              echo "health check failed, rolling back"
+              if [ -f notes-maker-api.prev ]; then
+                mv notes-maker-api.prev notes-maker-api
+                sudo systemctl restart notes-maker-api
+              fi
+              exit 1
+            fi

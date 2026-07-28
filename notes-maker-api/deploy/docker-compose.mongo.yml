@@ -1,0 +1,35 @@
+# Production Mongo for notes-maker-api, VPS-side.
+#
+# Differs from the repo-root docker-compose.yml (local dev) in the ways that
+# matter once this is reachable from the internet:
+#   - --auth + --keyFile: client AND internal replica-set auth are required.
+#     A single-node replica set still needs the keyfile even with one member.
+#   - Port is published to 127.0.0.1 only. The Go API runs on the same VPS
+#     (systemd, not a container) and reaches Mongo over loopback; nothing
+#     external ever needs to see 27017.
+#   - No mongo-express. That's a dev convenience with no auth of its own —
+#     do not run it here.
+#
+# One-time setup: see init-replica-and-user.sh in this directory before the
+# API can actually authenticate.
+services:
+  mongo:
+    image: mongo:7
+    container_name: notes-maker-mongo
+    restart: unless-stopped
+    command: ["--replSet", "rs0", "--bind_ip_all", "--auth", "--keyFile", "/etc/mongo-keyfile"]
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongo-data:/data/db
+      # Generate with: openssl rand -base64 756 > mongo-keyfile && chmod 400 mongo-keyfile
+      # Never commit this file — see .gitignore in this directory.
+      - ./mongo-keyfile:/etc/mongo-keyfile:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mongo-data:

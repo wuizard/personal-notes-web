@@ -1,0 +1,11 @@
+# Grants the `deploy` user (used by .github/workflows/api.yml over SSH) the
+# single privileged action it needs: restarting the API's systemd unit.
+# Nothing else — it never touches api.env or the Firebase credentials file,
+# and can't run anything as root beyond this one command.
+#
+# Install:
+#   sudo cp sudoers-deploy /etc/sudoers.d/deploy-notes-maker-api
+#   sudo chmod 440 /etc/sudoers.d/deploy-notes-maker-api
+#   sudo visudo -c    # verify syntax before trusting it
+
+deploy ALL=(root) NOPASSWD: /bin/systemctl restart notes-maker-api
