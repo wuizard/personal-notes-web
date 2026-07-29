@@ -15,6 +15,7 @@ import {usePlan} from "@/features/plan/use-plan";
 import {isChecklistComplete, noteKind} from "../model/convert";
 import {autoCompleteEnabled} from "../repo/completion";
 import {clearReminder, convertNoteKind, getNote, setCompleted, setReminder, updateNote,} from "../repo/note-repo";
+import {recordCapturePhrases} from "../repo/suggestions";
 import {ChecklistEditor} from "./checklist-editor";
 import {ReminderDialog} from "./reminder-dialog";
 
@@ -353,6 +354,7 @@ export function NoteEditor({
               setPendingNoteItemId(null);
               void finalizeComplete();
             }}
+            onItemCommitted={(text) => void recordCapturePhrases([text]).catch(() => {})}
             className="mt-3 flex-1 text-[16px] leading-[1.65]"
           />
         ) : (

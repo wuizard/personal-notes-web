@@ -22,6 +22,7 @@ export function ChecklistEditor({
   editingNoteId,
   onEditingNoteIdChange,
   onNoteCommitted,
+  onItemCommitted,
 }: {
   items: ChecklistItem[];
   onChange: (items: ChecklistItem[]) => void;
@@ -36,6 +37,12 @@ export function ChecklistEditor({
   /** Fires when a note field is committed (blurred) — how the caller learns
    *  the prompted-for note is done, so it can finish settling the item. */
   onNoteCommitted?: (id: string) => void;
+  /** Fires once per item text field, on blur, only when the text actually
+   *  changed since the field was focused — how a caller feeds the
+   *  Tab-completion history (docs/10 §10.2) from edits to an EXISTING note.
+   *  Quick-compose omits this: it already records once at submit time, and
+   *  passing this too would double-count every item. */
+  onItemCommitted?: (text: string) => void;
 }) {
   const t = useTranslations("checklist");
   const [showDone, setShowDone] = useState(false);
@@ -56,6 +63,9 @@ export function ChecklistEditor({
   // an earlier keystroke clobbering a newer one.
   const [ghost, setGhost] = useState<{ id: string; tail: string } | null>(null);
   const ghostToken = useRef(0);
+  // Text an item's input held when it gained focus, keyed by item id — the
+  // baseline onItemCommitted diffs against on blur.
+  const focusText = useRef<Record<string, string>>({});
 
   function updateGhost(id: string, text: string) {
     const token = ++ghostToken.current;
@@ -289,7 +299,18 @@ export function ChecklistEditor({
               if (!item.checked) updateGhost(item.id, e.target.value);
             }}
             onKeyDown={(e) => onKeyDown(e, item)}
-            onBlur={() => setGhost((g) => (g?.id === item.id ? null : g))}
+            onFocus={() => {
+              focusText.current[item.id] = item.text;
+            }}
+            onBlur={() => {
+              setGhost((g) => (g?.id === item.id ? null : g));
+              const before = focusText.current[item.id];
+              delete focusText.current[item.id];
+              const text = item.text.trim();
+              if (onItemCommitted && text && text !== before?.trim()) {
+                onItemCommitted(item.text);
+              }
+            }}
             placeholder={t("itemPlaceholder")}
             className={`relative z-10 w-full bg-transparent py-0.5 outline-none placeholder:opacity-40 ${
               item.checked ? "line-through opacity-50" : ""

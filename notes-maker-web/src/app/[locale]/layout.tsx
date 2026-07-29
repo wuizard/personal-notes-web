@@ -121,11 +121,7 @@ export default async function LocaleLayout({
       className={`${GeistSans.variable} ${GeistMono.variable} h-full`}
     >
       <head>
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3014369083955512"
-          crossOrigin="anonymous"
-        />
+        <meta name="google-adsense-account" content="ca-pub-3014369083955512" />
       </head>
       <body className="min-h-full">
         {/* Applies the stored app colour wash before first paint — the same
