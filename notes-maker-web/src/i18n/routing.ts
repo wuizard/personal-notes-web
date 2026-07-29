@@ -19,8 +19,9 @@ export const routing = defineRouting({
    * It is also better for SEO: each locale gets a real, crawlable URL rather
    * than one URL whose content depends on a header.
    *
-   * `/` itself is redirected by the Worker (worker/index.ts), which is the one
-   * thing static hosting genuinely cannot do.
+   * `/` itself has no prerendered page, so it falls back to a client-side
+   * redirect (src/app/page.tsx, public/index.html) — the one thing static
+   * hosting genuinely cannot do as a real HTTP redirect.
    */
   localePrefix: "always",
 });

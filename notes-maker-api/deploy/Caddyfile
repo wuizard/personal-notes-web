@@ -2,13 +2,14 @@
 # cert automatically as long as api.quickchecklist.app's DNS record points
 # at this VPS and ports 80/443 are open.
 #
-# quickchecklist.app is already on Cloudflare DNS for the frontend (Workers
-# custom domain) — this record must be "DNS only" (grey cloud), NOT
-# proxied. A proxied (orange cloud) record puts Cloudflare's edge in front
-# of the ACME HTTP-01 challenge and Cloudflare's own TLS in front of
-# Caddy's, which this simple setup isn't set up to negotiate. Set it once
-# in the Cloudflare dashboard: DNS -> api -> A record -> click the cloud
-# icon to grey/"DNS only".
+# quickchecklist.app itself is also on this VPS (notes-maker-web/deploy/
+# Caddyfile) and IS proxied (orange cloud) through Cloudflare, using a
+# Cloudflare Origin CA cert instead of Let's Encrypt. api.quickchecklist.app
+# stays "DNS only" (grey cloud) here on purpose: a proxied record would put
+# Cloudflare's edge in front of the ACME HTTP-01 challenge and Cloudflare's
+# own TLS in front of Caddy's, which this simple setup isn't set up to
+# negotiate. Set it once in the Cloudflare dashboard: DNS -> api -> A record
+# -> click the cloud icon to grey/"DNS only".
 #
 #   sudo cp Caddyfile /etc/caddy/Caddyfile
 #   sudo systemctl reload caddy

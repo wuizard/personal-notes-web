@@ -8,8 +8,7 @@ packages:
 #   unrs-resolver    — ESLint import resolver (native binary)
 #   @swc/core        — Next.js compiler (native binary)
 #   @parcel/watcher  — file watching for dev/build tooling (native binary)
-#   esbuild          — bundler used by wrangler (native binary)
-#   workerd          — the Cloudflare Workers runtime, for local dev + deploy
+#   esbuild          — bundler used by vite/vitest (native binary)
 allowBuilds:
   '@firebase/util': false
   "@parcel/watcher": true
@@ -18,4 +17,3 @@ allowBuilds:
   protobufjs: false
   sharp: true
   unrs-resolver: true
-  workerd: true

@@ -61,21 +61,61 @@ jobs:
           node-version: 24
           cache: pnpm
 
-      # Root install, not --filter: wrangler is a root devDependency
-      # (docs/09 §9.2 — wrangler.jsonc deliberately lives at the repo root).
       - run: pnpm install --frozen-lockfile
 
-      # Rebuilds rather than reusing the `web` job's output — `pnpm run
-      # deploy` is exactly the command docs/09 §9.2 has you run locally, so
-      # CI and a human deploying by hand never diverge.
-      - name: Build and deploy
-        run: pnpm run deploy
+      # Rebuilds rather than reusing the `web` job's output, same reasoning
+      # as notes-maker-api's deploy job: keeps this job self-contained.
+      - name: Build
+        run: pnpm --filter notes-maker-web build
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
           NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
           NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
           NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_ADSENSE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_ADSENSE_CLIENT_ID }}
+          NEXT_PUBLIC_ADSENSE_BANNER_SLOT: ${{ secrets.NEXT_PUBLIC_ADSENSE_BANNER_SLOT }}
+
+      # Flat filename, built one level up — keeps the scp step's source path
+      # trivial, same trick api.yml uses for the Go binary.
+      - name: Package
+        run: tar -C notes-maker-web/out -czf web-release.tar.gz .
+
+      - name: Upload release
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: deploy
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: web-release.tar.gz
+          target: /opt/notes-maker-web/releases/
+
+      # Extracts into a release dir named for this commit, sanity-checks the
+      # expected files exist, THEN swaps the `current` symlink — unlike
+      # api.yml's restart-then-rollback, verification happens before the
+      # swap here, so a bad extract never goes live in the first place.
+      # `deploy` owns /opt/notes-maker-web (see notes-maker-web/deploy/
+      # Caddyfile's setup comment) so no sudo/systemctl is needed at all —
+      # Caddy just reads files off disk per request.
+      - name: Extract, verify, swap in
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: deploy
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /opt/notes-maker-web/releases
+            rm -rf ${{ github.sha }}
+            mkdir ${{ github.sha }}
+            tar -xzf web-release.tar.gz -C ${{ github.sha }}
+            rm web-release.tar.gz
+            test -f ${{ github.sha }}/en.html
+            test -f ${{ github.sha }}/id.html
+            test -f ${{ github.sha }}/sw.js
+            cd /opt/notes-maker-web
+            ln -sfn releases/${{ github.sha }} current_tmp
+            mv -T current_tmp current
+            # Keep the last 5 releases for manual rollback, prune the rest.
+            cd releases && ls -1t | tail -n +6 | xargs -r rm -rf

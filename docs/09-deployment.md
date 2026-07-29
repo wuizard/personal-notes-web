@@ -1,207 +1,105 @@
-# 9. Deployment — Cloudflare
+# 9. Deployment — VPS + Caddy
 
 The app is a **static export**. There are no API routes, no server actions, and no dynamic server
 APIs — every note screen renders client-side against IndexedDB. `next build` writes `out/`, and any
 static host can serve it.
 
-Two Cloudflare products can host it. **Workers is what this repo is configured for**, and is the
-recommendation; Pages is documented because it is the more familiar name and works fine.
+`notes-maker-web` and `notes-maker-api` share one VPS. Caddy in front does TLS and reverse-proxies
+`api.quickchecklist.app` to the Go binary (`notes-maker-api/deploy/`); for `quickchecklist.app` it
+just serves the static export directly off disk — no runtime, no process to restart. Cloudflare
+sits in front of `quickchecklist.app` in proxy mode (orange cloud) purely for edge/DDoS protection;
+it is not the hosting platform. `api.quickchecklist.app` stays DNS-only (grey cloud) so Caddy's own
+Let's Encrypt HTTP-01 challenge keeps working for it.
 
-| | Workers (configured) | Pages |
-| --- | --- | --- |
-| Serves `out/` | yes | yes |
-| Can negotiate `/` by language | **yes** — small fetch handler | no — needs a fixed redirect |
-| Config lives in repo | `wrangler.jsonc` | dashboard (or `wrangler.jsonc`) |
-| Cloudflare's direction | actively developed | maintenance for new framework work |
-
-## 9.1 Why the `/` redirect needs a Worker
+## 9.1 The `/` fallback
 
 Locale routing uses `localePrefix: "always"` (docs/01, `src/i18n/routing.ts`), so the build produces
-`/id/**` and `/en/**` and deliberately **no `/`**. That is what makes a static export possible: every
-page is prerendered per locale and nothing is decided at request time.
+`/id/**` and `/en/**` and deliberately **no prerendered page at `/`** — every page is prerendered per
+locale and nothing is decided at request time, which is what makes a static export possible.
 
-The cost is that the bare origin has nothing to serve. `worker/index.ts` handles exactly that one
-request: it parses `Accept-Language` — including q-values, so `en;q=0.5, id;q=0.9` correctly resolves
-to Indonesian — and issues a `307` with `Vary: Accept-Language`.
+`/` is served by `public/index.html`, a static page that meta-refreshes to `/en` client-side (copied
+over `src/app/page.tsx`'s own build output during the export — the two exist for the same fallback,
+see the comment in `src/app/page.tsx`). There is no server-side language negotiation; everyone lands
+on English and switches languages in-app.
 
-**307, never 301.** The target depends on a request header; a permanent redirect would be cached by
-browsers and intermediaries, pinning one visitor's language onto everyone behind that cache.
+## 9.2 Deploying — CI
 
-Everything else is served straight from the assets binding with no compute.
+Pushing to `main` runs `ci.yml`'s `deploy-web` job:
 
-## 9.2 Deploying to Workers
+1. `pnpm --filter notes-maker-web build` — same build command as CI's lint/typecheck/test job.
+2. Tar `notes-maker-web/out/` and `scp` it to the VPS (`appleboy/scp-action`), reusing the same
+   `VPS_HOST` / `VPS_SSH_KEY` secrets and `deploy` SSH user as `api.yml`.
+3. Over SSH: extract into `/opt/notes-maker-web/releases/<commit-sha>/`, verify a few expected files
+   exist (`en.html`, `id.html`, `sw.js`), **then** atomically swap the `current` symlink
+   to point at the new release. Verification happens *before* the swap, so a broken extract never
+   goes live. No systemd restart, no health check needed — Caddy reads whatever `current` points at
+   on every request. The last 5 releases are kept for manual rollback (`ln -sfn` back to an older one
+   + `mv`), older ones pruned.
 
-```bash
-pnpm run deploy      # from the repo root
-```
-
-### Why `wrangler.jsonc` sits at the repository root
-
-It looks misplaced — the app is in `notes-maker-web/` — and it is there on purpose.
-
-Cloudflare Workers Builds runs its deploy command from the repository root. With no config there,
-wrangler falls back to workspace detection, finds several candidate packages, and refuses:
-
-```
-✘ [ERROR] The Cloudflare application detection logic has been run in the root of a
-  workspace instead of targeting a specific project. Change your working directory
-  to one of the applications in the workspace and try again.
-Failed: error occurred while running deploy command
-```
-
-This is a nasty one to diagnose because **the build succeeds first** — you get a full green build
-log and then a failure that reads like a wrangler bug.
-
-Two ways to fix it. Putting the config where the deploy actually runs is the one chosen here,
-because the alternative depends on a dashboard field staying in sync with the repo by hand — and a
-setting that lives only in a web UI is not reviewable, not versioned, and silently wrong the moment
-someone recreates the project.
-
-Paths inside it are therefore relative to the root (`notes-maker-web/worker/index.ts`,
-`./notes-maker-web/out`). `wrangler` is a **root** devDependency for the same reason: it is a
-repository-level deploy tool, not something the app imports.
-
-The upshot is that a bare `npx wrangler deploy` at the root just works, which is what Cloudflare
-runs by default.
-
-### Workers Builds (deploy on push)
-
-| Setting | Value |
-| --- | --- |
-| Build command | `pnpm run build` |
-| Deploy command | `npx wrangler deploy` *(Cloudflare's default — no change needed)* |
-| Root directory | *(repo root)* |
-| `NODE_VERSION` | `24` |
-
-Because the config is at the root, the default deploy command works unmodified. `pnpm run deploy`
-is equivalent and additionally rebuilds first, which is what you want locally.
-
-Root directory stays at the repository root even though the app is a subdirectory: the pnpm
-workspace lockfile lives at the top, and `pnpm install --frozen-lockfile` needs to see it. The
-build script filters to the package; the deploy reads `wrangler.jsonc`, which is already there.
-
-Set `NODE_VERSION` explicitly. Cloudflare's default image has shipped Node 22 while this project is
-developed and tested on 24 — the `engines` floor is 20.9 so 22 does build, but pinning it removes a
-difference you would otherwise only discover from a version-specific failure.
-
-First time only:
+To do it by hand instead:
 
 ```bash
-pnpm exec wrangler login
+pnpm --filter notes-maker-web build
+tar -C notes-maker-web/out -czf web-release.tar.gz .
+scp web-release.tar.gz deploy@<vps-host>:/opt/notes-maker-web/releases/
+ssh deploy@<vps-host>
+# then run the same extract/verify/swap steps ci.yml's deploy-web job does
 ```
 
-Local verification against the real runtime — worth doing before every deploy, because it catches
-asset-handling differences that `next start` cannot:
+## 9.3 One-time VPS + Cloudflare setup
 
-```bash
-pnpm run cf:dev                             # build + wrangler dev (workerd)
-```
+Everything below is manual, done once, and documented at the top of
+`notes-maker-web/deploy/Caddyfile` — this section is the narrative version.
 
-`wrangler.jsonc` is the whole configuration. Two settings there are load-bearing:
-
-- `html_handling: "auto-trailing-slash"` — the export writes `en/notes.html`, and this is what maps a
-  request for `/en/notes` onto it.
-- `not_found_handling: "404-page"` — explicitly **not** `single-page-application`. SPA fallback would
-  return `200` plus the app shell for genuinely missing URLs, which search engines index as duplicate
-  content.
-
-## 9.3 Deploying to Pages instead
-
-Connect the repo in the Cloudflare dashboard, then:
-
-| Setting | Value |
-| --- | --- |
-| Framework preset | None |
-| Build command | `pnpm install && pnpm --filter notes-maker-web build` |
-| Build output directory | `notes-maker-web/out` |
-| Root directory | *(repo root — the build command already filters)* |
-| `NODE_VERSION` | `24` |
-
-The monorepo is the only fiddly part: set the root to the repository root and let the pnpm filter
-select the package, rather than setting root to `notes-maker-web` — the workspace lockfile lives at
-the top and pnpm needs to see it.
-
-`public/_headers` is honoured by Pages exactly as it is by Workers, so caching behaves identically.
-
-**What you lose:** the `/` language redirect. Options, worst to best:
-
-1. Add `/ /id 302` to a `_redirects` file — every visitor lands on Indonesian regardless of browser.
-2. Add a Pages Function at `functions/index.ts` with the same logic as `worker/index.ts` — at which
-   point you are running a Worker anyway, which is the argument for using Workers directly.
-
-## 9.3a Why `/` needs `run_worker_first`
-
-The deployed site 404s at the origin root unless the Worker is explicitly routed there first:
-
-```jsonc
-"assets": { "run_worker_first": ["/"] }
-```
-
-There is no `out/index.html` (locales are always prefixed), so `/` misses the asset router, and
-`not_found_handling: "404-page"` then answers with `404.html` **itself** — the Worker is never
-invoked and the language redirect never runs.
-
-**`wrangler dev` does not reproduce this.** Locally the Worker receives `/` and the redirect works,
-so the failure only appears on a real deployment. Do not treat a passing `wrangler dev` as proof
-that the root works.
-
-Scoped to `"/"` rather than `true`: every other path is a real asset and must keep being served by
-the asset router with no compute.
-
-`public/index.html` is a second line of defence for the same request — a static page that detects
-language client-side and redirects. It is what serves `/` on Pages, where there is no Worker at all.
-Which one handled a request is easy to check:
-
-```bash
-curl -I https://your-domain/     # 307 = Worker (preferred);  200 = static fallback
-```
-
-If you ever see `200` there on Workers, `run_worker_first` has stopped taking effect.
+1. **Directory + permissions**: `deploy` (the same SSH user `api.yml` already uses) needs write
+   access to `/opt/notes-maker-web/releases/`. Unlike the API's deploy user, no sudoers grant is
+   needed — serving static files never requires restarting anything as root.
+2. **TLS**: generate a Cloudflare Origin CA certificate (dashboard → SSL/TLS → Origin Server) for
+   `quickchecklist.app` and install it on the VPS. This is used instead of Caddy's usual automatic
+   Let's Encrypt HTTP-01 flow because Cloudflare's proxy sits in front of the origin — a public CA
+   can't complete that challenge cleanly through a proxied hostname, and Origin CA needs no ACME
+   plugin or extra secret. Set Cloudflare's SSL/TLS mode to **Full (strict)**; this only affects
+   proxied hostnames, so `api.quickchecklist.app` (DNS-only) is unaffected.
+3. **Caddy config**: append `notes-maker-web/deploy/Caddyfile`'s site block into the VPS's existing
+   `/etc/caddy/Caddyfile` (which already has the `api.quickchecklist.app` block from
+   `notes-maker-api/deploy/Caddyfile`), then `sudo systemctl reload caddy`.
+4. **DNS cutover, last**: verify Caddy serves the app correctly by IP/Host header first, then remove
+   the domain from wherever it previously pointed and add a plain `A` record for
+   `quickchecklist.app` → the VPS IP, proxied (orange cloud) in Cloudflare.
 
 ## 9.4 The caching trap
 
-`public/_headers` sets `Cache-Control: no-cache` on `/sw.js`. **Do not remove it.**
+The Caddyfile sets `Cache-Control: no-cache` on `/sw.js`. **Do not remove it.**
 
 A cached service worker pins every user to the deploy that installed it. They keep getting the old
 app, no later release ever reaches them, and nothing in your logs looks wrong. It is the most common
-way a PWA on a CDN silently breaks.
+way a PWA on a CDN or edge cache silently breaks.
 
-The rest of that file is the inverse: `/_next/static/*` is content-hashed and cached for a year with
-`immutable`.
+The rest of the Caddyfile's header rules are the inverse: `/_next/static/*` is content-hashed and
+cached for a year with `immutable`.
 
 ## 9.5 The offline page must not redirect
 
-The service worker precaches `/offline` — **without** the `.html` extension.
+The service worker precaches `/offline` — **without** the `.html` extension. The Caddyfile's
+`try_files {path} {path}.html {path}/index.html` serves `offline.html` for a request to `/offline`
+directly, with no redirect involved, so `cache.add()` in the service worker never sees a redirected
+response. If routing here ever changes, re-check this — a redirect leaves the offline fallback
+silently uninstalled, discovered only by a user who goes offline.
 
-Cloudflare's `auto-trailing-slash` handling 307s `/offline.html` to `/offline`, and `cache.add()`
-rejects a redirected response. Requesting the `.html` form leaves the offline fallback silently
-uninstalled, discovered only by a user who goes offline. If asset handling is ever changed, re-check
-this.
-
-## 9.6 Custom domain
-
-Workers: add the route under the Worker's **Settings → Domains & Routes**. Pages: **Custom domains**.
-Either way Cloudflare provisions the certificate; if the domain is already on Cloudflare DNS the
-record is created for you.
-
-Set `start_url` and `scope` in `public/manifest.webmanifest` only if the app is served from a
-subpath — at a domain root the current values are correct.
-
-## 9.7 Pre-deploy checklist
+## 9.6 Pre-deploy checklist
 
 ```bash
 pnpm --filter notes-maker-web check:messages   # locale catalogs in sync
 pnpm --filter notes-maker-web lint
 pnpm --filter notes-maker-web typecheck
-pnpm --filter notes-maker-web typecheck:worker
 pnpm --filter notes-maker-web test
 ```
 
-CI runs all but the worker typecheck; add it there when the Worker grows beyond the redirect.
+CI runs all of these before `deploy-web` is allowed to run.
 
 After deploying, verify in a fresh private window:
 
-- `/` redirects by browser language, and `Vary: Accept-Language` is present
+- `/` redirects to `/en`
 - `/sw.js` responds `Cache-Control: no-cache`
 - the app installs as a PWA and opens with the network disabled
 - a note written before a redeploy is still there afterwards — the strongest signal that nothing

@@ -1,0 +1,91 @@
+# Static-file site block for notes-maker-web on the VPS. Caddy serves the
+# `next build` static export directly — no runtime, no reverse proxy, no
+# systemd unit — so a deploy is just swapping which directory `root` points
+# at (.github/workflows/ci.yml's `deploy-web` job does that over SSH).
+#
+# quickchecklist.app is proxied (orange cloud) through Cloudflare for edge
+# protection — unlike api.quickchecklist.app, which stays DNS-only (grey
+# cloud) so Caddy's own Let's Encrypt HTTP-01 challenge can reach it. A
+# proxied hostname can't complete that challenge cleanly, so this site uses
+# a Cloudflare Origin CA certificate instead: trusted by Cloudflare's edge,
+# not by the public web, which is fine because only Cloudflare ever talks to
+# this origin directly.
+#
+# ---- One-time setup (do these once, by hand; CI never runs any of this) ----
+#
+# 1. Give the `deploy` SSH user (already used by .github/workflows/api.yml)
+#    write access to the release directory:
+#
+#      sudo mkdir -p /opt/notes-maker-web/releases
+#      sudo chown -R deploy:deploy /opt/notes-maker-web
+#
+#    No sudoers grant needed here (unlike notes-maker-api's deploy user) —
+#    serving static files never requires restarting anything as root.
+#
+# 2. Cloudflare dashboard -> SSL/TLS -> Origin Server -> Create Certificate,
+#    for quickchecklist.app (add www.quickchecklist.app too if you want that
+#    covered by the same cert). Save the two outputs on the VPS:
+#
+#      /etc/ssl/cloudflare/quickchecklist.app.pem   (certificate)
+#      /etc/ssl/cloudflare/quickchecklist.app.key   (private key)
+#      sudo chown root:caddy /etc/ssl/cloudflare/quickchecklist.app.*
+#      sudo chmod 640 /etc/ssl/cloudflare/quickchecklist.app.*
+#
+# 3. Cloudflare dashboard -> SSL/TLS -> Overview -> set mode to
+#    "Full (strict)". This only changes behaviour for proxied hostnames, so
+#    api.quickchecklist.app (DNS-only) is unaffected.
+#
+# 4. Append the site block below into the VPS's existing
+#    /etc/caddy/Caddyfile (which already has the api.quickchecklist.app
+#    block from notes-maker-api/deploy/Caddyfile), then:
+#
+#      sudo systemctl reload caddy
+#
+# 5. Cut DNS over LAST, only after confirming Caddy serves the app:
+#
+#      curl -H "Host: quickchecklist.app" https://<vps-ip>/en --insecure
+#      # expect the app's HTML, not a Caddy default page or connection error
+#
+#    Then, in the Cloudflare dashboard: remove the Workers custom domain for
+#    quickchecklist.app (Workers -> Settings -> Domains & Routes), and add a
+#    plain A record for quickchecklist.app pointing at the VPS IP with the
+#    proxy toggle ON (orange cloud). The old Workers deploy stays reachable
+#    at its workers.dev URL until you're sure DNS has switched, which is
+#    your rollback path during the cutover window.
+
+quickchecklist.app {
+	tls /etc/ssl/cloudflare/quickchecklist.app.pem /etc/ssl/cloudflare/quickchecklist.app.key
+
+	root * /opt/notes-maker-web/current
+
+	# The export writes flat files like en/notes.html, not
+	# en/notes/index.html — this is the direct equivalent of Cloudflare's
+	# html_handling: "auto-trailing-slash" that wrangler.jsonc used to set.
+	try_files {path} {path}.html {path}/index.html =404
+	file_server
+
+	# Header-for-header equivalent of the public/_headers rules Cloudflare
+	# used to apply (see notes-maker-web/public/_headers before its removal
+	# in git history).
+
+	# The service worker must never be served from a stale cache — a cached
+	# sw.js pins every visitor to the deploy that installed it.
+	@sw path /sw.js
+	header @sw Cache-Control "no-cache"
+	header @sw Service-Worker-Allowed "/"
+
+	@manifest path /manifest.webmanifest
+	header @manifest Cache-Control "public, max-age=3600"
+
+	# Content-hashed by the build, so it can be cached forever.
+	@nextstatic path /_next/static/*
+	header @nextstatic Cache-Control "public, max-age=31536000, immutable"
+
+	@icons path /icons/*
+	header @icons Cache-Control "public, max-age=86400"
+
+	header X-Content-Type-Options "nosniff"
+	header Referrer-Policy "strict-origin-when-cross-origin"
+
+	encode gzip
+}

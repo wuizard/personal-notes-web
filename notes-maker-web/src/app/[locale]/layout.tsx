@@ -120,6 +120,13 @@ export default async function LocaleLayout({
       suppressHydrationWarning
       className={`${GeistSans.variable} ${GeistMono.variable} h-full`}
     >
+      <head>
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3014369083955512"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="min-h-full">
         {/* Applies the stored app colour wash before first paint — the same
             no-flash trick next-themes uses for the dark class. */}

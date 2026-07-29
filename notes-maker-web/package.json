@@ -10,8 +10,7 @@
     "typecheck": "tsc --noEmit",
     "gen:icons": "node scripts/generate-icons.mjs",
     "check:messages": "node scripts/check-messages.mjs",
-    "test": "vitest run",
-    "typecheck:worker": "tsc --noEmit -p worker/tsconfig.json"
+    "test": "vitest run"
   },
   "dependencies": {
     "@heroui/react": "^3.2.2",
@@ -34,7 +33,6 @@
     "uuidv7": "^1.2.1"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260722.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^20",

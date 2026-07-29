@@ -66,13 +66,13 @@ folder.
 | i18n | next-intl, `id`/`en` |
 | Auth | Firebase Authentication (client SDK on web; `firebase-admin-go` verifies tokens on the API) |
 | PWA | Custom service worker (`sw.js`), offline page, install manifest |
-| Frontend hosting | Cloudflare Workers (static assets + a small Worker for the `/` language redirect) — see `wrangler.jsonc`, [docs/09](docs/09-deployment.md) |
+| Frontend hosting | Static export served by Caddy on the VPS, Cloudflare proxied in front for edge protection only — see `notes-maker-web/deploy/`, [docs/09](docs/09-deployment.md) |
 | Backend language | Go 1.26 |
 | API | GraphQL via [gqlgen](https://gqlgen.com/) |
 | Database | MongoDB 7, single-node replica set (multi-document transactions need it even with one member) |
 | Billing | [Polar](https://polar.sh) — static Checkout Link + Standard Webhooks-signed webhook |
 | Backend hosting | Docker (MongoDB only) + systemd (the Go binary) + Caddy (reverse proxy/TLS) on a VPS — see `notes-maker-api/deploy/` |
-| CI/CD | GitHub Actions — `.github/workflows/ci.yml` (web: lint/typecheck/test/build, then deploy via `wrangler`) and `.github/workflows/api.yml` (API: vet/test/build, then deploy over SSH with a health-check rollback) |
+| CI/CD | GitHub Actions — `.github/workflows/ci.yml` (web: lint/typecheck/test/build, then deploy over SSH with a verify-before-swap release) and `.github/workflows/api.yml` (API: vet/test/build, then deploy over SSH with a health-check rollback) |
 | Package management | pnpm workspace (JS/TS side) + a standalone Go module (`notes-maker-api/` is not a workspace package) |
 
 ## Usage
@@ -95,15 +95,11 @@ pnpm --filter notes-maker-web build       # static export to notes-maker-web/out
 
 ### Frontend — deploy
 
-Pushing to `main` runs `ci.yml`'s `deploy-web` job, which deploys via `wrangler` only after
-lint/typecheck/test/build all pass. To do it by hand instead:
-
-```bash
-pnpm run deploy      # from the repo root — rebuilds, then `wrangler deploy`
-pnpm run cf:dev       # build + wrangler dev, to test against the real Workers runtime locally
-```
-
-Full details, including why `wrangler.jsonc` lives at the repo root: [docs/09-deployment.md](docs/09-deployment.md).
+Pushing to `main` runs `ci.yml`'s `deploy-web` job, which builds the static export and deploys it
+over SSH to the VPS only after lint/typecheck/test/build all pass — same VPS the API runs on, with
+Caddy serving the files directly and Cloudflare proxying in front for edge protection only, not as
+the host. Full details, including the one-time VPS/Cloudflare setup:
+[docs/09-deployment.md](docs/09-deployment.md).
 
 ### Backend — local dev
 
@@ -149,7 +145,7 @@ at a live product until that's closed; see `docs/10-plan-change-v2.md` §10.17 f
 | [06 — UX specification](docs/06-ux-spec.md) | Screens, flows, keyboard map, quota and upgrade UX |
 | [07 — Roadmap](docs/07-roadmap.md) | v1 stages, then the gate into Phase 2 |
 | [08 — Local storage](docs/08-local-storage.md) | Dexie, persistence, eviction, images, export |
-| [09 — Deployment](docs/09-deployment.md) | Cloudflare Workers (configured) and Pages |
+| [09 — Deployment](docs/09-deployment.md) | Static export served by Caddy on the VPS |
 | [10 — Plan change v2](docs/10-plan-change-v2.md) | **Supersedes parts of 00–09** — checklists-first, English-first, accounts, FCM push |
 
 ## Toolchain

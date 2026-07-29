@@ -5,7 +5,8 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   /**
-   * Static export — deployed to Cloudflare Workers via Static Assets.
+   * Static export — served by Caddy on the VPS (notes-maker-web/deploy/
+   * Caddyfile), Cloudflare proxying in front for edge protection only.
    *
    * This app is local-first: every note screen renders client-side against
    * IndexedDB, there are no API routes, no server actions, and no dynamic
@@ -19,8 +20,8 @@ const nextConfig: NextConfig = {
    * Consequences, both accepted:
    *  - No middleware. `src/proxy.ts` was deleted; locale routing is now
    *    `localePrefix: "always"` so every route is prerendered per locale.
-   *  - `/` cannot negotiate a locale at the edge, so a small Worker does the
-   *    Accept-Language redirect. See worker/index.ts.
+   *  - `/` cannot negotiate a locale server-side, so it falls back to a
+   *    client-side redirect. See public/index.html and src/app/page.tsx.
    */
   output: "export",
 
