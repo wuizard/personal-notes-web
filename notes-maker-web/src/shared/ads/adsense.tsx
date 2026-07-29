@@ -1,19 +1,9 @@
 "use client";
 
 import Script from "next/script";
-import {useSyncExternalStore} from "react";
-import {usePlan} from "@/features/plan/use-plan";
+import {useAdsEnabled} from "./use-ads-enabled";
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
-
-function subscribeOnline(onChange: () => void): () => void {
-  window.addEventListener("online", onChange);
-  window.addEventListener("offline", onChange);
-  return () => {
-    window.removeEventListener("online", onChange);
-    window.removeEventListener("offline", onChange);
-  };
-}
 
 /**
  * AdSense loader — docs/10 §10.7, §10.13.
@@ -29,14 +19,9 @@ function subscribeOnline(onChange: () => void): () => void {
  * features/auth/firebase.ts.
  */
 export function AdSense() {
-  const { plan } = usePlan();
-  const online = useSyncExternalStore(
-    subscribeOnline,
-    () => navigator.onLine,
-    () => true,
-  );
+  const enabled = useAdsEnabled();
 
-  if (!CLIENT_ID || plan !== "free" || !online) return null;
+  if (!CLIENT_ID || !enabled) return null;
 
   return (
     <Script

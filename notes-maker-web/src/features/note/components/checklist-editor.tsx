@@ -5,6 +5,7 @@ import {useTranslations} from "next-intl";
 import {useEffect, useMemo, useRef, useState} from "react";
 import type {ChecklistItem} from "@/features/storage";
 import {newChecklistItem} from "../model/convert";
+import {suggestCompletion} from "../repo/suggestions";
 
 /**
  * The checklist surface, shared by compose and the editor pane — docs/10 §10.1.
@@ -48,6 +49,25 @@ export function ChecklistEditor({
   // The id of the input to focus once the item it belongs to has rendered —
   // a new row's input does not exist yet on the click that creates it.
   const pendingFocus = useRef<string | null>(null);
+
+  // Tab-completion ghost text — the id it belongs to plus the tail to append
+  // on Tab. One slot, like editingNote above: only the focused row can have
+  // an active suggestion. A request token guards against a slow lookup from
+  // an earlier keystroke clobbering a newer one.
+  const [ghost, setGhost] = useState<{ id: string; tail: string } | null>(null);
+  const ghostToken = useRef(0);
+
+  function updateGhost(id: string, text: string) {
+    const token = ++ghostToken.current;
+    if (!text.trim()) {
+      setGhost(null);
+      return;
+    }
+    void suggestCompletion(text).then((tail) => {
+      if (ghostToken.current !== token) return; // a newer keystroke won the race
+      setGhost(tail ? { id, tail } : null);
+    });
+  }
 
   const ordered = useMemo(() => items.slice().sort((a, b) => a.order - b.order), [items]);
   const active = ordered.filter((i) => !i.checked);
@@ -109,7 +129,11 @@ export function ChecklistEditor({
   };
 
   const onKeyDown = (e: React.KeyboardEvent, item: ChecklistItem) => {
-    if (e.key === "Enter") {
+    if (e.key === "Tab" && ghost?.id === item.id && ghost.tail) {
+      e.preventDefault();
+      setText(item.id, item.text + ghost.tail);
+      setGhost(null);
+    } else if (e.key === "Enter") {
       e.preventDefault();
       insertAfter(item.id);
     } else if (e.key === "Backspace" && item.text === "") {
@@ -243,16 +267,35 @@ export function ChecklistEditor({
           </span>
         </button>
 
-        <input
-          data-item-id={item.id}
-          value={item.text}
-          onChange={(e) => setText(item.id, e.target.value)}
-          onKeyDown={(e) => onKeyDown(e, item)}
-          placeholder={t("itemPlaceholder")}
-          className={`min-w-0 flex-1 bg-transparent py-0.5 outline-none placeholder:opacity-40 ${
-            item.checked ? "line-through opacity-50" : ""
-          }`}
-        />
+        <div className="relative min-w-0 flex-1">
+          {/* Ghost completion — non-interactive text sitting exactly behind
+              the real input. The typed portion is invisible so it reserves
+              the right amount of space; only the suggested tail shows,
+              muted, past where the caret actually is. Tab accepts it. */}
+          {!item.checked && ghost?.id === item.id && ghost.tail && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 flex items-center overflow-hidden whitespace-pre py-0.5"
+            >
+              <span className="invisible">{item.text}</span>
+              <span className="text-ink-subtle opacity-50">{ghost.tail}</span>
+            </div>
+          )}
+          <input
+            data-item-id={item.id}
+            value={item.text}
+            onChange={(e) => {
+              setText(item.id, e.target.value);
+              if (!item.checked) updateGhost(item.id, e.target.value);
+            }}
+            onKeyDown={(e) => onKeyDown(e, item)}
+            onBlur={() => setGhost((g) => (g?.id === item.id ? null : g))}
+            placeholder={t("itemPlaceholder")}
+            className={`relative z-10 w-full bg-transparent py-0.5 outline-none placeholder:opacity-40 ${
+              item.checked ? "line-through opacity-50" : ""
+            }`}
+          />
+        </div>
 
         <button
           type="button"

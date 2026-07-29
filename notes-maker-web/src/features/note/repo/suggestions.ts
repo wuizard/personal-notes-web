@@ -72,3 +72,33 @@ export async function topSuggestions(limit = 3): Promise<string[]> {
 export async function clearSuggestionHistory(): Promise<void> {
   await getDb().capture_phrases.clear();
 }
+
+/**
+ * Inline Tab-completion for checklist items: the tail text to append to
+ * `prefix` so it reads as the best-matching past phrase, or `null` for no
+ * match. Unlike topSuggestions(), a phrase used only once still qualifies —
+ * this is Tab-to-accept, not an always-visible chip, so there is no passive
+ * clutter cost to matching on a single prior use.
+ *
+ * Matches against `display` (not the pre-normalized `text` column) so the
+ * returned tail's length lines up exactly with what the user actually typed,
+ * whitespace and all — comparing against the normalized column would risk an
+ * off-by-some-whitespace slice if the user's in-progress text has irregular
+ * spacing that `text` already collapsed away.
+ */
+export async function suggestCompletion(prefix: string): Promise<string | null> {
+  const db = getDb();
+  if (!prefix || !(await suggestionsEnabled())) return null;
+
+  const at = Date.now();
+  const score = (p: CapturePhrase) =>
+    p.count * Math.pow(0.5, Math.max(0, at - p.last_used_at) / HALF_LIFE_MS);
+
+  const lower = prefix.toLowerCase();
+  const all = await db.capture_phrases.toArray();
+  const best = all
+    .filter((p) => p.display.length > prefix.length && p.display.toLowerCase().startsWith(lower))
+    .sort((a, b) => score(b) - score(a))[0];
+
+  return best ? best.display.slice(prefix.length) : null;
+}

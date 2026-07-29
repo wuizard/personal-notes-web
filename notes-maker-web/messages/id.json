@@ -143,8 +143,8 @@
       "privacyBody": "Catatan Anda tersimpan di penyimpanan peramban Anda sendiri. Tidak pernah menyentuh server — kecuali kelak Anda membayar kami untuk menyinkronkannya.",
       "checklistTitle": "Tugas dalam satu ketukan",
       "checklistBody": "Pencatatan dimulai sebagai daftar centang, dan daftar centang tanpa batas — di semua paket.",
-      "offlineTitle": "Berfungsi offline",
-      "offlineBody": "Pasang seperti aplikasi dan menulislah di mana saja. Tanpa koneksi, kapan pun."
+      "autoEntryTitle": "Entri tugas otomatis",
+      "autoEntryBody": "Mulai mengetik dan kalimatnya akan dilengkapi otomatis, dipelajari dari tugas-tugas Anda sebelumnya — tekan Tab untuk menerimanya."
     }
   },
   "settings": {

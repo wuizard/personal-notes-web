@@ -260,6 +260,15 @@ Roughly in dependency order; stages 1–4 are pure client work and shippable wit
 - Firebase **client web config** (apiKey/authDomain snippet + enabling the Google provider +
   authorized domains) — deferred by choice to stage 5; the admin SDK key is already provisioned
   locally (gitignored, never committed).
+- **Rewarded video → 1-day premium (idea, not built, 2026-07-29).** Let a free-tier user watch a
+  rewarded ad in exchange for a 24-hour premium grant, as an alternative on-ramp alongside the
+  $2/month subscription. Unresolved: how a 24h grant is represented (`Subscription.Status` is
+  currently a durable Polar-webhook-driven field, §10.7/§10.17 — a self-expiring grant with no
+  payment behind it is a different shape and needs its own field or a distinct status value, not a
+  fake Polar subscription); which ad network actually serves rewarded video (AdSense's own unit
+  types are display/in-feed/in-article — rewarded video is a separate product, e.g. Google Ad
+  Manager or AdMob, which may mean a second SDK); and whether this cannibalizes subscription
+  conversions enough to matter at this app's scale. Not sequenced into any stage yet.
 
 ### Resolved (2026-07-24)
 
@@ -320,9 +329,16 @@ verdict.
 `NEXT_PUBLIC_ADSENSE_CLIENT_ID` is configured — matching §10.7's "shown when online... the offline
 app never holds a blank ad slot" exactly. Publisher ID is not a secret (it's public in every
 served page), so it lives in `.env.local.example` with a real default rather than blank like the
-Firebase keys; unset in any environment, the component renders nothing. Ad *unit* placement
-(where `<ins class="adsbygoogle">` slots actually sit on the page) is not decided yet — this stage
-only wires the loader.
+Firebase keys; unset in any environment, the component renders nothing. The free/online gate
+itself lives in `use-ads-enabled.ts`, shared by the script loader and every ad unit.
+
+**Ad unit placement (2026-07-29).** One banner, `src/shared/ads/banner-ad.tsx`: bottom-center of
+the app screens (notes/archive/completed/reminders/settings/trash via `AppShell`), not the
+marketing landing page. Sits in the normal document flow below the page content and above the
+mobile tab bar, so it takes up no space at all — for anyone not seeing ads (premium, offline, or
+the unit not configured) — rather than being an overlay that always reserves a strip. Needs its
+own slot ID, `NEXT_PUBLIC_ADSENSE_BANNER_SLOT`, from an AdSense "Display ad" unit; blank renders
+nothing, same as the client ID.
 
 ## 10.13a Completed checklists (Premium)
 

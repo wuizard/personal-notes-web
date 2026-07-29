@@ -5,6 +5,7 @@ import {useTranslations} from "next-intl";
 import type {ReactNode} from "react";
 import {Link, usePathname} from "@/i18n/navigation";
 import {AuthMenu} from "@/features/auth/auth-menu";
+import {BannerAd} from "@/shared/ads/banner-ad";
 import {ThemeToggle} from "./theme-toggle";
 import {LocaleSwitcher} from "./locale-switcher";
 import {AppColorPicker} from "./app-color-picker";
@@ -126,9 +127,17 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* pb-16 on mobile keeps content clear of the fixed tab bar.
           Pages own their own scrolling. */}
-      <main className="flex min-h-0 flex-1 flex-col overflow-hidden pb-16 md:pb-0">
+      <main className="flex min-h-0 flex-1 flex-col overflow-hidden pb-32 md:pb-16">
         {children}
       </main>
+
+      {/* Fixed like the tab bar below it, for the same reason: the app's
+          panes (note list, editor) assume they own the full height of
+          <main> and won't shrink to make room for an in-flow sibling.
+          `pb-32`/`md:pb-16` above reserves space unconditionally — same
+          approach as the tab bar's own always-on `pb-16` — so nothing ever
+          renders under it, whether or not an ad actually loads. */}
+      <BannerAd />
 
       {/* ── mobile bottom tab bar ── */}
       <nav

@@ -1,5 +1,5 @@
 import {getTranslations, setRequestLocale} from "next-intl/server";
-import {CloudOff, ListChecks, ShieldCheck} from "lucide-react";
+import {ListChecks, ShieldCheck, WandSparkles} from "lucide-react";
 import {Link} from "@/i18n/navigation";
 import {AppColorSwatches} from "@/shared/ui/app-color-swatches";
 import {BrandMark} from "@/shared/ui/brand-mark";
@@ -75,7 +75,7 @@ export default async function LandingPage({
             [
               { key: "privacy", icon: ShieldCheck },
               { key: "checklist", icon: ListChecks },
-              { key: "offline", icon: CloudOff },
+              { key: "autoEntry", icon: WandSparkles },
             ] as const
           ).map(({ key, icon: Icon }) => (
             <li
