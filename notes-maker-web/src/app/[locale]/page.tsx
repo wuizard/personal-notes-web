@@ -23,8 +23,26 @@ export default async function LandingPage({
   setRequestLocale(locale);
   const t = await getTranslations();
 
+  // SoftwareApplication rich-result eligibility: name/description reuse the
+  // same seo.* strings as <meta name="description">, so the structured data
+  // never drifts out of sync with what's actually in the page's own <head>.
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Notes Maker",
+    applicationCategory: "ProductivityApplication",
+    operatingSystem: "Web",
+    description: t("seo.description"),
+    url: `https://quickchecklist.app/${locale}`,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  };
+
   return (
     <div className="flex min-h-dvh flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <header className="flex items-center gap-3 px-6 py-4">
         <BrandMark size={28} />
         <span className="font-semibold tracking-tight">{t("app.name")}</span>

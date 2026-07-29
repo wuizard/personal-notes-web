@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Disallow: /en/notes
+Disallow: /en/archive
+Disallow: /en/completed
+Disallow: /en/reminders
+Disallow: /en/settings
+Disallow: /en/trash
+Disallow: /id/notes
+Disallow: /id/archive
+Disallow: /id/completed
+Disallow: /id/reminders
+Disallow: /id/settings
+Disallow: /id/trash
+
+Sitemap: https://quickchecklist.app/sitemap.xml

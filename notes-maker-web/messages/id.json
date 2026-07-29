@@ -127,9 +127,13 @@
     "restore": "Pulihkan dari cadangan",
     "dismiss": "Mulai dari awal"
   },
+  "seo": {
+    "title": "Notes Maker — Aplikasi Catatan Pribadi, To-Do List & Checklist Gratis",
+    "description": "Aplikasi catatan pribadi dan to-do list gratis tanpa perlu mendaftar. Tulis catatan, buat checklist, dan tetap terorganisir — semuanya tersimpan privat di perangkat Anda dan bisa dipakai offline."
+  },
   "landing": {
-    "heroTitle": "Catatan yang tetap milik Anda.",
-    "heroBody": "Gratis, tanpa akun, dan tersimpan di peramban Anda sendiri. Tidak ada yang dikirim ke server mana pun.",
+    "heroTitle": "Catatan pribadi dan to-do list yang tetap milik Anda.",
+    "heroBody": "Aplikasi catatan pribadi dan checklist gratis — tanpa akun, tanpa perlu mendaftar. Semuanya tersimpan di peramban Anda sendiri; tidak pernah dikirim ke server mana pun.",
     "cta": "Mulai menulis",
     "noAccount": "Tanpa perlu mendaftar.",
     "useTheme": "Gunakan tema warna {color}",

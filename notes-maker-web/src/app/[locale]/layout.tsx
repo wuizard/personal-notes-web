@@ -2,9 +2,9 @@ import type {Metadata, Viewport} from "next";
 import {GeistSans} from "geist/font/sans";
 import {GeistMono} from "geist/font/mono";
 import {hasLocale, NextIntlClientProvider} from "next-intl";
-import {setRequestLocale} from "next-intl/server";
+import {getTranslations, setRequestLocale} from "next-intl/server";
 import {notFound} from "next/navigation";
-import {routing} from "@/i18n/routing";
+import {routing, type Locale} from "@/i18n/routing";
 import {AdSense} from "@/shared/ads/adsense";
 import {appColorBootScript} from "@/shared/app-color";
 import {Providers} from "@/shared/providers";
@@ -22,20 +22,68 @@ import "../globals.css";
  * The npm package carries the .woff2 files, so the build is hermetic.
  */
 
-export const metadata: Metadata = {
-  title: { default: "Notes Maker", template: "%s · Notes Maker" },
-  description: "Free, no account, stored in your own browser.",
-  applicationName: "Notes Maker",
-  manifest: "/manifest.webmanifest",
-  appleWebApp: { capable: true, statusBarStyle: "default", title: "Notes Maker" },
-  icons: {
-    icon: [
-      { url: "/icons/favicon.svg", type: "image/svg+xml" },
-      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-    ],
-    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
-  },
-};
+const SITE_URL = "https://quickchecklist.app";
+
+/**
+ * Per-locale metadata — title/description come from messages/*.json's `seo`
+ * namespace so they can be keyword-targeted independently of the friendlier
+ * on-page hero copy (landing.heroTitle/heroBody), while staying in the same
+ * translation files check:messages already keeps in sync across locales.
+ *
+ * `alternates.languages` emits hreflang tags so Google attributes /en and
+ * /id as translations of each other rather than as duplicate content in
+ * different languages — without it, two fully-translated URLs for the same
+ * page can compete against each other in search instead of each ranking in
+ * its own market.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seo" });
+  const title = t("title");
+  const description = t("description");
+  const path = `/${locale}`;
+
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: { default: title, template: "%s · Notes Maker" },
+    description,
+    applicationName: "Notes Maker",
+    manifest: "/manifest.webmanifest",
+    appleWebApp: { capable: true, statusBarStyle: "default", title: "Notes Maker" },
+    icons: {
+      icon: [
+        { url: "/icons/favicon.svg", type: "image/svg+xml" },
+        { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      ],
+      apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+    },
+    alternates: {
+      canonical: path,
+      languages: Object.fromEntries(
+        routing.locales.map((l) => [l, `/${l}`]),
+      ) as Record<Locale, string>,
+    },
+    openGraph: {
+      type: "website",
+      url: path,
+      siteName: "Notes Maker",
+      title,
+      description,
+      locale,
+      images: [{ url: "/icons/icon-512.png", width: 512, height: 512 }],
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+      images: ["/icons/icon-512.png"],
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: [

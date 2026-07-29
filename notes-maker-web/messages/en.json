@@ -127,9 +127,13 @@
     "restore": "Restore from backup",
     "dismiss": "Start fresh"
   },
+  "seo": {
+    "title": "Notes Maker — Free Personal Notes, To-Do List & Checklist App",
+    "description": "A free personal notes app and to-do list maker with no sign-up. Write notes, build checklists, and stay organised — everything stays private on your own device and works offline."
+  },
   "landing": {
-    "heroTitle": "Notes that stay yours.",
-    "heroBody": "Free, no account, and stored in your own browser. Nothing is sent to any server.",
+    "heroTitle": "Personal notes and to-do lists that stay yours.",
+    "heroBody": "A free personal notes app and checklist maker — no account, no sign-up. Everything is stored in your own browser; nothing is ever sent to a server.",
     "cta": "Start writing",
     "noAccount": "No sign-up required.",
     "useTheme": "Use the {color} theme",
