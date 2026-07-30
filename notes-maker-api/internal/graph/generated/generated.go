@@ -52,6 +52,7 @@ type ComplexityRoot struct {
 		Kind        func(childComplexity int) int
 		Labels      func(childComplexity int) int
 		Pinned      func(childComplexity int) int
+		Purged      func(childComplexity int) int
 		Reminder    func(childComplexity int) int
 		Rev         func(childComplexity int) int
 		UpdatedAt   func(childComplexity int) int
@@ -186,6 +187,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Note.Pinned(childComplexity), true
+	case "Note.purged":
+		if e.ComplexityRoot.Note.Purged == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Note.Purged(childComplexity), true
 	case "Note.reminder":
 		if e.ComplexityRoot.Note.Reminder == nil {
 			break
@@ -423,6 +430,13 @@ type Note {
   updatedAt: DateTime!
   """Set on a tombstone. Tombstones travel as ordinary documents so every device learns of the deletion."""
   deletedAt: DateTime
+  """
+  True when the content is gone for good ("delete forever"), as opposed to a
+  restorable trash tombstone. An empty note sitting in trash is otherwise
+  indistinguishable from a purged one, and the two must not be handled alike:
+  purged means remove the local row, trashed means show it in Trash.
+  """
+  purged: Boolean!
   """Server-owned revision counter; the client echoes it back as baseRev."""
   rev: Int!
 }
@@ -521,6 +535,8 @@ func (ec *executionContext) childFields_Note(ctx context.Context, field graphql.
 		return ec.fieldContext_Note_updatedAt(ctx, field)
 	case "deletedAt":
 		return ec.fieldContext_Note_deletedAt(ctx, field)
+	case "purged":
+		return ec.fieldContext_Note_purged(ctx, field)
 	case "rev":
 		return ec.fieldContext_Note_rev(ctx, field)
 	}
@@ -1113,6 +1129,29 @@ func (ec *executionContext) _Note_deletedAt(ctx context.Context, field graphql.C
 }
 func (ec *executionContext) fieldContext_Note_deletedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Note", field, false, false, errors.New("field of type DateTime does not have child fields"))
+}
+
+func (ec *executionContext) _Note_purged(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Note_purged(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Purged, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Note_purged(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Note", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _Note_rev(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
@@ -2897,6 +2936,11 @@ func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj
 		case "deletedAt":
 			out.Values[i] = ec._Note_deletedAt(ctx, field, obj)
 			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "purged":
+			out.Values[i] = ec._Note_purged(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "rev":

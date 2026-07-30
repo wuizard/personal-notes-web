@@ -141,7 +141,10 @@ type View struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   *time.Time
-	Rev         int
+	// Purged distinguishes "delete forever" from a restorable trash
+	// tombstone. Both are tombstones; only one still has content to restore.
+	Purged bool
+	Rev    int
 }
 
 // Mutation is one entry in a push batch. The client sends the whole note it
@@ -614,6 +617,7 @@ func (s *Service) view(userID bson.ObjectID, n *Note) (View, error) {
 		CreatedAt:   n.CreatedAt,
 		UpdatedAt:   n.UpdatedAt,
 		DeletedAt:   n.DeletedAt,
+		Purged:      n.DeletedAt != nil && len(n.Payload) == 0,
 		Rev:         n.Rev,
 	}, nil
 }

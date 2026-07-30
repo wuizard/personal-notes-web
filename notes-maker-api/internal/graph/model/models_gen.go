@@ -35,6 +35,11 @@ type Note struct {
 	UpdatedAt   time.Time  `json:"updatedAt"`
 	// Set on a tombstone. Tombstones travel as ordinary documents so every device learns of the deletion.
 	DeletedAt *time.Time `json:"deletedAt,omitempty"`
+	// True when the content is gone for good ("delete forever"), as opposed to a
+	// restorable trash tombstone. An empty note sitting in trash is otherwise
+	// indistinguishable from a purged one, and the two must not be handled alike:
+	// purged means remove the local row, trashed means show it in Trash.
+	Purged bool `json:"purged"`
 	// Server-owned revision counter; the client echoes it back as baseRev.
 	Rev int `json:"rev"`
 }
