@@ -1,8 +1,9 @@
 package graph
 
-// This file is hand-written and gqlgen never rewrites it. The Resolver struct
-// and any helper the resolvers share live here; internal/graph/resolver.go is
-// regenerated from the schema and holds only the resolver methods themselves.
+// This file is hand-written and gqlgen never rewrites it. Every helper the
+// resolvers share lives here rather than in schema.resolvers.go, which codegen
+// owns and which relocates anything that is not a resolver method into a
+// warning comment at the bottom of the file.
 
 import (
 	"context"
@@ -15,13 +16,6 @@ import (
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/graph/model"
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/middleware"
 )
-
-// Resolver wires GraphQL fields to feature services; it holds no business
-// logic of its own.
-type Resolver struct {
-	Users    *user.Service
-	NoteSync *note.Service
-}
 
 var (
 	// ErrUnauthenticated is returned by fields that require a verified
