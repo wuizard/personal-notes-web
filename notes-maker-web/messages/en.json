@@ -362,5 +362,10 @@
     "conflictedCopy": "{title} (conflicted copy — {when})",
     "conflictBanner": "This note was edited on another device at the same time. Your version was kept as a separate copy.",
     "conflictDismiss": "Got it"
+  },
+  "legal": {
+    "lastUpdated": "Last updated",
+    "backHome": "Back to Notes Maker",
+    "privacy": "Privacy Policy"
   }
 }

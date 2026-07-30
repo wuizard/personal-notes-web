@@ -99,6 +99,15 @@ export default async function LandingPage({
             what they became). */}
         <AppColorSwatches />
       </main>
+
+      {/* A privacy policy nobody can reach is not a privacy policy. It is
+          also what AdSense review looks for, and what anyone deciding
+          whether to trust a notes app goes looking for first. */}
+      <footer className="border-t border-border px-6 py-6 text-center text-[13px] text-muted">
+        <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">
+          {t("legal.privacy")}
+        </Link>
+      </footer>
     </div>
   );
 }

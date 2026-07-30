@@ -362,5 +362,10 @@
     "conflictedCopy": "{title} (salinan konflik — {when})",
     "conflictBanner": "Catatan ini diubah di perangkat lain pada saat bersamaan. Versi Anda disimpan sebagai salinan terpisah.",
     "conflictDismiss": "Mengerti"
+  },
+  "legal": {
+    "lastUpdated": "Terakhir diperbarui",
+    "backHome": "Kembali ke Notes Maker",
+    "privacy": "Kebijakan Privasi"
   }
 }
