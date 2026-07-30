@@ -763,3 +763,89 @@ The **client sync engine** (P2.4) — nothing in `notes-maker-web` calls these f
 `features/storage/remote.ts` is still the stub that reports zero remote notes. Then images/R2
 (P2.5) → push/reminders (P2.6) → `cmd/adminapi` + `notes-maker-admin/` (P2.8). Labels remain
 client-side strings; the `labels` collection of docs/02 does not exist.
+
+## 10.19 Client milestone: the sync engine (P2.4)
+
+`notes-maker-web/src/features/sync/` now consumes §10.18's API. Premium accounts sync notes across
+devices; free accounts are untouched, and their notes still never leave the browser (docs/01 §1.0).
+
+### Pull, then push — and why that order
+
+Push carries each note's `base_rev`, which is what the server uses to work out which fields *it*
+changed since. Pulling first keeps those base_revs current, so two devices editing different fields
+merge silently instead of colliding. The cursor advances only after a page is fully applied, so an
+interrupted pull resumes rather than skipping.
+
+### The rules that stop sync eating someone's work
+
+- **A note with unsent edits is never overwritten**, not by a newer server version and not by a
+  tombstone. A note deleted on one device and edited on another comes back; the local edits then
+  push normally and the server decides (docs/04 §4.3).
+- **`_base_rev` is not advanced for a dirty note.** It records the revision the local edits were
+  made against; moving it to the server's newer revision would tell the server those edits already
+  account for changes they have never seen, turning a merge into a silent clobber.
+- **A mid-flight edit keeps the note dirty.** If the row changes while the push is in flight, the
+  response cannot be allowed to clear the flag — that would strand an edit the server has never
+  seen. `base_rev` still advances, because the accepted revision does contain what was sent.
+- **Conflicts fork rather than choose.** The server's version keeps the note's identity; the local
+  version becomes a separate, labelled copy carrying `conflict_of`, with a quiet dismissible banner
+  (docs/04 §4.5 rule 3, §4.7). Never a modal, never a merge UI.
+
+### `_dirty_fields`, and why there is no outbox
+
+docs/04 §4.2 specifies a separate `outbox` store. It was not built, and does not need to be: every
+write path in `note-repo.ts` already set `_dirty`, and `_dirty` was already indexed. One additive
+field — `_dirty_fields`, populated from the patch keys `updateNote` already receives — buys
+§4.5 rule 1's disjoint-field merge without a second store or a schema migration (docs/08 §8.1).
+
+Absent or empty is read as "everything changed", which is the safe direction: it can cost an
+unnecessary conflict, never a lost edit.
+
+### Deleting forever needed its own queue
+
+Trashing rides on the surviving row. Deleting forever removes the row, and a row that no longer
+exists cannot carry a mutation — so without `storage/purge-queue.ts` the next pull would receive the
+server's still-live tombstone and resurrect the note the user had just destroyed. The queue is
+written unconditionally by every hard-delete path: note-repo has no business knowing the plan, and a
+free user who subscribes later should not have their pre-subscription deletions come back. It is
+bounded at 500 ids, since a free user never drains it.
+
+This is also why `Note.purged` was added to the schema: an empty note sitting in trash is otherwise
+indistinguishable from one whose payload was dropped, and the two must not be handled alike.
+
+### Scheduling (docs/04 §4.6)
+
+App start, `online`, regaining visibility if the last sync is older than 30s, a 60s heartbeat, and a
+2s debounce after a local write. The heartbeat is torn down when the tab hides and rebuilt when it
+returns, rather than firing into a hidden tab and returning early — on mobile a background heartbeat
+is a battery complaint. Backoff is 1/2/4/8/16/30s with jitter, and **only** for reachability
+failures: a refusal ("premium required") would answer identically however long we wait, so it stops
+and says so instead.
+
+Writes are noticed through Dexie's own `useLiveQuery`, not by note-repo announcing them. The repo
+still does not know a network exists (docs/01 §1.5).
+
+Rejected mutations are dropped rather than retried forever, and surfaced in Settings → Sync with the
+server's reason — "note cap of 100 reached" is something a user can act on (docs/04 §4.4, §4.6).
+
+### Contract test between the two halves
+
+`internal/graph/contract_test.go` reads the client's actual query strings and validates them against
+the server's schema, and fails if a `Note` field exists that the client never asks for. The Go
+module lives in this repo precisely so an API change and its clients land in one commit; nothing
+enforced that until now. A renamed field used to compile and type-check on both sides and fail only
+at runtime — which, since sync is premium-only, means failing first for a paying customer.
+
+### Not built, deliberately
+
+- **Background Sync API registration** (§4.6's last bullet). It needs service-worker coordination
+  with `sw.js`, which is hand-written (docs/07 Stage A); the 2s debounce plus the on-open sync covers
+  the same ground for a tab that stays open.
+- **Attachments do not sync** (P2.5). A conflicted copy therefore carries no attachments — they are
+  keyed by note id, and duplicating blobs for something the server has never heard of would consume
+  quota. The original keeps them.
+- **Labels** remain client-side strings.
+- **The two halves have never talked to each other.** Both sides are covered by their own tests and
+  by the contract test above, but there is no end-to-end run: `cmd/api` cannot boot without Firebase
+  Admin credentials, which are not provisioned locally. Stage 3's test-mode subscription run is the
+  first time real client and real server will meet.
