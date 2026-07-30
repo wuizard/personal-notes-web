@@ -22,6 +22,13 @@ services:
 
   # One-shot: initiates the replica set on first boot. Safe to re-run — it
   # checks rs.status() first and does nothing if already initiated.
+  #
+  # The member host is 127.0.0.1, NOT the "mongo" Compose service name, for
+  # the same reason production uses it (see deploy/init-replica-and-user.sh).
+  # A replica-set member address is what the driver connects to *after*
+  # topology discovery, so seeding it with "mongo:27017" makes the set
+  # unreachable from the host — where `go run ./cmd/api` actually runs — and
+  # the connection hangs until it times out rather than failing usefully.
   mongo-init-replica:
     image: mongo:7
     depends_on:
@@ -33,7 +40,7 @@ services:
       - -c
       - >
         mongosh --host mongo:27017 --quiet --eval
-        'try { rs.status() } catch (e) { rs.initiate({_id: "rs0", members: [{_id: 0, host: "mongo:27017"}]}) }'
+        'try { rs.status() } catch (e) { rs.initiate({_id: "rs0", members: [{_id: 0, host: "127.0.0.1:27017"}]}) }'
 
   mongo-express:
     image: mongo-express:1
@@ -42,11 +49,20 @@ services:
     ports:
       - "8081:8081"
     environment:
-      ME_CONFIG_MONGODB_URL: mongodb://mongo:27017/?replicaSet=rs0
+      # directConnection, not replicaSet: the set advertises its member as
+      # 127.0.0.1:27017 (see mongo-init-replica), which inside this container
+      # would resolve to mongo-express itself. Browsing data needs no
+      # transactions, so skipping topology discovery costs nothing here.
+      ME_CONFIG_MONGODB_URL: mongodb://mongo:27017/?directConnection=true
       ME_CONFIG_BASICAUTH: "false"
     depends_on:
       mongo:
         condition: service_healthy
+      # Pulls the one-shot initiator in even when only named services are
+      # started, so `docker compose up -d mongo mongo-express` cannot leave
+      # an uninitiated replica set behind.
+      mongo-init-replica:
+        condition: service_completed_successfully
 
 volumes:
   mongo-data:
