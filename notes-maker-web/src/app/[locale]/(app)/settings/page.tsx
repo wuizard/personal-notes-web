@@ -3,6 +3,7 @@ import {ResetPanel} from "@/features/storage/components/reset-panel";
 import {StoragePanel} from "@/features/storage/components/storage-panel";
 import {AutoCompletePanel} from "@/features/note/components/auto-complete-panel";
 import {SuggestionsPanel} from "@/features/note/components/suggestions-panel";
+import {SyncPanel} from "@/features/sync/components/sync-panel";
 
 export default async function SettingsPage({
   params,
@@ -18,6 +19,7 @@ export default async function SettingsPage({
       <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
       <SuggestionsPanel />
       <AutoCompletePanel />
+      <SyncPanel />
       <StoragePanel />
       <ResetPanel />
     </div>
