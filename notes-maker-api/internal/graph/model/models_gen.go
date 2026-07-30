@@ -7,7 +7,77 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"time"
 )
+
+type Mutation struct {
+}
+
+// A note or checklist as the server holds it.
+//
+// `content` is a serialized JSON object — `{title, body, body_text, checklist}` —
+// rather than separate fields, because the server stores it as one sealed blob.
+// That is deliberate: it is the same field an end-to-end-encrypted client would
+// write ciphertext into, so adding E2E later changes who holds the key and
+// nothing about this contract.
+type Note struct {
+	ClientID string   `json:"clientId"`
+	Content  string   `json:"content"`
+	Kind     *string  `json:"kind,omitempty"`
+	Color    *string  `json:"color,omitempty"`
+	Pinned   bool     `json:"pinned"`
+	Archived bool     `json:"archived"`
+	Labels   []string `json:"labels"`
+	// Serialized reminder JSON, stored opaquely until server-side scheduling exists.
+	Reminder    *string    `json:"reminder,omitempty"`
+	CompletedAt *time.Time `json:"completedAt,omitempty"`
+	CreatedAt   time.Time  `json:"createdAt"`
+	UpdatedAt   time.Time  `json:"updatedAt"`
+	// Set on a tombstone. Tombstones travel as ordinary documents so every device learns of the deletion.
+	DeletedAt *time.Time `json:"deletedAt,omitempty"`
+	// Server-owned revision counter; the client echoes it back as baseRev.
+	Rev int `json:"rev"`
+}
+
+type NoteMutationInput struct {
+	// Client-assigned, echoed back on the matching result so a batch can be reconciled in any order.
+	Seq      int    `json:"seq"`
+	ClientID string `json:"clientId"`
+	// The rev this device last saw. 0 means it has never seen a server copy — a create, or a retry of one.
+	BaseRev int `json:"baseRev"`
+	// Which fields this device changed since baseRev. This is what lets the
+	// server merge two devices' edits instead of one clobbering the other.
+	ChangedFields []string `json:"changedFields"`
+	// Move to trash: a tombstone that keeps its content, so another device can still restore it.
+	Deleted *bool `json:"deleted,omitempty"`
+	// Delete forever: still a tombstone, but the content is dropped.
+	Purged      *bool      `json:"purged,omitempty"`
+	Content     *string    `json:"content,omitempty"`
+	Kind        *string    `json:"kind,omitempty"`
+	Color       *string    `json:"color,omitempty"`
+	Pinned      *bool      `json:"pinned,omitempty"`
+	Archived    *bool      `json:"archived,omitempty"`
+	Labels      []string   `json:"labels,omitempty"`
+	Reminder    *string    `json:"reminder,omitempty"`
+	CompletedAt *time.Time `json:"completedAt,omitempty"`
+	CreatedAt   *time.Time `json:"createdAt,omitempty"`
+}
+
+type NotePage struct {
+	Notes []Note `json:"notes"`
+	// Opaque — pass it back verbatim on the next pull. Empty means start from the beginning.
+	Cursor     string    `json:"cursor"`
+	HasMore    bool      `json:"hasMore"`
+	ServerTime time.Time `json:"serverTime"`
+}
+
+type NoteResult struct {
+	Seq    int            `json:"seq"`
+	Status MutationStatus `json:"status"`
+	// Why a REJECTED mutation was refused. Surfaced to the user, so it is written for them.
+	Reason *string `json:"reason,omitempty"`
+	Note   *Note   `json:"note,omitempty"`
+}
 
 type Query struct {
 }
@@ -17,6 +87,65 @@ type User struct {
 	Email       string  `json:"email"`
 	DisplayName *string `json:"displayName,omitempty"`
 	Plan        Plan    `json:"plan"`
+}
+
+type MutationStatus string
+
+const (
+	MutationStatusApplied MutationStatus = "APPLIED"
+	// base_rev was stale and the edits could not be merged. `note` is the server's version; keep yours as a conflicted copy.
+	MutationStatusConflict MutationStatus = "CONFLICT"
+	// Validation failed. Drop the mutation — retrying will fail identically.
+	MutationStatusRejected MutationStatus = "REJECTED"
+)
+
+var AllMutationStatus = []MutationStatus{
+	MutationStatusApplied,
+	MutationStatusConflict,
+	MutationStatusRejected,
+}
+
+func (e MutationStatus) IsValid() bool {
+	switch e {
+	case MutationStatusApplied, MutationStatusConflict, MutationStatusRejected:
+		return true
+	}
+	return false
+}
+
+func (e MutationStatus) String() string {
+	return string(e)
+}
+
+func (e *MutationStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = MutationStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid MutationStatus", str)
+	}
+	return nil
+}
+
+func (e MutationStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *MutationStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e MutationStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 type Plan string

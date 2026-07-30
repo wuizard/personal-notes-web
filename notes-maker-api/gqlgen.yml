@@ -16,3 +16,9 @@ resolver:
 
 omit_slice_element_pointers: true
 omit_getters: true
+
+models:
+  # Bind the schema's DateTime scalar to time.Time rather than leaving it as
+  # an untyped `any` the resolvers would have to cast on every field.
+  DateTime:
+    model: github.com/99designs/gqlgen/graphql.Time
