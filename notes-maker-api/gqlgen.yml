@@ -9,10 +9,22 @@ model:
   filename: internal/graph/model/models_gen.go
   package: model
 
+# follow-schema, not single-file. Under single-file, codegen rewrites
+# `type Resolver struct{}` on every run and strips whatever fields it holds,
+# so the wired-in services vanished and the build broke on each schema change.
+# follow-schema generates the method file and creates the root resolver.go
+# only when it is missing, which leaves the struct and its dependencies alone.
 resolver:
-  layout: single-file
-  filename: internal/graph/resolver.go
+  layout: follow-schema
+  dir: internal/graph
   package: graph
+  filename_template: "{name}.resolvers.go"
 
 omit_slice_element_pointers: true
 omit_getters: true
+
+models:
+  # Bind the schema's DateTime scalar to time.Time rather than leaving it as
+  # an untyped `any` the resolvers would have to cast on every field.
+  DateTime:
+    model: github.com/99designs/gqlgen/graphql.Time

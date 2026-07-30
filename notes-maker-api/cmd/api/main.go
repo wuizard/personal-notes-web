@@ -12,11 +12,13 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/feature/billing"
+	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/feature/note"
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/feature/user"
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/graph"
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/graph/generated"
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/middleware"
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/platform/config"
+	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/platform/crypto"
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/platform/firebaseauth"
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/platform/httpx"
 	platformmongo "github.com/wuizard/personal-notes-web/notes-maker-api/internal/platform/mongo"
@@ -44,10 +46,20 @@ func main() {
 		log.Fatalf("firebaseauth: %v", err)
 	}
 
+	keys, err := crypto.ParseKeyring(cfg.NotesEncryptionKey)
+	if err != nil {
+		log.Fatalf("notes encryption key: %v", err)
+	}
+	sealer, err := crypto.NewSealer(keys)
+	if err != nil {
+		log.Fatalf("notes encryption key: %v", err)
+	}
+
 	userService := user.NewService(user.NewMongoRepository(db))
+	noteService := note.NewService(note.NewMongoRepository(db), sealer)
 	webhookHandler := billing.NewWebhookHandler(userService, cfg.PolarWebhookSecret)
 
-	resolver := &graph.Resolver{Users: userService}
+	resolver := &graph.Resolver{Users: userService, NoteSync: noteService}
 	graphqlSrv := gqlhandler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver}))
 
 	mux := http.NewServeMux()

@@ -38,6 +38,16 @@ type Config struct {
 	// AllowedOrigins is the CORS allowlist for the Next.js frontend, which is
 	// served from a different origin (Cloudflare Workers) than this API.
 	AllowedOrigins []string
+
+	// NotesEncryptionKey seals note content at rest. Format:
+	// comma-separated "<version>:<base64 of 32 bytes>" entries, or a bare
+	// base64 key read as version 1. Rotating means adding a higher-numbered
+	// key while keeping the old one so documents sealed under it still open.
+	//
+	// Losing every key in this variable means losing every synced note —
+	// there is no recovery path, by construction. Back it up wherever the
+	// other production secrets live.
+	NotesEncryptionKey string
 }
 
 // Load reads configuration from the environment. It returns an error rather
@@ -53,11 +63,15 @@ func Load() (Config, error) {
 		PolarWebhookSecret:      os.Getenv("POLAR_WEBHOOK_SECRET"),
 		PolarAPIKey:             os.Getenv("POLAR_API_KEY"),
 		AllowedOrigins:          splitCSV(getenvDefault("ALLOWED_ORIGINS", "http://localhost:3000")),
+		NotesEncryptionKey:      os.Getenv("NOTES_ENCRYPTION_KEY"),
 	}
 
 	var missing []string
 	if cfg.FirebaseCredentialsFile == "" {
 		missing = append(missing, "FIREBASE_CREDENTIALS_FILE")
+	}
+	if cfg.NotesEncryptionKey == "" {
+		missing = append(missing, "NOTES_ENCRYPTION_KEY")
 	}
 	if len(missing) > 0 {
 		return Config{}, fmt.Errorf("config: missing required env vars: %v", missing)

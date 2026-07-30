@@ -1,9 +1,10 @@
 "use client";
 
-import { CircleUserRound, LogIn, LogOut, Mail, ShieldCheck, Sparkles } from "lucide-react";
+import { CircleUserRound, FileText, LogIn, LogOut, Mail, ShieldCheck, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { PurchasePlanDialog } from "@/features/billing/purchase-plan-dialog";
+import { Link } from "@/i18n/navigation";
 import { isFirebaseConfigured, signOutUser } from "./firebase";
 import { useAuth } from "./use-auth";
 import { SignInDialog } from "./sign-in-dialog";
@@ -28,6 +29,7 @@ const itemClass =
  */
 export function AuthMenu({ direction = "down" }: { direction?: "up" | "down" }) {
   const t = useTranslations("auth");
+  const tLegal = useTranslations("legal");
   const { user, loading } = useAuth();
   const [signingIn, setSigningIn] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
@@ -104,6 +106,18 @@ export function AuthMenu({ direction = "down" }: { direction?: "up" | "down" }) 
               <Mail size={15} strokeWidth={1.75} aria-hidden />
               {t("feedback")}
             </a>
+            {/* Reachable from inside the app, not only from the marketing
+                page — the moment someone wonders where their notes go is
+                while they are using it, not while they are being sold it. */}
+            <Link
+              href="/privacy"
+              role="menuitem"
+              className={itemClass}
+              onClick={() => setMenuOpen(false)}
+            >
+              <FileText size={15} strokeWidth={1.75} aria-hidden />
+              {tLegal("privacy")}
+            </Link>
             <button
               type="button"
               role="menuitem"

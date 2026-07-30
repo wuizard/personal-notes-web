@@ -342,5 +342,30 @@
     "lockedBody": "Upgrade to have fully-checked checklists collect here automatically.",
     "restore": "Move back to Notes",
     "restored": "Note not completed — moved back to Notes"
+  },
+  "sync": {
+    "title": "Sync",
+    "synced": "Synced",
+    "syncing": "Syncing…",
+    "offline": "Offline",
+    "offlineQueued": "Offline — {count, plural, one {# change} other {# changes}} queued",
+    "queued": "{count, plural, one {# change} other {# changes}} to sync",
+    "error": "Sync problem",
+    "lastSynced": "Last synced",
+    "never": "Never",
+    "queuedLabel": "Waiting to sync",
+    "syncNow": "Sync now",
+    "unavailable": "Sync keeps your notes on every device you sign in to. It's part of Premium.",
+    "notConfigured": "Sync isn't set up on this build yet.",
+    "rejectedTitle": "{count, plural, one {# change couldn't sync} other {# changes couldn't sync}}",
+    "dismissRejected": "Dismiss",
+    "conflictedCopy": "{title} (conflicted copy — {when})",
+    "conflictBanner": "This note was edited on another device at the same time. Your version was kept as a separate copy.",
+    "conflictDismiss": "Got it"
+  },
+  "legal": {
+    "lastUpdated": "Last updated",
+    "backHome": "Back to Notes Maker",
+    "privacy": "Privacy Policy"
   }
 }

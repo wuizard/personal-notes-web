@@ -9,19 +9,24 @@ sync, notes that survive a cleared browser, and reminders that fire when the app
 **Read [docs/00-business-model.md](docs/00-business-model.md) first.** The architecture exists to
 serve that model.
 
-## v1 is client-only; Phase 2 has started
+## The free tier is client-only; Phase 2 is partly built
 
-The part most likely to surprise someone arriving at the repo: for **notes themselves**, there is
-still no API and no database. Notes, images, colours, and reminders all live in IndexedDB, entirely
-client-side. What Phase 2 has actually built so far is narrower than "the backend" — Firebase-verified
-identity and Polar-verified billing, in `notes-maker-api/`, so premium entitlement can be checked
-server-side. Notes CRUD, delta sync, and the admin panel are designed (docs/04, docs/10) but not
-built — see that folder's own state below rather than assuming "Phase 2" means "done."
+The part most likely to surprise someone arriving at the repo: **the free tier still has no API and
+no database at all.** Notes, images, colours, and reminders live in IndexedDB, entirely client-side,
+and nothing about that changes without a paid subscription.
+
+What Phase 2 has built so far: Firebase-verified identity and Polar-verified billing, so premium
+entitlement can be checked server-side — and, on top of that, notes sync (docs/10 §10.18, §10.19).
+A premium account's notes are pushed and pulled through `notes-maker-api`, with content sealed at
+rest; a free account's never leave the browser.
+
+Still designed but not built: images in object storage, push reminders, labels server-side, and the
+admin panel. Read that folder's own state below rather than assuming "Phase 2" means "done."
 
 | Folder | Stack | Status |
 | --- | --- | --- |
-| `notes-maker-web/` | Next.js 16 + HeroUI, PWA | **The whole product** — notes are 100% client-side regardless of account/plan |
-| `notes-maker-api/` | Go 1.26 + gqlgen + MongoDB | Partial: Firebase auth verification, `Query.me{plan}`, Polar webhook → entitlement. No notes/sync yet. Deploys to a VPS — see `deploy/` |
+| `notes-maker-web/` | Next.js 16 + HeroUI, PWA | **The whole product.** Free notes are 100% client-side; a premium account additionally syncs them (`src/features/sync/`) |
+| `notes-maker-api/` | Go 1.26 + gqlgen + MongoDB | Partial: Firebase auth verification, `Query.me{plan}`, Polar webhook → entitlement, and the notes sync API (`Query.notes` / `Mutation.pushNotes`, premium-only). No images, push, or admin yet. Deploys to a VPS — see `deploy/` |
 | `notes-maker-admin/` | React 19 + Vite + HeroUI | Not created yet |
 | `packages/shared/` | TypeScript | Not created yet |
 | `docs/` | Markdown | The plan — read in order |
@@ -105,8 +110,16 @@ the host. Full details, including the one-time VPS/Cloudflare setup:
 
 ```bash
 docker compose up -d mongo mongo-express   # repo-root docker-compose.yml, no auth, local only
-cp notes-maker-api/.env.example notes-maker-api/.env   # fill in FIREBASE_CREDENTIALS_FILE at minimum
+cp notes-maker-api/.env.example notes-maker-api/.env
 cd notes-maker-api && go run ./cmd/api
+```
+
+Two variables must be filled in before the server will boot — it fails fast rather than surfacing a
+nil pointer mid-request. `FIREBASE_CREDENTIALS_FILE` is the Admin SDK JSON path;
+`NOTES_ENCRYPTION_KEY` seals synced note content at rest and is generated with:
+
+```bash
+openssl rand -base64 32
 ```
 
 ```bash
@@ -114,6 +127,20 @@ cd notes-maker-api
 go vet ./...
 go test ./...
 go build ./...
+```
+
+Tests fake the repository boundary and need no database. The Mongo-backed ones — indexes, cursor
+paging, the unique constraint behind idempotent creates — are skipped unless a database is named,
+so run them explicitly when touching the sync layer:
+
+```bash
+MONGO_TEST_URI='mongodb://localhost:27017/?replicaSet=rs0' go test ./internal/feature/note/ -run Integration -v
+```
+
+Regenerating the GraphQL layer after editing `internal/graph/schema.graphql`:
+
+```bash
+cd notes-maker-api && go tool gqlgen generate
 ```
 
 ### Backend — deploy
