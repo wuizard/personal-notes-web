@@ -21,7 +21,7 @@ built — see that folder's own state below rather than assuming "Phase 2" means
 | Folder | Stack | Status |
 | --- | --- | --- |
 | `notes-maker-web/` | Next.js 16 + HeroUI, PWA | **The whole product** — notes are 100% client-side regardless of account/plan |
-| `notes-maker-api/` | Go 1.26 + gqlgen + MongoDB | Partial: Firebase auth verification, `Query.me{plan}`, Polar webhook → entitlement. No notes/sync yet. Deploys to a VPS — see `deploy/` |
+| `notes-maker-api/` | Go 1.26 + gqlgen + MongoDB | Partial: Firebase auth verification, `Query.me{plan}`, Polar webhook → entitlement, and the notes sync API (`Query.notes` / `Mutation.pushNotes`, premium-only). No client sync engine consumes it yet. Deploys to a VPS — see `deploy/` |
 | `notes-maker-admin/` | React 19 + Vite + HeroUI | Not created yet |
 | `packages/shared/` | TypeScript | Not created yet |
 | `docs/` | Markdown | The plan — read in order |
@@ -105,8 +105,16 @@ the host. Full details, including the one-time VPS/Cloudflare setup:
 
 ```bash
 docker compose up -d mongo mongo-express   # repo-root docker-compose.yml, no auth, local only
-cp notes-maker-api/.env.example notes-maker-api/.env   # fill in FIREBASE_CREDENTIALS_FILE at minimum
+cp notes-maker-api/.env.example notes-maker-api/.env
 cd notes-maker-api && go run ./cmd/api
+```
+
+Two variables must be filled in before the server will boot — it fails fast rather than surfacing a
+nil pointer mid-request. `FIREBASE_CREDENTIALS_FILE` is the Admin SDK JSON path;
+`NOTES_ENCRYPTION_KEY` seals synced note content at rest and is generated with:
+
+```bash
+openssl rand -base64 32
 ```
 
 ```bash
@@ -114,6 +122,20 @@ cd notes-maker-api
 go vet ./...
 go test ./...
 go build ./...
+```
+
+Tests fake the repository boundary and need no database. The Mongo-backed ones — indexes, cursor
+paging, the unique constraint behind idempotent creates — are skipped unless a database is named,
+so run them explicitly when touching the sync layer:
+
+```bash
+MONGO_TEST_URI='mongodb://localhost:27017/?replicaSet=rs0' go test ./internal/feature/note/ -run Integration -v
+```
+
+Regenerating the GraphQL layer after editing `internal/graph/schema.graphql`:
+
+```bash
+cd notes-maker-api && go tool gqlgen generate
 ```
 
 ### Backend — deploy
