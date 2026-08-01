@@ -153,6 +153,30 @@ export function ChecklistEditor({
       const at = active.findIndex((i) => i.id === item.id);
       pendingFocus.current = active[at - 1]?.id ?? null;
       remove(item.id);
+    } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+      // A single-line input already sends the caret to its start on the
+      // first ArrowUp (resp. end on the first ArrowDown) — the browser's
+      // native Home/End-like behaviour. Once the caret is already sitting at
+      // that edge, a repeat press steps to the neighbouring item instead, so
+      // holding the arrow key walks the whole list top to bottom.
+      const input = e.currentTarget as HTMLInputElement;
+      const atStart = input.selectionStart === 0 && input.selectionEnd === 0;
+      const atEnd =
+        input.selectionStart === input.value.length && input.selectionEnd === input.value.length;
+      const list = item.checked ? done : active;
+      const at = list.findIndex((i) => i.id === item.id);
+      const neighbour = e.key === "ArrowUp" ? (atStart ? list[at - 1] : undefined) : atEnd ? list[at + 1] : undefined;
+      if (neighbour) {
+        e.preventDefault();
+        const target = root.current?.querySelector<HTMLInputElement>(
+          `input[data-item-id="${neighbour.id}"]`,
+        );
+        if (target) {
+          target.focus();
+          const pos = e.key === "ArrowUp" ? 0 : target.value.length;
+          target.setSelectionRange(pos, pos);
+        }
+      }
     }
   };
 

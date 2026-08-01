@@ -1,13 +1,17 @@
 ﻿import {defineRouting} from "next-intl/routing";
 
 /**
- * Indonesian is the default; English lives under `/en`. Marketing pages need
+ * English is the default; Indonesian lives under `/id`. Marketing pages need
  * real URLs per locale for SEO and AdSense approval (docs/00 Â§0.4), which is
  * why locale routing exists at all rather than a cookie-only setup.
+ *
+ * Defaulting to English rather than Indonesian because billing runs through
+ * Paddle, which has no IDR price point — Indonesian visitors would land on a
+ * localized page whose pricing is still USD-only anyway.
  */
 export const routing = defineRouting({
   locales: ["id", "en"],
-  defaultLocale: "id",
+  defaultLocale: "en",
   /**
    * `always`, not `as-needed`.
    *

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="id">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -22,7 +22,7 @@
       Not indexed: the locale pages are the canonical URLs.
     -->
     <meta name="robots" content="noindex" />
-    <meta http-equiv="refresh" content="0; url=/id" />
+    <meta http-equiv="refresh" content="0; url=/en" />
 
     <style>
       /* Match the app background so there is no white flash before the hop. */
@@ -51,10 +51,11 @@
 
     <script>
       // Runs before render, so the redirect happens without a visible page.
-      // Mirrors the Worker's logic: primary subtag, default Indonesian.
+      // Mirrors the Worker's logic: primary subtag, default English (Paddle
+      // has no IDR price point, so there is no pricing reason to favor id).
       (function () {
         var supported = ["id", "en"];
-        var target = "id";
+        var target = "en";
         var langs = navigator.languages || [navigator.language || ""];
         for (var i = 0; i < langs.length; i++) {
           var primary = String(langs[i]).toLowerCase().split("-")[0];
@@ -71,6 +72,6 @@
   </head>
   <body>
     <!-- Only ever seen with JS disabled and the meta refresh blocked. -->
-    <p><a href="/id">Buka Notes Maker</a> · <a href="/en">Open Notes Maker</a></p>
+    <p><a href="/en">Open Notes Maker</a> · <a href="/id">Buka Notes Maker</a></p>
   </body>
 </html>
