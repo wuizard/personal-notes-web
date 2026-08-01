@@ -15,6 +15,7 @@ import (
 // All is the full, ordered set of migrations run at process boot.
 var All = []platformmongo.Migration{
 	{Name: "0001_users_indexes", Run: usersIndexes},
+	{Name: "0002_notes_indexes", Run: notesIndexes},
 }
 
 // usersIndexes gives each Firebase account exactly one users document.

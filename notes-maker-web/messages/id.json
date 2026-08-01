@@ -343,5 +343,30 @@
     "lockedBody": "Tingkatkan agar checklist yang sudah selesai dikumpulkan di sini secara otomatis.",
     "restore": "Kembalikan ke Catatan",
     "restored": "Catatan tidak selesai — dikembalikan ke Catatan"
+  },
+  "sync": {
+    "title": "Sinkronisasi",
+    "synced": "Tersinkron",
+    "syncing": "Menyinkronkan…",
+    "offline": "Luring",
+    "offlineQueued": "Luring — {count, plural, other {# perubahan}} menunggu",
+    "queued": "{count, plural, other {# perubahan}} belum disinkronkan",
+    "error": "Masalah sinkronisasi",
+    "lastSynced": "Terakhir disinkronkan",
+    "never": "Belum pernah",
+    "queuedLabel": "Menunggu sinkronisasi",
+    "syncNow": "Sinkronkan sekarang",
+    "unavailable": "Sinkronisasi menjaga catatan Anda di setiap perangkat tempat Anda masuk. Termasuk dalam Premium.",
+    "notConfigured": "Sinkronisasi belum disiapkan di versi ini.",
+    "rejectedTitle": "{count, plural, other {# perubahan gagal disinkronkan}}",
+    "dismissRejected": "Tutup",
+    "conflictedCopy": "{title} (salinan konflik — {when})",
+    "conflictBanner": "Catatan ini diubah di perangkat lain pada saat bersamaan. Versi Anda disimpan sebagai salinan terpisah.",
+    "conflictDismiss": "Mengerti"
+  },
+  "legal": {
+    "lastUpdated": "Terakhir diperbarui",
+    "backHome": "Kembali ke Notes Maker",
+    "privacy": "Kebijakan Privasi"
   }
 }

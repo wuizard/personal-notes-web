@@ -10,6 +10,7 @@ import (
 	"math"
 	"strconv"
 	"sync/atomic"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -28,6 +29,7 @@ func NewExecutableSchema(cfg Config) graphql.ExecutableSchema {
 type Config = graphql.Config[ResolverRoot, DirectiveRoot, ComplexityRoot]
 
 type ResolverRoot interface {
+	Mutation() MutationResolver
 	Query() QueryResolver
 }
 
@@ -35,8 +37,44 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Mutation struct {
+		PushNotes func(childComplexity int, mutations []model.NoteMutationInput) int
+	}
+
+	Note struct {
+		Archived    func(childComplexity int) int
+		ClientID    func(childComplexity int) int
+		Color       func(childComplexity int) int
+		CompletedAt func(childComplexity int) int
+		Content     func(childComplexity int) int
+		CreatedAt   func(childComplexity int) int
+		DeletedAt   func(childComplexity int) int
+		Kind        func(childComplexity int) int
+		Labels      func(childComplexity int) int
+		Pinned      func(childComplexity int) int
+		Purged      func(childComplexity int) int
+		Reminder    func(childComplexity int) int
+		Rev         func(childComplexity int) int
+		UpdatedAt   func(childComplexity int) int
+	}
+
+	NotePage struct {
+		Cursor     func(childComplexity int) int
+		HasMore    func(childComplexity int) int
+		Notes      func(childComplexity int) int
+		ServerTime func(childComplexity int) int
+	}
+
+	NoteResult struct {
+		Note   func(childComplexity int) int
+		Reason func(childComplexity int) int
+		Seq    func(childComplexity int) int
+		Status func(childComplexity int) int
+	}
+
 	Query struct {
-		Me func(childComplexity int) int
+		Me    func(childComplexity int) int
+		Notes func(childComplexity int, cursor *string, limit *int) int
 	}
 
 	User struct {
@@ -51,8 +89,12 @@ type ComplexityRoot struct {
 
 // region    ************************** generated!.gotpl **************************
 
+type MutationResolver interface {
+	PushNotes(ctx context.Context, mutations []model.NoteMutationInput) ([]model.NoteResult, error)
+}
 type QueryResolver interface {
 	Me(ctx context.Context) (*model.User, error)
+	Notes(ctx context.Context, cursor *string, limit *int) (*model.NotePage, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -73,12 +115,170 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	_ = ec
 	switch typeName + "." + field {
 
+	case "Mutation.pushNotes":
+		if e.ComplexityRoot.Mutation.PushNotes == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_pushNotes_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.PushNotes(childComplexity, args["mutations"].([]model.NoteMutationInput)), true
+
+	case "Note.archived":
+		if e.ComplexityRoot.Note.Archived == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Note.Archived(childComplexity), true
+	case "Note.clientId":
+		if e.ComplexityRoot.Note.ClientID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Note.ClientID(childComplexity), true
+	case "Note.color":
+		if e.ComplexityRoot.Note.Color == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Note.Color(childComplexity), true
+	case "Note.completedAt":
+		if e.ComplexityRoot.Note.CompletedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Note.CompletedAt(childComplexity), true
+	case "Note.content":
+		if e.ComplexityRoot.Note.Content == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Note.Content(childComplexity), true
+	case "Note.createdAt":
+		if e.ComplexityRoot.Note.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Note.CreatedAt(childComplexity), true
+	case "Note.deletedAt":
+		if e.ComplexityRoot.Note.DeletedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Note.DeletedAt(childComplexity), true
+	case "Note.kind":
+		if e.ComplexityRoot.Note.Kind == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Note.Kind(childComplexity), true
+	case "Note.labels":
+		if e.ComplexityRoot.Note.Labels == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Note.Labels(childComplexity), true
+	case "Note.pinned":
+		if e.ComplexityRoot.Note.Pinned == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Note.Pinned(childComplexity), true
+	case "Note.purged":
+		if e.ComplexityRoot.Note.Purged == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Note.Purged(childComplexity), true
+	case "Note.reminder":
+		if e.ComplexityRoot.Note.Reminder == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Note.Reminder(childComplexity), true
+	case "Note.rev":
+		if e.ComplexityRoot.Note.Rev == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Note.Rev(childComplexity), true
+	case "Note.updatedAt":
+		if e.ComplexityRoot.Note.UpdatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Note.UpdatedAt(childComplexity), true
+
+	case "NotePage.cursor":
+		if e.ComplexityRoot.NotePage.Cursor == nil {
+			break
+		}
+
+		return e.ComplexityRoot.NotePage.Cursor(childComplexity), true
+	case "NotePage.hasMore":
+		if e.ComplexityRoot.NotePage.HasMore == nil {
+			break
+		}
+
+		return e.ComplexityRoot.NotePage.HasMore(childComplexity), true
+	case "NotePage.notes":
+		if e.ComplexityRoot.NotePage.Notes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.NotePage.Notes(childComplexity), true
+	case "NotePage.serverTime":
+		if e.ComplexityRoot.NotePage.ServerTime == nil {
+			break
+		}
+
+		return e.ComplexityRoot.NotePage.ServerTime(childComplexity), true
+
+	case "NoteResult.note":
+		if e.ComplexityRoot.NoteResult.Note == nil {
+			break
+		}
+
+		return e.ComplexityRoot.NoteResult.Note(childComplexity), true
+	case "NoteResult.reason":
+		if e.ComplexityRoot.NoteResult.Reason == nil {
+			break
+		}
+
+		return e.ComplexityRoot.NoteResult.Reason(childComplexity), true
+	case "NoteResult.seq":
+		if e.ComplexityRoot.NoteResult.Seq == nil {
+			break
+		}
+
+		return e.ComplexityRoot.NoteResult.Seq(childComplexity), true
+	case "NoteResult.status":
+		if e.ComplexityRoot.NoteResult.Status == nil {
+			break
+		}
+
+		return e.ComplexityRoot.NoteResult.Status(childComplexity), true
+
 	case "Query.me":
 		if e.ComplexityRoot.Query.Me == nil {
 			break
 		}
 
 		return e.ComplexityRoot.Query.Me(childComplexity), true
+	case "Query.notes":
+		if e.ComplexityRoot.Query.Notes == nil {
+			break
+		}
+
+		args, err := ec.field_Query_notes_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.Notes(childComplexity, args["cursor"].(*string), args["limit"].(*int)), true
 
 	case "User.displayName":
 		if e.ComplexityRoot.User.DisplayName == nil {
@@ -112,7 +312,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := newExecutionContext(opCtx, e, make(chan graphql.DeferredResult))
-	inputUnmarshalMap := graphql.BuildUnmarshalerMap()
+	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputNoteMutationInput,
+	)
 	first := true
 
 	switch opCtx.Operation.Operation {
@@ -146,6 +348,21 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 
 			return &response
 		}
+	case ast.Mutation:
+		return func(ctx context.Context) *graphql.Response {
+			if !first {
+				return nil
+			}
+			first = false
+			ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
+			data := ec._Mutation(ctx, opCtx.Operation.SelectionSet)
+			var buf bytes.Buffer
+			data.MarshalGQL(&buf)
+
+			return &graphql.Response{
+				Data: buf.Bytes(),
+			}
+		}
 
 	default:
 		return graphql.OneShot(graphql.ErrorResponse(ctx, "unsupported GraphQL operation"))
@@ -172,9 +389,8 @@ func newExecutionContext(
 }
 
 var sources = []*ast.Source{
-	{Name: "../schema.graphql", Input: `# Milestone 1 subset of docs/10 §10.15's full sketch: just enough for the
-# frontend's usePlan() to verify entitlement against a real backend. Notes,
-# sync, labels, etc. are added in the next milestone.
+	{Name: "../schema.graphql", Input: `# The user-facing API (docs/10 §10.15, which supersedes docs/03's REST shape).
+# Labels, images and push are later milestones; nothing here anticipates them.
 
 scalar DateTime
 
@@ -190,8 +406,100 @@ type User {
   plan: Plan!
 }
 
+"""
+A note or checklist as the server holds it.
+
+` + "`" + `content` + "`" + ` is a serialized JSON object — ` + "`" + `{title, body, body_text, checklist}` + "`" + ` —
+rather than separate fields, because the server stores it as one sealed blob.
+That is deliberate: it is the same field an end-to-end-encrypted client would
+write ciphertext into, so adding E2E later changes who holds the key and
+nothing about this contract.
+"""
+type Note {
+  clientId: ID!
+  content: String!
+  kind: String
+  color: String
+  pinned: Boolean!
+  archived: Boolean!
+  labels: [String!]!
+  """Serialized reminder JSON, stored opaquely until server-side scheduling exists."""
+  reminder: String
+  completedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  """Set on a tombstone. Tombstones travel as ordinary documents so every device learns of the deletion."""
+  deletedAt: DateTime
+  """
+  True when the content is gone for good ("delete forever"), as opposed to a
+  restorable trash tombstone. An empty note sitting in trash is otherwise
+  indistinguishable from a purged one, and the two must not be handled alike:
+  purged means remove the local row, trashed means show it in Trash.
+  """
+  purged: Boolean!
+  """Server-owned revision counter; the client echoes it back as baseRev."""
+  rev: Int!
+}
+
+type NotePage {
+  notes: [Note!]!
+  """Opaque — pass it back verbatim on the next pull. Empty means start from the beginning."""
+  cursor: String!
+  hasMore: Boolean!
+  serverTime: DateTime!
+}
+
+input NoteMutationInput {
+  """Client-assigned, echoed back on the matching result so a batch can be reconciled in any order."""
+  seq: Int!
+  clientId: ID!
+  """The rev this device last saw. 0 means it has never seen a server copy — a create, or a retry of one."""
+  baseRev: Int!
+  """
+  Which fields this device changed since baseRev. This is what lets the
+  server merge two devices' edits instead of one clobbering the other.
+  """
+  changedFields: [String!]!
+  """Move to trash: a tombstone that keeps its content, so another device can still restore it."""
+  deleted: Boolean
+  """Delete forever: still a tombstone, but the content is dropped."""
+  purged: Boolean
+  content: String
+  kind: String
+  color: String
+  pinned: Boolean
+  archived: Boolean
+  labels: [String!]
+  reminder: String
+  completedAt: DateTime
+  createdAt: DateTime
+}
+
+enum MutationStatus {
+  APPLIED
+  """base_rev was stale and the edits could not be merged. ` + "`" + `note` + "`" + ` is the server's version; keep yours as a conflicted copy."""
+  CONFLICT
+  """Validation failed. Drop the mutation — retrying will fail identically."""
+  REJECTED
+}
+
+type NoteResult {
+  seq: Int!
+  status: MutationStatus!
+  """Why a REJECTED mutation was refused. Surfaced to the user, so it is written for them."""
+  reason: String
+  note: Note
+}
+
 type Query {
   me: User!
+  """Changes strictly after ` + "`" + `cursor` + "`" + `, tombstones included. Loop until hasMore is false."""
+  notes(cursor: String, limit: Int): NotePage!
+}
+
+type Mutation {
+  """Applies a batch in order. Does not stop at the first conflict — later mutations often apply cleanly."""
+  pushNotes(mutations: [NoteMutationInput!]!): [NoteResult!]!
 }
 `, BuiltIn: false},
 }
@@ -200,6 +508,68 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // childFields_* functions provide shared child field context lookups.
 // Each function is generated once per unique object type, deduplicating the
 // switch statements that were previously inlined in every fieldContext_* function.
+
+func (ec *executionContext) childFields_Note(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientId":
+		return ec.fieldContext_Note_clientId(ctx, field)
+	case "content":
+		return ec.fieldContext_Note_content(ctx, field)
+	case "kind":
+		return ec.fieldContext_Note_kind(ctx, field)
+	case "color":
+		return ec.fieldContext_Note_color(ctx, field)
+	case "pinned":
+		return ec.fieldContext_Note_pinned(ctx, field)
+	case "archived":
+		return ec.fieldContext_Note_archived(ctx, field)
+	case "labels":
+		return ec.fieldContext_Note_labels(ctx, field)
+	case "reminder":
+		return ec.fieldContext_Note_reminder(ctx, field)
+	case "completedAt":
+		return ec.fieldContext_Note_completedAt(ctx, field)
+	case "createdAt":
+		return ec.fieldContext_Note_createdAt(ctx, field)
+	case "updatedAt":
+		return ec.fieldContext_Note_updatedAt(ctx, field)
+	case "deletedAt":
+		return ec.fieldContext_Note_deletedAt(ctx, field)
+	case "purged":
+		return ec.fieldContext_Note_purged(ctx, field)
+	case "rev":
+		return ec.fieldContext_Note_rev(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
+}
+
+func (ec *executionContext) childFields_NotePage(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "notes":
+		return ec.fieldContext_NotePage_notes(ctx, field)
+	case "cursor":
+		return ec.fieldContext_NotePage_cursor(ctx, field)
+	case "hasMore":
+		return ec.fieldContext_NotePage_hasMore(ctx, field)
+	case "serverTime":
+		return ec.fieldContext_NotePage_serverTime(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type NotePage", field.Name)
+}
+
+func (ec *executionContext) childFields_NoteResult(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "seq":
+		return ec.fieldContext_NoteResult_seq(ctx, field)
+	case "status":
+		return ec.fieldContext_NoteResult_status(ctx, field)
+	case "reason":
+		return ec.fieldContext_NoteResult_reason(ctx, field)
+	case "note":
+		return ec.fieldContext_NoteResult_note(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type NoteResult", field.Name)
+}
 
 func (ec *executionContext) childFields_User(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
@@ -331,6 +701,20 @@ func (ec *executionContext) childFields___Type(ctx context.Context, field graphq
 
 // region    ***************************** args.gotpl *****************************
 
+func (ec *executionContext) field_Mutation_pushNotes_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "mutations",
+		func(ctx context.Context, v any) ([]model.NoteMutationInput, error) {
+			return ec.unmarshalNNoteMutationInput2ᚕgithubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐNoteMutationInputᚄ(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["mutations"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -342,6 +726,28 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		return nil, err
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_notes_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "cursor",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["cursor"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "limit",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg1
 	return args, nil
 }
 
@@ -405,6 +811,574 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _Mutation_pushNotes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_pushNotes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().PushNotes(ctx, fc.Args["mutations"].([]model.NoteMutationInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []model.NoteResult) graphql.Marshaler {
+			return ec.marshalNNoteResult2ᚕgithubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐNoteResultᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_pushNotes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_NoteResult(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_pushNotes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Note_clientId(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Note_clientId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ClientID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Note_clientId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Note", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _Note_content(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Note_content(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Content, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Note_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Note", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Note_kind(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Note_kind(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Kind, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Note_kind(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Note", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Note_color(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Note_color(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Color, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Note_color(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Note", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Note_pinned(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Note_pinned(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Pinned, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Note_pinned(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Note", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _Note_archived(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Note_archived(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Archived, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Note_archived(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Note", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _Note_labels(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Note_labels(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Labels, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []string) graphql.Marshaler {
+			return ec.marshalNString2ᚕstringᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Note_labels(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Note", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Note_reminder(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Note_reminder(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Reminder, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Note_reminder(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Note", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Note_completedAt(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Note_completedAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CompletedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *time.Time) graphql.Marshaler {
+			return ec.marshalODateTime2ᚖtimeᚐTime(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Note_completedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Note", field, false, false, errors.New("field of type DateTime does not have child fields"))
+}
+
+func (ec *executionContext) _Note_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Note_createdAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNDateTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Note_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Note", field, false, false, errors.New("field of type DateTime does not have child fields"))
+}
+
+func (ec *executionContext) _Note_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Note_updatedAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNDateTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Note_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Note", field, false, false, errors.New("field of type DateTime does not have child fields"))
+}
+
+func (ec *executionContext) _Note_deletedAt(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Note_deletedAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DeletedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *time.Time) graphql.Marshaler {
+			return ec.marshalODateTime2ᚖtimeᚐTime(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Note_deletedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Note", field, false, false, errors.New("field of type DateTime does not have child fields"))
+}
+
+func (ec *executionContext) _Note_purged(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Note_purged(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Purged, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Note_purged(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Note", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _Note_rev(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Note_rev(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Rev, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Note_rev(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Note", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _NotePage_notes(ctx context.Context, field graphql.CollectedField, obj *model.NotePage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_NotePage_notes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Notes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []model.Note) graphql.Marshaler {
+			return ec.marshalNNote2ᚕgithubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐNoteᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_NotePage_notes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NotePage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Note(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NotePage_cursor(ctx context.Context, field graphql.CollectedField, obj *model.NotePage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_NotePage_cursor(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_NotePage_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("NotePage", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _NotePage_hasMore(ctx context.Context, field graphql.CollectedField, obj *model.NotePage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_NotePage_hasMore(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.HasMore, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_NotePage_hasMore(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("NotePage", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _NotePage_serverTime(ctx context.Context, field graphql.CollectedField, obj *model.NotePage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_NotePage_serverTime(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ServerTime, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNDateTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_NotePage_serverTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("NotePage", field, false, false, errors.New("field of type DateTime does not have child fields"))
+}
+
+func (ec *executionContext) _NoteResult_seq(ctx context.Context, field graphql.CollectedField, obj *model.NoteResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_NoteResult_seq(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Seq, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_NoteResult_seq(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("NoteResult", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _NoteResult_status(ctx context.Context, field graphql.CollectedField, obj *model.NoteResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_NoteResult_status(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.MutationStatus) graphql.Marshaler {
+			return ec.marshalNMutationStatus2githubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐMutationStatus(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_NoteResult_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("NoteResult", field, false, false, errors.New("field of type MutationStatus does not have child fields"))
+}
+
+func (ec *executionContext) _NoteResult_reason(ctx context.Context, field graphql.CollectedField, obj *model.NoteResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_NoteResult_reason(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Reason, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_NoteResult_reason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("NoteResult", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _NoteResult_note(ctx context.Context, field graphql.CollectedField, obj *model.NoteResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_NoteResult_note(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Note, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Note) graphql.Marshaler {
+			return ec.marshalONote2ᚖgithubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐNote(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_NoteResult_note(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NoteResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Note(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -433,6 +1407,50 @@ func (ec *executionContext) fieldContext_Query_me(_ context.Context, field graph
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return ec.childFields_User(ctx, field)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_notes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_notes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Notes(ctx, fc.Args["cursor"].(*string), fc.Args["limit"].(*int))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.NotePage) graphql.Marshaler {
+			return ec.marshalNNotePage2ᚖgithubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐNotePage(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_notes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_NotePage(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_notes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -1664,6 +2682,134 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputNoteMutationInput(ctx context.Context, obj any) (model.NoteMutationInput, error) {
+	var it model.NoteMutationInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"seq", "clientId", "baseRev", "changedFields", "deleted", "purged", "content", "kind", "color", "pinned", "archived", "labels", "reminder", "completedAt", "createdAt"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "seq":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("seq"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Seq = data
+		case "clientId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClientID = data
+		case "baseRev":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("baseRev"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BaseRev = data
+		case "changedFields":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("changedFields"))
+			data, err := ec.unmarshalNString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ChangedFields = data
+		case "deleted":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deleted"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Deleted = data
+		case "purged":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("purged"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Purged = data
+		case "content":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Content = data
+		case "kind":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("kind"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Kind = data
+		case "color":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("color"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Color = data
+		case "pinned":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pinned"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Pinned = data
+		case "archived":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("archived"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Archived = data
+		case "labels":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("labels"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Labels = data
+		case "reminder":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reminder"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Reminder = data
+		case "completedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("completedAt"))
+			data, err := ec.unmarshalODateTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CompletedAt = data
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalODateTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		}
+	}
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -1671,6 +2817,263 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var mutationImplementors = []string{"Mutation"}
+
+func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, mutationImplementors)
+	ctx = graphql.WithFieldContext(ctx, &graphql.FieldContext{
+		Object: "Mutation",
+	})
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		innerCtx := graphql.WithRootFieldContext(ctx, &graphql.RootFieldContext{
+			Object: field.Name,
+			Field:  field,
+		})
+
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Mutation")
+		case "pushNotes":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_pushNotes(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var noteImplementors = []string{"Note"}
+
+func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj *model.Note) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, noteImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Note")
+		case "clientId":
+			out.Values[i] = ec._Note_clientId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "content":
+			out.Values[i] = ec._Note_content(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "kind":
+			out.Values[i] = ec._Note_kind(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "color":
+			out.Values[i] = ec._Note_color(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "pinned":
+			out.Values[i] = ec._Note_pinned(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "archived":
+			out.Values[i] = ec._Note_archived(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "labels":
+			out.Values[i] = ec._Note_labels(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "reminder":
+			out.Values[i] = ec._Note_reminder(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "completedAt":
+			out.Values[i] = ec._Note_completedAt(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._Note_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._Note_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deletedAt":
+			out.Values[i] = ec._Note_deletedAt(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "purged":
+			out.Values[i] = ec._Note_purged(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rev":
+			out.Values[i] = ec._Note_rev(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var notePageImplementors = []string{"NotePage"}
+
+func (ec *executionContext) _NotePage(ctx context.Context, sel ast.SelectionSet, obj *model.NotePage) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, notePageImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NotePage")
+		case "notes":
+			out.Values[i] = ec._NotePage_notes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cursor":
+			out.Values[i] = ec._NotePage_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "hasMore":
+			out.Values[i] = ec._NotePage_hasMore(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "serverTime":
+			out.Values[i] = ec._NotePage_serverTime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var noteResultImplementors = []string{"NoteResult"}
+
+func (ec *executionContext) _NoteResult(ctx context.Context, sel ast.SelectionSet, obj *model.NoteResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, noteResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NoteResult")
+		case "seq":
+			out.Values[i] = ec._NoteResult_seq(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._NoteResult_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "reason":
+			out.Values[i] = ec._NoteResult_reason(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "note":
+			out.Values[i] = ec._NoteResult_note(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
 
 var queryImplementors = []string{"Query"}
 
@@ -1702,6 +3105,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_me(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "notes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_notes(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -2210,6 +3635,22 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) unmarshalNDateTime2timeᚐTime(ctx context.Context, v any) (time.Time, error) {
+	res, err := graphql.UnmarshalTime(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDateTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalTime(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -2224,6 +3665,105 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v any) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNMutationStatus2githubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐMutationStatus(ctx context.Context, v any) (model.MutationStatus, error) {
+	var res model.MutationStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNMutationStatus2githubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐMutationStatus(ctx context.Context, sel ast.SelectionSet, v model.MutationStatus) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNNote2githubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v model.Note) graphql.Marshaler {
+	return ec._Note(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNNote2ᚕgithubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐNoteᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Note) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNNote2githubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐNote(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalNNoteMutationInput2githubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐNoteMutationInput(ctx context.Context, v any) (model.NoteMutationInput, error) {
+	res, err := ec.unmarshalInputNoteMutationInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNNoteMutationInput2ᚕgithubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐNoteMutationInputᚄ(ctx context.Context, v any) ([]model.NoteMutationInput, error) {
+	vSlice := graphql.CoerceList(v)
+	var err error
+	res := make([]model.NoteMutationInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNNoteMutationInput2githubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐNoteMutationInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNNotePage2githubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐNotePage(ctx context.Context, sel ast.SelectionSet, v model.NotePage) graphql.Marshaler {
+	return ec._NotePage(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNNotePage2ᚖgithubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐNotePage(ctx context.Context, sel ast.SelectionSet, v *model.NotePage) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._NotePage(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNNoteResult2githubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐNoteResult(ctx context.Context, sel ast.SelectionSet, v model.NoteResult) graphql.Marshaler {
+	return ec._NoteResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNNoteResult2ᚕgithubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐNoteResultᚄ(ctx context.Context, sel ast.SelectionSet, v []model.NoteResult) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNNoteResult2githubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐNoteResult(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNPlan2githubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐPlan(ctx context.Context, v any) (model.Plan, error) {
@@ -2250,6 +3790,35 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
+	vSlice := graphql.CoerceList(v)
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNUser2githubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {
@@ -2434,6 +4003,84 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	_ = ctx
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalODateTime2ᚖtimeᚐTime(ctx context.Context, v any) (*time.Time, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalTime(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalODateTime2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalTime(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v any) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalInt(*v)
+	return res
+}
+
+func (ec *executionContext) marshalONote2ᚖgithubᚗcomᚋwuizardᚋpersonalᚑnotesᚑwebᚋnotesᚑmakerᚑapiᚋinternalᚋgraphᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v *model.Note) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Note(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	vSlice := graphql.CoerceList(v)
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {

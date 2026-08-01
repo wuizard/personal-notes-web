@@ -97,7 +97,7 @@ func (s *Service) GetOrCreateByFirebaseUID(ctx context.Context, firebaseUID, ema
 // to reach the Subscribe button — so, unlike the retired Polar integration's
 // email-matching design (docs/10 §10.17), ErrNotFound here means the account
 // was deleted between checkout and webhook delivery, not an unmatched payer
-// (docs/10 §10.18).
+// (docs/10 §10.20).
 func (s *Service) SetSubscription(ctx context.Context, firebaseUID string, sub *Subscription) error {
 	u, err := s.repo.FindByFirebaseUID(ctx, firebaseUID)
 	if err != nil {

@@ -107,11 +107,28 @@ export interface LocalNote {
    */
   completed_at?: number | null;
 
-  // ── Phase 2 sync fields, unused in v1 ──
+  // ── Phase 2 sync fields ──
   rev: number;
   _base_rev: number;
   /** 0|1 rather than boolean: IndexedDB cannot index booleans (docs/08 §8.2). */
   _dirty: 0 | 1;
+  /**
+   * Which fields this device has changed since `_base_rev`, by their server
+   * names — docs/04 §4.5 rule 1. Without it the server can only clobber:
+   * knowing that this device touched the colour and the other touched the
+   * title is what lets both edits survive.
+   *
+   * Absent on rows written before it existed, and on rows that have never
+   * been edited. Absent is read as "everything changed", which is the safe
+   * direction — it costs a conflict, never a lost edit.
+   */
+  _dirty_fields?: string[];
+  /**
+   * On a conflicted copy, the `client_id` of the note it forked from
+   * (docs/04 §4.5 rule 3). Drives the dismissible inline banner; the copy is
+   * an ordinary note in every other respect.
+   */
+  conflict_of?: string;
 }
 
 /** Legacy v1 shape. Kept so the v2 migration and old backups still type-check. */
@@ -197,7 +214,25 @@ export const META = {
   /** `true` disables auto-moving fully-checked checklists to Completed
    *  (docs/10 §10.13a, Premium). Absent means enabled. */
   autoCompleteDisabled: "autoCompleteDisabled",
+  /** Opaque server cursor for the sync pull (docs/04 §4.3). */
+  syncCursor: "syncCursor",
+  /** epoch ms of the last fully successful sync. */
+  syncLastAt: "syncLastAt",
+  /** `client_id`s deleted forever here, still to be told to the server.
+   *  A purge cannot ride on the note row the way a trash does, because the
+   *  row is gone — see storage/purge-queue.ts. */
+  syncPendingPurges: "syncPendingPurges",
+  /** Mutations the server refused outright, surfaced in Settings → Sync
+   *  rather than retried forever (docs/04 §4.4, §4.6). */
+  syncRejections: "syncRejections",
 } as const;
+
+/** One server-refused mutation, kept so the user can be told (docs/04 §4.6). */
+export interface SyncRejection {
+  client_id: string;
+  reason: string;
+  at: number;
+}
 
 export interface InstallMeta {
   installedAt: number;

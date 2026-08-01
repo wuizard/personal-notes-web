@@ -1,5 +1,5 @@
 /**
- * Paddle checkout — docs/10 §10.10 (MoR), §10.18 (this integration,
+ * Paddle checkout — docs/10 §10.10 (MoR), §10.20 (this integration,
  * replacing Polar after Polar locked the account).
  *
  * Paddle.js is a client-side overlay checkout, not a static link like the

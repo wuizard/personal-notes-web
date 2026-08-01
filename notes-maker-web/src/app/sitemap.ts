@@ -8,19 +8,34 @@ const SITE_URL = "https://quickchecklist.app";
 export const dynamic = "force-static";
 
 /**
- * Only the marketing landing page per locale — the actual app screens
+ * The indexable pages only: the marketing landing page and the privacy
+ * policy, per locale. The actual app screens
  * (notes/archive/completed/reminders/settings/trash) are noindex'd in
  * (app)/layout.tsx and deliberately excluded here too, since a sitemap
  * listing pages that ask not to be indexed just wastes crawl budget.
+ *
+ * The privacy policy is listed because it genuinely needs to be found —
+ * AdSense review looks for a reachable one, and so does anyone deciding
+ * whether to trust a notes app with their notes.
  *
  * Resolved entirely at build time (no params, no fetch), which is what
  * makes this compatible with `output: "export"` — see next.config.ts.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  return routing.locales.map((locale) => ({
-    url: `${SITE_URL}/${locale}`,
-    lastModified: new Date(),
-    changeFrequency: "monthly",
-    priority: 1,
-  }));
+  const lastModified = new Date();
+
+  return routing.locales.flatMap((locale) => [
+    {
+      url: `${SITE_URL}/${locale}`,
+      lastModified,
+      changeFrequency: "monthly" as const,
+      priority: 1,
+    },
+    {
+      url: `${SITE_URL}/${locale}/privacy`,
+      lastModified,
+      changeFrequency: "yearly" as const,
+      priority: 0.3,
+    },
+  ]);
 }

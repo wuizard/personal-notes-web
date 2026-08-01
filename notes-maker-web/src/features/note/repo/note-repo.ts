@@ -1,6 +1,7 @@
 import {uuidv7} from "uuidv7";
 import {getDb} from "@/features/storage/db";
 import {markHadNotes} from "@/features/storage/persistence";
+import {recordPurges} from "@/features/storage/purge-queue";
 import type {ChecklistItem, LocalNote, NoteColor, NoteDoc, NoteKind} from "@/features/storage/types";
 import {buildBodyText} from "../model/body-text";
 import {checklistToDoc, docToChecklist, isChecklistComplete, noteKind} from "../model/convert";
@@ -67,13 +68,41 @@ export type NotePatch = Partial<
   >
 >;
 
+/**
+ * Accumulates which fields this device has changed since the server last saw
+ * the note — docs/04 §4.5 rule 1. Unions rather than replaces, because a note
+ * can be edited many times between two syncs and every one of those fields is
+ * still unsent.
+ *
+ * The patch keys are already the server's field names. `body_text` is added
+ * whenever its sources change, since updateNote recomputes it rather than
+ * taking it from the caller.
+ */
+function withDirtyFields(existing: LocalNote, changed: string[]): string[] {
+  const fields = new Set(existing._dirty_fields ?? []);
+  for (const field of changed) fields.add(field);
+  return [...fields];
+}
+
+function patchedFields(patch: NotePatch): string[] {
+  const fields = Object.keys(patch);
+  if (patch.body !== undefined || patch.checklist !== undefined) fields.push("body_text");
+  return fields;
+}
+
 export async function updateNote(clientId: string, patch: NotePatch): Promise<void> {
   const db = getDb();
   await db.transaction("rw", db.notes, async () => {
     const existing = await db.notes.get(clientId);
     if (!existing) return;
 
-    const next: LocalNote = { ...existing, ...patch, updated_at: now(), _dirty: 1 };
+    const next: LocalNote = {
+      ...existing,
+      ...patch,
+      updated_at: now(),
+      _dirty: 1,
+      _dirty_fields: withDirtyFields(existing, patchedFields(patch)),
+    };
 
     // body_text is always recomputed rather than accepted from the caller, so
     // it can never drift from the content it indexes.
@@ -86,6 +115,9 @@ export async function updateNote(clientId: string, patch: NotePatch): Promise<vo
     // (docs/10 §10.13a). The UI reacts to the drop by watching completed_at.
     if (patch.checklist !== undefined && next.completed_at && !isChecklistComplete(next.checklist ?? [])) {
       next.completed_at = null;
+      // Cleared here rather than by the caller, so it has to be marked dirty
+      // here too — otherwise the drop never reaches the other device.
+      next._dirty_fields = withDirtyFields(next, ["completed_at"]);
     }
 
     await db.notes.put(next);
@@ -128,6 +160,9 @@ export async function convertNoteKind(clientId: string, to: NoteKind): Promise<v
 
     next.updated_at = now();
     next._dirty = 1;
+    // A kind switch rewrites the body and the checklist together, and the
+    // plaintext mirror with them.
+    next._dirty_fields = withDirtyFields(existing, ["kind", "body", "checklist", "body_text"]);
     await db.notes.put(next);
   });
 }
@@ -260,7 +295,13 @@ export async function dismissReminderOccurrence(clientId: string): Promise<void>
           }
         : { ...r, state: "dismissed" as const, fired_at: now() };
 
-    await db.notes.put({ ...note, reminder, updated_at: now(), _dirty: 1 });
+    await db.notes.put({
+      ...note,
+      reminder,
+      updated_at: now(),
+      _dirty: 1,
+      _dirty_fields: withDirtyFields(note, ["reminder"]),
+    });
   });
 }
 
@@ -300,7 +341,7 @@ export function trashDaysLeft(deletedAt: number, at = Date.now()): number {
 export async function purgeExpiredTrash(): Promise<number> {
   const db = getDb();
   const cutoff = now() - TRASH_RETENTION_MS;
-  return db.transaction("rw", db.notes, db.files, async () => {
+  return db.transaction("rw", db.notes, db.files, db.meta, async () => {
     const expired = await db.notes
       .filter((n) => n.deleted_at !== null && n.deleted_at < cutoff)
       .toArray();
@@ -308,6 +349,7 @@ export async function purgeExpiredTrash(): Promise<number> {
     const ids = expired.map((n) => n.client_id);
     await db.files.where("note_id").anyOf(ids).delete();
     await db.notes.bulkDelete(ids);
+    await recordPurges(ids);
     return ids.length;
   });
 }
@@ -319,22 +361,28 @@ export async function purgeExpiredTrash(): Promise<number> {
  */
 export async function deleteForever(clientId: string): Promise<void> {
   const db = getDb();
-  await db.transaction("rw", db.notes, db.files, async () => {
+  await db.transaction("rw", db.notes, db.files, db.meta, async () => {
     await db.files.where("note_id").equals(clientId).delete();
     await db.notes.delete(clientId);
+    // The row is gone, so nothing is left to carry this deletion to the
+    // server — it is queued separately (storage/purge-queue.ts). Without
+    // this the next pull would resurrect the note from the server's
+    // still-live tombstone.
+    await recordPurges([clientId]);
   });
 }
 
 /** Permanently deletes trashed notes and their attachments. Irreversible. */
 export async function emptyTrash(): Promise<number> {
   const db = getDb();
-  return db.transaction("rw", db.notes, db.files, async () => {
+  return db.transaction("rw", db.notes, db.files, db.meta, async () => {
     const trashed = await db.notes.filter((n) => n.deleted_at !== null).toArray();
     const ids = trashed.map((n) => n.client_id);
     // Attachments must go in the same transaction — orphaned blobs would keep
     // consuming quota with nothing left to reach them.
     await db.files.where("note_id").anyOf(ids).delete();
     await db.notes.bulkDelete(ids);
+    await recordPurges(ids);
     return ids.length;
   });
 }

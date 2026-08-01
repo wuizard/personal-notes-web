@@ -26,7 +26,7 @@ type Config struct {
 	FirebaseCredentialsFile string
 
 	// PaddleWebhookSecret verifies the Paddle-Signature header on incoming
-	// Paddle webhook deliveries (docs/10 §10.18).
+	// Paddle webhook deliveries (docs/10 §10.20).
 	PaddleWebhookSecret string
 
 	// PaddleAPIKey is a Paddle API key, for calling the Paddle API directly
@@ -44,6 +44,15 @@ type Config struct {
 	// /var/log/notes-maker-api/app.log. Empty by default so local dev only
 	// logs to stdout.
 	LogFilePath string
+	// NotesEncryptionKey seals note content at rest. Format:
+	// comma-separated "<version>:<base64 of 32 bytes>" entries, or a bare
+	// base64 key read as version 1. Rotating means adding a higher-numbered
+	// key while keeping the old one so documents sealed under it still open.
+	//
+	// Losing every key in this variable means losing every synced note —
+	// there is no recovery path, by construction. Back it up wherever the
+	// other production secrets live.
+	NotesEncryptionKey string
 }
 
 // Load reads configuration from the environment. It returns an error rather
@@ -60,11 +69,15 @@ func Load() (Config, error) {
 		PaddleAPIKey:            os.Getenv("PADDLE_API_KEY"),
 		AllowedOrigins:          splitCSV(getenvDefault("ALLOWED_ORIGINS", "http://localhost:3000")),
 		LogFilePath:             os.Getenv("LOG_FILE_PATH"),
+		NotesEncryptionKey:      os.Getenv("NOTES_ENCRYPTION_KEY"),
 	}
 
 	var missing []string
 	if cfg.FirebaseCredentialsFile == "" {
 		missing = append(missing, "FIREBASE_CREDENTIALS_FILE")
+	}
+	if cfg.NotesEncryptionKey == "" {
+		missing = append(missing, "NOTES_ENCRYPTION_KEY")
 	}
 	if len(missing) > 0 {
 		return Config{}, fmt.Errorf("config: missing required env vars: %v", missing)

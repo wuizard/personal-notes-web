@@ -1,5 +1,5 @@
 // Command api serves the public GraphQL schema (Query.me) and the Paddle
-// webhook. See docs/10 §10.18 for scope; Notes CRUD/sync are a later
+// webhook. See docs/10 §10.20 for scope; Notes CRUD/sync are a later
 // milestone.
 package main
 
@@ -14,11 +14,13 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/feature/billing"
+	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/feature/note"
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/feature/user"
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/graph"
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/graph/generated"
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/middleware"
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/platform/config"
+	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/platform/crypto"
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/platform/firebaseauth"
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/platform/httpx"
 	"github.com/wuizard/personal-notes-web/notes-maker-api/internal/platform/logging"
@@ -52,10 +54,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	keys, err := crypto.ParseKeyring(cfg.NotesEncryptionKey)
+	if err != nil {
+		log.Fatalf("notes encryption key: %v", err)
+	}
+	sealer, err := crypto.NewSealer(keys)
+	if err != nil {
+		log.Fatalf("notes encryption key: %v", err)
+	}
+
 	userService := user.NewService(user.NewMongoRepository(db))
+	noteService := note.NewService(note.NewMongoRepository(db), sealer)
 	webhookHandler := billing.NewWebhookHandler(userService, cfg.PaddleWebhookSecret)
 
-	resolver := &graph.Resolver{Users: userService}
+	resolver := &graph.Resolver{Users: userService, NoteSync: noteService}
 	graphqlSrv := gqlhandler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver}))
 
 	mux := http.NewServeMux()

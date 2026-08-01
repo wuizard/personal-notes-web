@@ -35,12 +35,12 @@ function Cell({ value }: { value: boolean | string }) {
 }
 
 /**
- * Free vs Premium — docs/10 §10.7/§10.14, checkout via §10.18.
+ * Free vs Premium — docs/10 §10.7/§10.14, checkout via §10.20.
  *
  * The Subscribe button opens a real Paddle overlay checkout when configured
  * (`NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`/`NEXT_PUBLIC_PADDLE_PRICE_ID`) — not a
  * mock. The backend verifies Paddle's webhook and grants the entitlement
- * (see paddle.ts's header comment and docs/10 §10.18).
+ * (see paddle.ts's header comment and docs/10 §10.20).
  */
 export function PurchasePlanDialog({
   user,

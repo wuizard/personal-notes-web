@@ -5,6 +5,9 @@ import {useTranslations} from "next-intl";
 import {useEffect, type ReactNode} from "react";
 import {Link, usePathname} from "@/i18n/navigation";
 import {AuthMenu} from "@/features/auth/auth-menu";
+import {SyncPill} from "@/features/sync/components/sync-pill";
+import {useSyncEngine} from "@/features/sync/use-sync";
+import {useSyncStatus} from "@/features/sync/use-sync-status";
 import {BannerAd} from "@/shared/ads/banner-ad";
 import {markVisitedApp} from "@/shared/returning-visitor";
 import {ThemeToggle} from "./theme-toggle";
@@ -47,6 +50,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     markVisitedApp();
   }, []);
+  // The app's only mount point for the sync engine — it does nothing at all
+  // unless the account is signed in and premium (docs/01 §1.0). Mounted here
+  // rather than in Providers so it never runs on the marketing pages.
+  useSyncEngine();
+  const { state: syncState } = useSyncStatus();
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
@@ -94,13 +102,18 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          {/* Local-only storage is a promise, not a limitation — say so. Its
-              own pill rather than plain text, so the green dot reads as a
-              live status badge and not just decoration on a sentence. */}
-          <p className="hidden items-center gap-2 rounded-full border border-border bg-surface-tertiary px-3 py-1.5 text-xs text-muted lg:flex">
-            <span className="size-1.5 shrink-0 rounded-full bg-success" aria-hidden />
-            {t("storage.local")}
-          </p>
+          {/* One slot, two truths. Without sync, local-only storage is a
+              promise rather than a limitation — say so. With sync running,
+              the same slot carries its state, because "stored on this device"
+              would then be the less interesting half of the story. */}
+          {syncState === "disabled" ? (
+            <p className="hidden items-center gap-2 rounded-full border border-border bg-surface-tertiary px-3 py-1.5 text-xs text-muted lg:flex">
+              <span className="size-1.5 shrink-0 rounded-full bg-success" aria-hidden />
+              {t("storage.local")}
+            </p>
+          ) : (
+            <SyncPill />
+          )}
 
           {/* Two functional clusters, each in its own rounded pill, so the
               bar doesn't read as one undifferentiated row of icons: pick a

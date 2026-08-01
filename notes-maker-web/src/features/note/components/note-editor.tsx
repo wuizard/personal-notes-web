@@ -12,6 +12,7 @@ import {AttachmentStrip} from "@/features/file/components/attachment-strip";
 import {ConfirmDialog} from "@/shared/ui/confirm-dialog";
 import {useToast} from "@/shared/ui/toast";
 import {usePlan} from "@/features/plan/use-plan";
+import {ConflictBanner} from "@/features/sync/components/conflict-banner";
 import {isChecklistComplete, noteKind} from "../model/convert";
 import {autoCompleteEnabled} from "../repo/completion";
 import {clearReminder, convertNoteKind, getNote, setCompleted, setReminder, updateNote,} from "../repo/note-repo";
@@ -244,6 +245,9 @@ export function NoteEditor({
         } as React.CSSProperties
       }
     >
+      {/* Only on a note a sync conflict forked off — docs/04 §4.5 rule 3. */}
+      {note.conflict_of ? <ConflictBanner /> : null}
+
       {/* toolbar */}
       <div className="flex items-center gap-1 border-b border-[var(--card-border)] px-2 py-2">
         {showBack && (

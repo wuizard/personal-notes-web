@@ -92,7 +92,7 @@ func (h *WebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			// (they must be signed in to reach the Subscribe button), so
 			// this is a genuine edge case, not the unmatched-payer-email gap
 			// the old Polar integration had (docs/10 §10.17, closed by
-			// §10.18). Ack so Paddle doesn't retry forever.
+			// §10.20). Ack so Paddle doesn't retry forever.
 			slog.WarnContext(r.Context(), "billing webhook: account not found for firebase_uid", logFields...)
 			w.WriteHeader(http.StatusOK)
 			return
@@ -170,7 +170,7 @@ var activeSubscriptionStatuses = map[string]bool{
 // paddleEvent is a deliberately conservative subset of Paddle's subscription
 // webhook payload — only what's needed to grant/revoke entitlement. Verify
 // field names against a real Paddle webhook delivery before pointing this at
-// production (docs/10 §10.18 flags this as unconfirmed, same caution the
+// production (docs/10 §10.20 flags this as unconfirmed, same caution the
 // Polar version of this file carried for its own field names).
 type paddleEvent struct {
 	EventType string `json:"event_type"`

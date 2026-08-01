@@ -224,7 +224,7 @@ work begins, verify two things on their current terms: fee schedule unchanged, a
 for an Indonesian individual seller. The app only ever sees "subscription active: yes/no" via
 webhook, so if either check fails the fallback is Paddle with no architectural change.
 
-**Superseded (2026-08-01): switched to Paddle** — Polar locked the account; see §10.18 for the
+**Superseded (2026-08-01): switched to Paddle** — Polar locked the account; see §10.20 for the
 full writeup. The fallback named above is exactly what happened.
 
 Note the standing fee-erosion problem from docs/00 §0.5: at $2/month even the cheapest option eats
@@ -266,7 +266,7 @@ Roughly in dependency order; stages 1–4 are pure client work and shippable wit
 - **Rewarded video → 1-day premium (idea, not built, 2026-07-29).** Let a free-tier user watch a
   rewarded ad in exchange for a 24-hour premium grant, as an alternative on-ramp alongside the
   $2/month subscription. Unresolved: how a 24h grant is represented (`Subscription.Status` is
-  currently a durable Paddle-webhook-driven field, §10.7/§10.18 — a self-expiring grant with no
+  currently a durable Paddle-webhook-driven field, §10.7/§10.20 — a self-expiring grant with no
   payment behind it is a different shape and needs its own field or a distinct status value, not a
   fake Polar subscription); which ad network actually serves rewarded video (AdSense's own unit
   types are display/in-feed/in-article — rewarded video is a separate product, e.g. Google Ad
@@ -627,7 +627,7 @@ forever) and the payment is simply not linked to anything. There is no invite/cl
 that case yet — a real gap, not an oversight, and it should be closed before
 `NEXT_PUBLIC_POLAR_CHECKOUT_URL` points at a live product for real customers.
 
-**Resolved as of §10.18**: the Polar→Paddle switch replaces email matching with
+**Resolved as of §10.20**: the Polar→Paddle switch replaces email matching with
 `custom_data.firebase_uid`, passed at checkout and echoed back in the webhook, closing this gap
 entirely rather than just documenting it.
 
@@ -638,7 +638,226 @@ images/R2 (P2.5) → push/reminders (P2.6) → a real `cmd/adminapi` + `notes-ma
 production deployment target has been chosen for `notes-maker-api` — this milestone is local-dev
 only (`docker compose up -d mongo && go run ./cmd/api`), matching docs/01 §1.9.
 
-## 10.18 MoR switch: Polar → Paddle (2026-08-01)
+## 10.18 Backend milestone 2: the notes sync API (2026-07-30)
+
+**P2.3 is built, server-side.** `notes-maker-api` now serves the notes half of docs/04: a cursor
+pull, a batched push with `client_id` idempotency and `base_rev` conflict resolution, and note
+content sealed at rest. No client consumes it yet — the sync engine in `notes-maker-web` is the
+next milestone, and until it exists nothing about the shipped app changes.
+
+Sequencing note: this was built ahead of the docs/00 §0.7 validation gate, deliberately. The gate
+asks whether to build a *paid tier at all*; §10.16/§10.17 already answered that by wiring real
+checkout and real entitlement. What was left was a Premium plan promising sync it did not have
+(§10.7's comparison table, rendered in `purchase-plan-dialog.tsx`), which is the actual blocker to
+charging anyone. Analytics — the thing that would *measure* the gate — is sequenced after payments
+go live, at the maintainer's call; the cost of that ordering is recorded in the plan file rather
+than hidden here: the first cohort of paying users arrives unmeasured.
+
+### Encryption at rest, and the E2E seam
+
+Note content — `title`, `body`, `body_text`, `checklist` — is sealed into one opaque `payload`
+field (AES-256-GCM, `internal/platform/crypto`) rather than stored as readable fields. Metadata
+(`color`, `pinned`, `archived`, `labels`, `reminder`, `completed_at`) stays in the clear because it
+drives indexes and reveals nothing about what a note says.
+
+The key comes from `NOTES_ENCRYPTION_KEY`, a keyring: comma-separated `<version>:<base64>` entries,
+highest version seals new writes, older keys stay available so documents already written still
+open. Notes re-seal lazily on their next edit. **Losing every key in that variable loses every
+synced note**, by construction — it is backed up wherever the other production secrets are.
+
+The payload is bound to `(user_id, client_id)` as GCM additional data, so a ciphertext lifted from
+one note into another — or into another account's note — fails to open rather than silently
+decrypting.
+
+This is the seam for the E2E decision below. A future E2E client seals content itself and hands the
+server ciphertext; the server stores what it is given and stops calling `Seal`. The document shape
+and the GraphQL contract do not change on that day — only who holds the key. That is why `content`
+crosses the wire as one serialized JSON string rather than as separate GraphQL fields.
+
+**Two costs, accepted rather than discovered later:**
+- Server-side full-text search is impossible while the payload is sealed. Search stays local over
+  Dexie, which is where it already lives and works (docs/08).
+- Field-level conflict merge works *today* only because the server holds the key and can open the
+  blob. That is precisely what breaks under real E2E, where conflicts would degrade to whole-note
+  conflicted copies.
+
+### Encryption: decided, with the contingency reasoning recorded
+
+E2E was considered and deferred. The scheme initially floated — the server holding a backup key
+alongside the user — was rejected outright: if the system can decrypt, it is not E2E, and it would
+buy all of E2E's complexity with none of its guarantee while being unmarketable as zero-knowledge.
+
+The real obstacle is that Firebase Auth with Google Sign-In leaves most users with **no password to
+derive a key from**, so genuine E2E forces a second passphrase at signup on an app whose pitch is
+zero friction — and a Firebase password reset would not recover the data, which users would
+reasonably expect it to. HSM-backed key escrow with a rate-limited PIN (what Apple and WhatsApp do)
+solves this properly and costs on the order of $1,000/month in HSMs, which is not defensible at
+$2/user/month.
+
+**Roadmapped instead:** passkey-PRF-derived keys as a Premium "private vault", once there is
+revenue to justify it. WebAuthn's `prf` extension derives a stable secret from a passkey held in
+iCloud Keychain or Google Password Manager, so recovery is inherited from an account the user
+already knows how to recover, with no second passphrase. It needs a recovery-code fallback for
+browsers without PRF support.
+
+### Conflict resolution: what's implemented, and where it approximates docs/04 §4.5
+
+Each note carries a `rev_log` — the last 20 revisions and which fields each changed. That is what
+makes rule 1 (disjoint-field merge) possible at all: to merge, the server has to know which fields
+*it* changed since the pushing device's `base_rev`. Beyond that depth the history is gone and a
+stale push degrades to an honest conflict rather than a guess.
+
+- **Disjoint fields merge** (rule 1) — only the pushing device's changed fields are replayed onto
+  the server's version.
+- **Metadata-only overlap resolves to the pushing device**, which is rule 2's spirit: metadata is
+  cheap to redo, content is not.
+- **Overlapping content edits conflict** (rule 3) — the server's version is returned and the client
+  keeps its own as a conflicted copy. Nothing is discarded server-side.
+- **Checklists union by item id** when only `checklist` overlaps. Items on both sides take the
+  pushing device's version; items on either side alone are kept. An item deleted on one device
+  therefore comes back if the other still has it — a duplicate line is a mild annoyance, a vanished
+  one is not.
+
+Two honest approximations: per-item `checked` is resolved by "the pushing device wins" rather than
+a true per-item timestamp, because items carry no timestamps; and `order` values can collide after
+a union, left for the client to settle by sorting on order then position.
+
+`base_rev: 0` is an **upsert**, not a conflict — it means the device has never seen a server copy,
+which is a create or a retry of one whose response was lost. That is what makes a retried create
+idempotent, backed by the unique `(user_id, client_id)` index rather than by application logic.
+
+### Trash vs delete-forever
+
+`deleted` writes a tombstone that **keeps** its payload, so restoring from trash on another device
+still recovers the content. `purged` writes a tombstone with the payload **dropped**. Both sync as
+ordinary documents so every device learns of the deletion. Server-side purge of expired tombstones
+(docs/10 §10.8's "server-side for synced notes") is a worker and is not built.
+
+### What's built
+
+- `internal/feature/note/` — `Repository` + `MongoRepository` + `Service`, tested against an
+  in-memory fake per this project's testing philosophy, plus a Mongo-backed `integration_test.go`
+  that skips unless `MONGO_TEST_URI` is set (it covers what a fake cannot: the real indexes, the
+  unique constraint, cursor paging over a real `Find`).
+- `internal/platform/crypto/` — the keyring, seal/open, and key rotation.
+- `migrations/0002_notes_indexes.go` — unique `(user_id, client_id)`, and `(user_id, updated_at,
+  _id)` for the cursor. The `_id` tiebreak is not optional: a cursor on `updated_at` alone silently
+  skips notes written in the same millisecond.
+- GraphQL `Query.notes(cursor, limit)` and `Mutation.pushNotes(mutations)`, both **premium-gated**
+  via `user.User.Plan()` — the tier boundary of docs/01 §1.0, not a soft upsell. The 100-item cap
+  (§10.14) is enforced server-side too, matching the client's `countActiveNotes` exactly: archived
+  and trashed items don't count, because archiving must stay a legitimate way to make room
+  (docs/00 §0.6).
+- `internal/graph/root.go` — the `Resolver` struct and helpers now live outside the gqlgen-managed
+  `resolver.go`, which codegen rewrites.
+- gqlgen is a proper `tool` dependency in `go.mod`. It previously could not be run at all: its
+  codegen deps had been pruned from `go.sum`, so `gqlgen generate` failed on a fresh checkout.
+
+### Fixed in passing: the local Mongo replica set was unreachable from the host
+
+`docker-compose.yml` initiated the replica set with the Compose service name (`mongo:27017`). A
+member address is what the driver connects to *after* topology discovery, so from the host — where
+`go run ./cmd/api` actually runs — the connection hung until timeout. Production already learned
+this (`deploy/init-replica-and-user.sh` uses `127.0.0.1`); the dev file had not. It now matches,
+with `mongo-express` switched to `directConnection=true` since it can no longer reach the member
+address by that name. `mongo-express` also now depends on the initiator completing, so the
+README's `docker compose up -d mongo mongo-express` can no longer leave an uninitiated set behind —
+which it previously did every time, since naming services skips the one-shot init container.
+
+### What's still not built
+
+The **client sync engine** (P2.4) — nothing in `notes-maker-web` calls these fields yet, and
+`features/storage/remote.ts` is still the stub that reports zero remote notes. Then images/R2
+(P2.5) → push/reminders (P2.6) → `cmd/adminapi` + `notes-maker-admin/` (P2.8). Labels remain
+client-side strings; the `labels` collection of docs/02 does not exist.
+
+## 10.19 Client milestone: the sync engine (P2.4)
+
+`notes-maker-web/src/features/sync/` now consumes §10.18's API. Premium accounts sync notes across
+devices; free accounts are untouched, and their notes still never leave the browser (docs/01 §1.0).
+
+### Pull, then push — and why that order
+
+Push carries each note's `base_rev`, which is what the server uses to work out which fields *it*
+changed since. Pulling first keeps those base_revs current, so two devices editing different fields
+merge silently instead of colliding. The cursor advances only after a page is fully applied, so an
+interrupted pull resumes rather than skipping.
+
+### The rules that stop sync eating someone's work
+
+- **A note with unsent edits is never overwritten**, not by a newer server version and not by a
+  tombstone. A note deleted on one device and edited on another comes back; the local edits then
+  push normally and the server decides (docs/04 §4.3).
+- **`_base_rev` is not advanced for a dirty note.** It records the revision the local edits were
+  made against; moving it to the server's newer revision would tell the server those edits already
+  account for changes they have never seen, turning a merge into a silent clobber.
+- **A mid-flight edit keeps the note dirty.** If the row changes while the push is in flight, the
+  response cannot be allowed to clear the flag — that would strand an edit the server has never
+  seen. `base_rev` still advances, because the accepted revision does contain what was sent.
+- **Conflicts fork rather than choose.** The server's version keeps the note's identity; the local
+  version becomes a separate, labelled copy carrying `conflict_of`, with a quiet dismissible banner
+  (docs/04 §4.5 rule 3, §4.7). Never a modal, never a merge UI.
+
+### `_dirty_fields`, and why there is no outbox
+
+docs/04 §4.2 specifies a separate `outbox` store. It was not built, and does not need to be: every
+write path in `note-repo.ts` already set `_dirty`, and `_dirty` was already indexed. One additive
+field — `_dirty_fields`, populated from the patch keys `updateNote` already receives — buys
+§4.5 rule 1's disjoint-field merge without a second store or a schema migration (docs/08 §8.1).
+
+Absent or empty is read as "everything changed", which is the safe direction: it can cost an
+unnecessary conflict, never a lost edit.
+
+### Deleting forever needed its own queue
+
+Trashing rides on the surviving row. Deleting forever removes the row, and a row that no longer
+exists cannot carry a mutation — so without `storage/purge-queue.ts` the next pull would receive the
+server's still-live tombstone and resurrect the note the user had just destroyed. The queue is
+written unconditionally by every hard-delete path: note-repo has no business knowing the plan, and a
+free user who subscribes later should not have their pre-subscription deletions come back. It is
+bounded at 500 ids, since a free user never drains it.
+
+This is also why `Note.purged` was added to the schema: an empty note sitting in trash is otherwise
+indistinguishable from one whose payload was dropped, and the two must not be handled alike.
+
+### Scheduling (docs/04 §4.6)
+
+App start, `online`, regaining visibility if the last sync is older than 30s, a 60s heartbeat, and a
+2s debounce after a local write. The heartbeat is torn down when the tab hides and rebuilt when it
+returns, rather than firing into a hidden tab and returning early — on mobile a background heartbeat
+is a battery complaint. Backoff is 1/2/4/8/16/30s with jitter, and **only** for reachability
+failures: a refusal ("premium required") would answer identically however long we wait, so it stops
+and says so instead.
+
+Writes are noticed through Dexie's own `useLiveQuery`, not by note-repo announcing them. The repo
+still does not know a network exists (docs/01 §1.5).
+
+Rejected mutations are dropped rather than retried forever, and surfaced in Settings → Sync with the
+server's reason — "note cap of 100 reached" is something a user can act on (docs/04 §4.4, §4.6).
+
+### Contract test between the two halves
+
+`internal/graph/contract_test.go` reads the client's actual query strings and validates them against
+the server's schema, and fails if a `Note` field exists that the client never asks for. The Go
+module lives in this repo precisely so an API change and its clients land in one commit; nothing
+enforced that until now. A renamed field used to compile and type-check on both sides and fail only
+at runtime — which, since sync is premium-only, means failing first for a paying customer.
+
+### Not built, deliberately
+
+- **Background Sync API registration** (§4.6's last bullet). It needs service-worker coordination
+  with `sw.js`, which is hand-written (docs/07 Stage A); the 2s debounce plus the on-open sync covers
+  the same ground for a tab that stays open.
+- **Attachments do not sync** (P2.5). A conflicted copy therefore carries no attachments — they are
+  keyed by note id, and duplicating blobs for something the server has never heard of would consume
+  quota. The original keeps them.
+- **Labels** remain client-side strings.
+- **The two halves have never talked to each other.** Both sides are covered by their own tests and
+  by the contract test above, but there is no end-to-end run: `cmd/api` cannot boot without Firebase
+  Admin credentials, which are not provisioned locally. Stage 3's test-mode subscription run is the
+  first time real client and real server will meet.
+
+## 10.20 MoR switch: Polar → Paddle (2026-08-01)
 
 **Trigger**: Polar locked the account and deemed the decision final/unappealable — no dispute path
 exists. The integration had to move to a different MoR before any real product launch, since

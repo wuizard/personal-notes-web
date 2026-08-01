@@ -5,7 +5,7 @@ import Script from "next/script";
 const CLIENT_TOKEN = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
 
 /**
- * Loads Paddle.js globally — docs/10 §10.18. Unlike AdSense (gated to free +
+ * Loads Paddle.js globally — docs/10 §10.20. Unlike AdSense (gated to free +
  * online users, since ads only make sense there), this loads unconditionally
  * whenever configured: anyone who might open the upgrade dialog needs
  * Paddle.js ready beforehand, and it's a single small script either way.

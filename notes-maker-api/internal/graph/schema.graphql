@@ -1,6 +1,5 @@
-# Milestone 1 subset of docs/10 §10.15's full sketch: just enough for the
-# frontend's usePlan() to verify entitlement against a real backend. Notes,
-# sync, labels, etc. are added in the next milestone.
+# The user-facing API (docs/10 §10.15, which supersedes docs/03's REST shape).
+# Labels, images and push are later milestones; nothing here anticipates them.
 
 scalar DateTime
 
@@ -16,6 +15,98 @@ type User {
   plan: Plan!
 }
 
+"""
+A note or checklist as the server holds it.
+
+`content` is a serialized JSON object — `{title, body, body_text, checklist}` —
+rather than separate fields, because the server stores it as one sealed blob.
+That is deliberate: it is the same field an end-to-end-encrypted client would
+write ciphertext into, so adding E2E later changes who holds the key and
+nothing about this contract.
+"""
+type Note {
+  clientId: ID!
+  content: String!
+  kind: String
+  color: String
+  pinned: Boolean!
+  archived: Boolean!
+  labels: [String!]!
+  """Serialized reminder JSON, stored opaquely until server-side scheduling exists."""
+  reminder: String
+  completedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  """Set on a tombstone. Tombstones travel as ordinary documents so every device learns of the deletion."""
+  deletedAt: DateTime
+  """
+  True when the content is gone for good ("delete forever"), as opposed to a
+  restorable trash tombstone. An empty note sitting in trash is otherwise
+  indistinguishable from a purged one, and the two must not be handled alike:
+  purged means remove the local row, trashed means show it in Trash.
+  """
+  purged: Boolean!
+  """Server-owned revision counter; the client echoes it back as baseRev."""
+  rev: Int!
+}
+
+type NotePage {
+  notes: [Note!]!
+  """Opaque — pass it back verbatim on the next pull. Empty means start from the beginning."""
+  cursor: String!
+  hasMore: Boolean!
+  serverTime: DateTime!
+}
+
+input NoteMutationInput {
+  """Client-assigned, echoed back on the matching result so a batch can be reconciled in any order."""
+  seq: Int!
+  clientId: ID!
+  """The rev this device last saw. 0 means it has never seen a server copy — a create, or a retry of one."""
+  baseRev: Int!
+  """
+  Which fields this device changed since baseRev. This is what lets the
+  server merge two devices' edits instead of one clobbering the other.
+  """
+  changedFields: [String!]!
+  """Move to trash: a tombstone that keeps its content, so another device can still restore it."""
+  deleted: Boolean
+  """Delete forever: still a tombstone, but the content is dropped."""
+  purged: Boolean
+  content: String
+  kind: String
+  color: String
+  pinned: Boolean
+  archived: Boolean
+  labels: [String!]
+  reminder: String
+  completedAt: DateTime
+  createdAt: DateTime
+}
+
+enum MutationStatus {
+  APPLIED
+  """base_rev was stale and the edits could not be merged. `note` is the server's version; keep yours as a conflicted copy."""
+  CONFLICT
+  """Validation failed. Drop the mutation — retrying will fail identically."""
+  REJECTED
+}
+
+type NoteResult {
+  seq: Int!
+  status: MutationStatus!
+  """Why a REJECTED mutation was refused. Surfaced to the user, so it is written for them."""
+  reason: String
+  note: Note
+}
+
 type Query {
   me: User!
+  """Changes strictly after `cursor`, tombstones included. Loop until hasMore is false."""
+  notes(cursor: String, limit: Int): NotePage!
+}
+
+type Mutation {
+  """Applies a batch in order. Does not stop at the first conflict — later mutations often apply cleanly."""
+  pushNotes(mutations: [NoteMutationInput!]!): [NoteResult!]!
 }
