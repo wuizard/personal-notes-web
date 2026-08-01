@@ -6,6 +6,7 @@ package user
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -22,13 +23,13 @@ const (
 
 const activeSubscriptionStatus = "active"
 
-// Subscription is the Polar-sourced entitlement state for one account. A nil
+// Subscription is the Paddle-sourced entitlement state for one account. A nil
 // Subscription (or a non-"active" Status) means free tier.
 type Subscription struct {
-	Status              string    `bson:"status"`
-	PolarCustomerID     string    `bson:"polar_customer_id,omitempty"`
-	PolarSubscriptionID string    `bson:"polar_subscription_id,omitempty"`
-	CurrentPeriodEnd    time.Time `bson:"current_period_end,omitempty"`
+	Status               string    `bson:"status"`
+	PaddleCustomerID     string    `bson:"paddle_customer_id,omitempty"`
+	PaddleSubscriptionID string    `bson:"paddle_subscription_id,omitempty"`
+	CurrentPeriodEnd     time.Time `bson:"current_period_end,omitempty"`
 }
 
 // User is identified by firebase_uid, not email/password — Firebase Auth
@@ -81,20 +82,24 @@ func (s *Service) GetOrCreateByFirebaseUID(ctx context.Context, firebaseUID, ema
 		UpdatedAt:   now,
 	}
 	if err := s.repo.Insert(ctx, u); err != nil {
+		slog.ErrorContext(ctx, "user registration failed", "event", "user.register.error", "email", email, "error", err)
 		return nil, err
 	}
+	slog.InfoContext(ctx, "new user registered", "event", "user.register", "user_id", u.ID.Hex(), "email", email)
 	return u, nil
 }
 
-// SetSubscription applies Polar-sourced entitlement state to whichever
-// account the payment's email resolves to. Called from the webhook handler.
+// SetSubscription applies Paddle-sourced entitlement state to the account a
+// checkout's Firebase UID (passed as custom_data at checkout time, echoed
+// back in the webhook) belongs to. Called from the webhook handler.
 //
-// Limitation (docs/10 §10.17): this only works for a payer who already has a
-// Firebase account under that email. A payment from an email with no
-// matching account is reported via ErrNotFound and dropped — there is no
-// invite/claim flow yet to link it retroactively.
-func (s *Service) SetSubscription(ctx context.Context, email string, sub *Subscription) error {
-	u, err := s.repo.FindByEmail(ctx, email)
+// Every paying user already has a Firebase account — they must be signed in
+// to reach the Subscribe button — so, unlike the retired Polar integration's
+// email-matching design (docs/10 §10.17), ErrNotFound here means the account
+// was deleted between checkout and webhook delivery, not an unmatched payer
+// (docs/10 §10.18).
+func (s *Service) SetSubscription(ctx context.Context, firebaseUID string, sub *Subscription) error {
+	u, err := s.repo.FindByFirebaseUID(ctx, firebaseUID)
 	if err != nil {
 		return err
 	}

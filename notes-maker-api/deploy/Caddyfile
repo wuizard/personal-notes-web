@@ -17,8 +17,8 @@
 api.quickchecklist.app {
 	reverse_proxy 127.0.0.1:8080
 
-	# Polar webhook deliveries can run a few KB of JSON; the handler itself
-	# already caps the read at 1MiB (polar_webhook.go), this just keeps
+	# Paddle webhook deliveries can run a few KB of JSON; the handler itself
+	# already caps the read at 1MiB (paddle_webhook.go), this just keeps
 	# Caddy from rejecting anything unusually large before it gets there.
 	request_body {
 		max_size 2MB

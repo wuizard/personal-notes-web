@@ -12,6 +12,14 @@
 #   /opt/notes-maker-api/api.env                real values, mode 600, root-owned — CI never touches this
 #   /opt/notes-maker-api/firebase-adminsdk.json  service account key, mode 600 — CI never touches this
 #
+# /var/log/notes-maker-api/ is created and chowned automatically by the
+# ExecStartPre below on every start, so ReadWritePaths can list it
+# unconditionally without breaking deploys that never set LOG_FILE_PATH
+# (internal/platform/logging) — in that case the app just never opens
+# anything there. journalctl -u notes-maker-api keeps working regardless;
+# the file is only for a copy independent of the journal's own retention.
+# See notes-maker-api.logrotate for rotating it.
+#
 # Binds to :8080 on all interfaces (the app has no per-interface bind config)
 # — that's fine because ufw's default-deny only opens 22/80/443, so 8080 is
 # unreachable from outside the VPS. Caddy reaches it over loopback.
@@ -26,15 +34,22 @@ User=notes-maker
 Group=notes-maker
 WorkingDirectory=/opt/notes-maker-api
 EnvironmentFile=/opt/notes-maker-api/api.env
+# "+" runs as root, ahead of ReadWritePaths/User below, purely to guarantee
+# the directory exists with the right owner before the sandboxed main
+# process starts — ReadWritePaths on a path that doesn't exist yet fails the
+# whole unit (systemd will not create it for you).
+ExecStartPre=+/bin/sh -c 'mkdir -p /var/log/notes-maker-api && chown notes-maker:notes-maker /var/log/notes-maker-api'
 ExecStart=/opt/notes-maker-api/notes-maker-api
 Restart=on-failure
 RestartSec=2s
 
-# Hardening — the process needs nothing outside its own directory.
+# Hardening — the process needs nothing outside its own directory, plus
+# /var/log/notes-maker-api (see ExecStartPre above) for the optional
+# LOG_FILE_PATH file log.
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/notes-maker-api
+ReadWritePaths=/opt/notes-maker-api /var/log/notes-maker-api
 PrivateTmp=true
 
 [Install]

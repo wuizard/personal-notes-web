@@ -4,6 +4,7 @@ import {GeistMono} from "geist/font/mono";
 import {hasLocale, NextIntlClientProvider} from "next-intl";
 import {getTranslations, setRequestLocale} from "next-intl/server";
 import {notFound} from "next/navigation";
+import {PaddleLoader} from "@/features/billing/paddle-loader";
 import {routing, type Locale} from "@/i18n/routing";
 import {AdSense} from "@/shared/ads/adsense";
 import {appColorBootScript} from "@/shared/app-color";
@@ -132,6 +133,7 @@ export default async function LocaleLayout({
         </NextIntlClientProvider>
         <RegisterServiceWorker />
         <AdSense />
+        <PaddleLoader />
       </body>
     </html>
   );

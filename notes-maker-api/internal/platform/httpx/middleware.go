@@ -3,7 +3,7 @@
 package httpx
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"sync/atomic"
@@ -15,7 +15,7 @@ func Recover(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if rec := recover(); rec != nil {
-				log.Printf("panic recovered: %v", rec)
+				slog.ErrorContext(r.Context(), "panic recovered", "event", "http.panic", "path", r.URL.Path, "panic", rec)
 				http.Error(w, "internal server error", http.StatusInternalServerError)
 			}
 		}()

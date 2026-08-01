@@ -5,6 +5,7 @@ import {AppColorSwatches} from "@/shared/ui/app-color-swatches";
 import {BrandMark} from "@/shared/ui/brand-mark";
 import {ThemeToggle} from "@/shared/ui/theme-toggle";
 import {LocaleSwitcher} from "@/shared/ui/locale-switcher";
+import {returningVisitorBootScript} from "@/shared/returning-visitor";
 
 /**
  * Marketing landing page.
@@ -39,6 +40,13 @@ export default async function LandingPage({
 
   return (
     <div className="flex min-h-dvh flex-col">
+      {/* Runs before the page paints — a returning visitor who has already
+          entered the app once gets bounced straight to /notes instead of
+          seeing the marketing page again. Scoped to this page only, so
+          nothing on the /notes side ever re-triggers it (returning-visitor.ts). */}
+      <script
+        dangerouslySetInnerHTML={{ __html: returningVisitorBootScript(locale) }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

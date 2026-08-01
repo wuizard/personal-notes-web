@@ -2,9 +2,9 @@
 
 import { Check, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useId } from "react";
+import { useId, useState } from "react";
 import type { AuthUser } from "@/features/auth/firebase";
-import { isPolarConfigured, polarCheckoutUrl } from "./polar";
+import { isPaddleConfigured, openPaddleCheckout } from "./paddle";
 
 interface Row {
   key: string;
@@ -35,14 +35,12 @@ function Cell({ value }: { value: boolean | string }) {
 }
 
 /**
- * Free vs Premium — docs/10 §10.7/§10.14, checkout via §10.16.
+ * Free vs Premium — docs/10 §10.7/§10.14, checkout via §10.18.
  *
- * The Subscribe button is a real redirect to a Polar Checkout Link when one
- * is configured (`NEXT_PUBLIC_POLAR_CHECKOUT_URL`) — not a mock. What it
- * does NOT do: grant premium afterward. That needs a backend verifying
- * Polar's webhook, which doesn't exist yet (see polar.ts's header comment
- * and docs/10 §10.16). Paying here charges a real card and changes nothing
- * else in the app until that piece is built.
+ * The Subscribe button opens a real Paddle overlay checkout when configured
+ * (`NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`/`NEXT_PUBLIC_PADDLE_PRICE_ID`) — not a
+ * mock. The backend verifies Paddle's webhook and grants the entitlement
+ * (see paddle.ts's header comment and docs/10 §10.18).
  */
 export function PurchasePlanDialog({
   user,
@@ -53,7 +51,8 @@ export function PurchasePlanDialog({
 }) {
   const t = useTranslations("billing");
   const titleId = useId();
-  const configured = isPolarConfigured();
+  const configured = isPaddleConfigured();
+  const [checkoutError, setCheckoutError] = useState(false);
 
   return (
     <div
@@ -100,16 +99,26 @@ export function PurchasePlanDialog({
         </p>
 
         {configured ? (
-          <a
-            href={polarCheckoutUrl(user?.email) ?? undefined}
-            className="mt-3 block w-full rounded-xl bg-accent px-3.5 py-2.5 text-center text-[13.5px] font-semibold text-accent-foreground transition-colors hover:bg-accent-hover"
-          >
-            {t("subscribe")}
-          </a>
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                if (!openPaddleCheckout(user)) setCheckoutError(true);
+              }}
+              className="mt-3 block w-full rounded-xl bg-accent px-3.5 py-2.5 text-center text-[13.5px] font-semibold text-accent-foreground transition-colors hover:bg-accent-hover"
+            >
+              {t("subscribe")}
+            </button>
+            {checkoutError && (
+              <p className="mt-2 text-center text-[12.5px] text-warning-soft-foreground">
+                {t("checkoutError")}
+              </p>
+            )}
+          </>
         ) : (
           // Honest about the current state rather than a dead/fake button —
-          // this is genuinely where things stand until a real Polar
-          // Checkout Link is configured (see .env.local.example).
+          // this is genuinely where things stand until Paddle is configured
+          // (see .env.local.example).
           <p className="mt-3 rounded-xl bg-warning-soft px-3 py-2.5 text-center text-[12.5px] text-warning-soft-foreground">
             {t("notConfigured")}
           </p>

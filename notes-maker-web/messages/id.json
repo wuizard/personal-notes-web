@@ -310,6 +310,7 @@
     "price": "$2 / bulan",
     "subscribe": "Berlangganan",
     "notConfigured": "Checkout belum siap — coba lagi nanti.",
+    "checkoutError": "Checkout belum siap — coba lagi sebentar lagi.",
     "close": "Tutup"
   },
   "checklist": {

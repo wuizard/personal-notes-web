@@ -2,10 +2,11 @@
 
 import {Archive, Bell, CheckCheck, NotebookText, Settings, Trash2} from "lucide-react";
 import {useTranslations} from "next-intl";
-import type {ReactNode} from "react";
+import {useEffect, type ReactNode} from "react";
 import {Link, usePathname} from "@/i18n/navigation";
 import {AuthMenu} from "@/features/auth/auth-menu";
 import {BannerAd} from "@/shared/ads/banner-ad";
+import {markVisitedApp} from "@/shared/returning-visitor";
 import {ThemeToggle} from "./theme-toggle";
 import {LocaleSwitcher} from "./locale-switcher";
 import {AppColorPicker} from "./app-color-picker";
@@ -39,6 +40,13 @@ const NAV = [
 export function AppShell({ children }: { children: ReactNode }) {
   const t = useTranslations();
   const pathname = usePathname();
+
+  // Reaching the app shell at all — via the landing page's CTA or any other
+  // path — means later landing-page visits should skip straight to /notes
+  // (returning-visitor.ts).
+  useEffect(() => {
+    markVisitedApp();
+  }, []);
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 

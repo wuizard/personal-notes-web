@@ -224,6 +224,9 @@ work begins, verify two things on their current terms: fee schedule unchanged, a
 for an Indonesian individual seller. The app only ever sees "subscription active: yes/no" via
 webhook, so if either check fails the fallback is Paddle with no architectural change.
 
+**Superseded (2026-08-01): switched to Paddle** — Polar locked the account; see §10.18 for the
+full writeup. The fallback named above is exactly what happened.
+
 Note the standing fee-erosion problem from docs/00 §0.5: at $2/month even the cheapest option eats
 ~18–24%. An **annual plan added later** (~$20–24/year) drops the fixed-fee share below 3% and
 remains the single biggest margin lever available.
@@ -263,7 +266,7 @@ Roughly in dependency order; stages 1–4 are pure client work and shippable wit
 - **Rewarded video → 1-day premium (idea, not built, 2026-07-29).** Let a free-tier user watch a
   rewarded ad in exchange for a 24-hour premium grant, as an alternative on-ramp alongside the
   $2/month subscription. Unresolved: how a 24h grant is represented (`Subscription.Status` is
-  currently a durable Polar-webhook-driven field, §10.7/§10.17 — a self-expiring grant with no
+  currently a durable Paddle-webhook-driven field, §10.7/§10.18 — a self-expiring grant with no
   payment behind it is a different shape and needs its own field or a distinct status value, not a
   fake Polar subscription); which ad network actually serves rewarded video (AdSense's own unit
   types are display/in-feed/in-article — rewarded video is a separate product, e.g. Google Ad
@@ -624,9 +627,61 @@ forever) and the payment is simply not linked to anything. There is no invite/cl
 that case yet — a real gap, not an oversight, and it should be closed before
 `NEXT_PUBLIC_POLAR_CHECKOUT_URL` points at a live product for real customers.
 
+**Resolved as of §10.18**: the Polar→Paddle switch replaces email matching with
+`custom_data.firebase_uid`, passed at checkout and echoed back in the webhook, closing this gap
+entirely rather than just documenting it.
+
 ### What's still not built (unchanged sequencing from §10.15's "not decided here")
 
 Notes CRUD + `client_id` idempotency + `base_rev` conflicts (P2.3) → delta sync (P2.4, docs/04) →
 images/R2 (P2.5) → push/reminders (P2.6) → a real `cmd/adminapi` + `notes-maker-admin/` (P2.8). No
 production deployment target has been chosen for `notes-maker-api` — this milestone is local-dev
 only (`docker compose up -d mongo && go run ./cmd/api`), matching docs/01 §1.9.
+
+## 10.18 MoR switch: Polar → Paddle (2026-08-01)
+
+**Trigger**: Polar locked the account and deemed the decision final/unappealable — no dispute path
+exists. The integration had to move to a different MoR before any real product launch, since
+`NEXT_PUBLIC_POLAR_CHECKOUT_URL` had never been set in production (confirmed: it was never even
+added to `ci.yml`'s `deploy-web` build-env block), so this was a pre-launch cutover, not a live
+migration — no existing paying subscribers to carry over.
+
+**Provider**: Paddle, exactly the fallback §10.10 pre-agreed ("if either check fails the fallback
+is Paddle with no architectural change") — still an MoR, so the original VAT/tax/chargeback
+reasoning in §10.10 holds unchanged. Xendit (a payment gateway, not an MoR) was considered and
+ruled out for the same reason Stripe was originally ruled out: it would push global tax/GST
+registration liability back onto a solo seller. Price stays **$2/month USD** — Paddle does not
+support IDR as a checkout currency, ruling out a currency pivot alongside the (separate,
+already-completed) switch of the site's default locale to Indonesian.
+
+**What actually changed, beyond the provider name**:
+
+- **Checkout**: no more static Checkout Link. `src/features/billing/paddle.ts` calls
+  `Paddle.Checkout.open()` (a Paddle.js overlay) instead of building a redirect URL — still no
+  backend secret needed pre-payment, just a JS SDK call instead of an `<a href>`. `PaddleLoader`
+  (`src/features/billing/paddle-loader.tsx`) loads the SDK globally, mirroring
+  `shared/ads/adsense.tsx`'s "absent config renders nothing" shape.
+- **Webhook auth**: Paddle's `Paddle-Signature: ts=...;h1=...` header (HMAC-SHA256 over
+  `"{ts}:{rawBody}"`, hex-encoded) replaces Polar's Standard Webhooks scheme — simpler, single
+  signature, no key-rotation multi-entry format.
+- **Account linking, genuinely improved, not just ported**: Paddle's subscription webhooks carry no
+  customer email, only `customer_id`. Rather than adding an extra API call to fetch it, checkout now
+  passes `customData: { firebase_uid }`, which Paddle copies onto the subscription and echoes back in
+  every webhook. `SetSubscription` resolves the account via the already-existing
+  `Repository.FindByFirebaseUID` (the same lookup `GetOrCreateByFirebaseUID` already used) instead of
+  `FindByEmail`. Since every payer is necessarily signed in already to reach the Subscribe button,
+  this closes §10.17's "linking limitation" entirely — there is no more "payment from an unmatched
+  email" case, only the much narrower "account deleted between checkout and webhook delivery."
+- **Schema**: `users.subscription.polar_customer_id`/`polar_subscription_id` renamed to
+  `paddle_customer_id`/`paddle_subscription_id`. No migration script: `UpdateSubscription` does a
+  whole-subdocument `$set`, so the next webhook for any account self-heals the field names, and
+  nothing reads the old keys. Safe specifically because there were zero real subscribers to strand.
+- **Route**: `/webhooks/polar` → `/webhooks/paddle`, removed and added in the same commit — no
+  dual-mount window needed, since Polar is locked and can never deliver another webhook.
+
+**Manual/operational steps** (not code): create the Paddle product/price and a notification
+destination in the Paddle dashboard, add the three `NEXT_PUBLIC_PADDLE_*` values as GitHub Actions
+secrets (learning from the fact that `NEXT_PUBLIC_POLAR_CHECKOUT_URL` never made it into that list),
+set `PADDLE_WEBHOOK_SECRET`/`PADDLE_API_KEY` by hand in the VPS's `api.env`, run a sandbox dry run
+end to end before pointing the dashboard at production, then revoke the old `POLAR_API_KEY` at
+Polar's dashboard.

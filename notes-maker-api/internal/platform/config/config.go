@@ -25,19 +25,25 @@ type Config struct {
 	// itself.
 	FirebaseCredentialsFile string
 
-	// PolarWebhookSecret verifies the signature on incoming Polar webhook
-	// deliveries (docs/10 §10.16/§10.17).
-	PolarWebhookSecret string
+	// PaddleWebhookSecret verifies the Paddle-Signature header on incoming
+	// Paddle webhook deliveries (docs/10 §10.18).
+	PaddleWebhookSecret string
 
-	// PolarAPIKey is the Polar organization access token, for calling the
-	// Polar API directly (as opposed to PolarWebhookSecret, which only
-	// verifies inbound webhook deliveries). Unused until a call site needs
-	// it — kept in config now so it's never hardcoded later.
-	PolarAPIKey string
+	// PaddleAPIKey is a Paddle API key, for calling the Paddle API directly
+	// (as opposed to PaddleWebhookSecret, which only verifies inbound
+	// webhook deliveries). Unused until a call site needs it — kept in
+	// config now so it's never hardcoded later.
+	PaddleAPIKey string
 
 	// AllowedOrigins is the CORS allowlist for the Next.js frontend, which is
 	// served from a different origin (Cloudflare Workers) than this API.
 	AllowedOrigins []string
+
+	// LogFilePath additionally appends structured logs to this file (see
+	// internal/platform/logging) — meant for the VPS's
+	// /var/log/notes-maker-api/app.log. Empty by default so local dev only
+	// logs to stdout.
+	LogFilePath string
 }
 
 // Load reads configuration from the environment. It returns an error rather
@@ -50,9 +56,10 @@ func Load() (Config, error) {
 		MongoURI:                getenvDefault("MONGO_URI", "mongodb://localhost:27017/?replicaSet=rs0"),
 		MongoDBName:             getenvDefault("MONGO_DB_NAME", "notes_maker"),
 		FirebaseCredentialsFile: os.Getenv("FIREBASE_CREDENTIALS_FILE"),
-		PolarWebhookSecret:      os.Getenv("POLAR_WEBHOOK_SECRET"),
-		PolarAPIKey:             os.Getenv("POLAR_API_KEY"),
+		PaddleWebhookSecret:     os.Getenv("PADDLE_WEBHOOK_SECRET"),
+		PaddleAPIKey:            os.Getenv("PADDLE_API_KEY"),
 		AllowedOrigins:          splitCSV(getenvDefault("ALLOWED_ORIGINS", "http://localhost:3000")),
+		LogFilePath:             os.Getenv("LOG_FILE_PATH"),
 	}
 
 	var missing []string

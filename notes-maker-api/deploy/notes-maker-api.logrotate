@@ -1,0 +1,22 @@
+# Rotates the optional LOG_FILE_PATH file (internal/platform/logging) — the
+# journal has its own retention via journald.conf, but a plain file needs
+# this or it grows forever.
+#
+# Install: sudo cp notes-maker-api.logrotate /etc/logrotate.d/notes-maker-api
+# logrotate itself is already run daily by cron/systemd-timer on Debian/Ubuntu
+# — no separate service to enable.
+# copytruncate, not create+postrotate-reopen: the app holds its log file fd
+# open for the life of the process with no SIGHUP handler to reopen it, so a
+# plain rename would leave it writing into the now-unlinked old file forever.
+# copytruncate copies then truncates the original in place, so the existing
+# fd keeps working — the tradeoff is a handful of lines written between the
+# copy and the truncate can be lost, which is fine for this use case.
+/var/log/notes-maker-api/app.log {
+	weekly
+	rotate 8
+	compress
+	delaycompress
+	missingok
+	notifempty
+	copytruncate
+}

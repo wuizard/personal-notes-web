@@ -14,14 +14,14 @@ serve that model.
 The part most likely to surprise someone arriving at the repo: for **notes themselves**, there is
 still no API and no database. Notes, images, colours, and reminders all live in IndexedDB, entirely
 client-side. What Phase 2 has actually built so far is narrower than "the backend" — Firebase-verified
-identity and Polar-verified billing, in `notes-maker-api/`, so premium entitlement can be checked
+identity and Paddle-verified billing, in `notes-maker-api/`, so premium entitlement can be checked
 server-side. Notes CRUD, delta sync, and the admin panel are designed (docs/04, docs/10) but not
 built — see that folder's own state below rather than assuming "Phase 2" means "done."
 
 | Folder | Stack | Status |
 | --- | --- | --- |
 | `notes-maker-web/` | Next.js 16 + HeroUI, PWA | **The whole product** — notes are 100% client-side regardless of account/plan |
-| `notes-maker-api/` | Go 1.26 + gqlgen + MongoDB | Partial: Firebase auth verification, `Query.me{plan}`, Polar webhook → entitlement. No notes/sync yet. Deploys to a VPS — see `deploy/` |
+| `notes-maker-api/` | Go 1.26 + gqlgen + MongoDB | Partial: Firebase auth verification, `Query.me{plan}`, Paddle webhook → entitlement. No notes/sync yet. Deploys to a VPS — see `deploy/` |
 | `notes-maker-admin/` | React 19 + Vite + HeroUI | Not created yet |
 | `packages/shared/` | TypeScript | Not created yet |
 | `docs/` | Markdown | The plan — read in order |
@@ -50,8 +50,9 @@ folder.
 - **Reminders**: free = in-app only; paid = real Web Push. A genuine technical boundary, stated
   plainly in the UI.
 - **Indonesia first, global after** — `id`/`en` i18n and multi-currency structured in from day one.
-- **Payments via Polar**, as a static Checkout Link plus a webhook that verifies the signature and
-  writes entitlement — see [Billing](#billing) below for what's built and what's still a gap.
+- **Payments via Paddle** (switched from Polar, docs/10 §10.18, after Polar locked the account), as a
+  Paddle.js overlay checkout plus a webhook that verifies the signature and writes entitlement — see
+  [Billing](#billing) below.
 - **HeroUI** is the component library for both frontends. Tailwind is pinned to whatever HeroUI
   requires, never the reverse.
 
@@ -70,7 +71,7 @@ folder.
 | Backend language | Go 1.26 |
 | API | GraphQL via [gqlgen](https://gqlgen.com/) |
 | Database | MongoDB 7, single-node replica set (multi-document transactions need it even with one member) |
-| Billing | [Polar](https://polar.sh) — static Checkout Link + Standard Webhooks-signed webhook |
+| Billing | [Paddle](https://paddle.com) — Paddle.js overlay checkout + signed webhook |
 | Backend hosting | Docker (MongoDB only) + systemd (the Go binary) + Caddy (reverse proxy/TLS) on a VPS — see `notes-maker-api/deploy/` |
 | CI/CD | GitHub Actions — `.github/workflows/ci.yml` (web: lint/typecheck/test/build, then deploy over SSH with a verify-before-swap release) and `.github/workflows/api.yml` (API: vet/test/build, then deploy over SSH with a health-check rollback) |
 | Package management | pnpm workspace (JS/TS side) + a standalone Go module (`notes-maker-api/` is not a workspace package) |
@@ -126,11 +127,11 @@ the deploy user's sudoers grant — is in `notes-maker-api/deploy/`.
 
 ## Billing
 
-Polar is wired end to end for the one $2/month product, with one documented gap: `polar_webhook.go`
-links a payment to an account by matching `data.customer.email` against an existing Firebase-account
-email. A payment from an email with no matching account is acked (so Polar doesn't retry) but not
-linked to anything — there is no invite/claim flow yet. Don't point `NEXT_PUBLIC_POLAR_CHECKOUT_URL`
-at a live product until that's closed; see `docs/10-plan-change-v2.md` §10.17 for the full writeup.
+Paddle is wired end to end for the one $2/month product (switched from Polar after Polar locked the
+account — docs/10 §10.18). `paddle_webhook.go` links a payment to an account via
+`custom_data.firebase_uid`, passed at checkout time and echoed back in the webhook — since every payer
+is already signed in to reach the Subscribe button, this closes the "unmatched payer email, no claim
+flow" gap the old Polar integration had. See `docs/10-plan-change-v2.md` §10.18 for the full writeup.
 
 ## Documents
 

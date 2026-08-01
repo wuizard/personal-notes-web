@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -22,7 +22,7 @@
       Not indexed: the locale pages are the canonical URLs.
     -->
     <meta name="robots" content="noindex" />
-    <meta http-equiv="refresh" content="0; url=/en" />
+    <meta http-equiv="refresh" content="0; url=/id" />
 
     <style>
       /* Match the app background so there is no white flash before the hop. */
@@ -51,10 +51,10 @@
 
     <script>
       // Runs before render, so the redirect happens without a visible page.
-      // Mirrors the Worker's logic: primary subtag, default English.
+      // Mirrors the Worker's logic: primary subtag, default Indonesian.
       (function () {
         var supported = ["id", "en"];
-        var target = "en";
+        var target = "id";
         var langs = navigator.languages || [navigator.language || ""];
         for (var i = 0; i < langs.length; i++) {
           var primary = String(langs[i]).toLowerCase().split("-")[0];

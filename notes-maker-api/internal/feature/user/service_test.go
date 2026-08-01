@@ -97,9 +97,9 @@ func TestSetSubscription_GrantsPremiumForActiveStatus(t *testing.T) {
 		t.Fatalf("seed user: %v", err)
 	}
 
-	err := svc.SetSubscription(ctx, "a@example.com", &Subscription{
-		Status:          "active",
-		PolarCustomerID: "cus_123",
+	err := svc.SetSubscription(ctx, "uid-1", &Subscription{
+		Status:           "active",
+		PaddleCustomerID: "ctm_123",
 	})
 	if err != nil {
 		t.Fatalf("SetSubscription: %v", err)
@@ -114,12 +114,12 @@ func TestSetSubscription_GrantsPremiumForActiveStatus(t *testing.T) {
 	}
 }
 
-func TestSetSubscription_UnknownEmailReturnsNotFound(t *testing.T) {
+func TestSetSubscription_UnknownFirebaseUIDReturnsNotFound(t *testing.T) {
 	repo := newFakeRepository()
 	svc := NewService(repo)
 
-	err := svc.SetSubscription(context.Background(), "nobody@example.com", &Subscription{Status: "active"})
+	err := svc.SetSubscription(context.Background(), "nobody-uid", &Subscription{Status: "active"})
 	if err != ErrNotFound {
-		t.Fatalf("expected ErrNotFound for an email with no account, got %v", err)
+		t.Fatalf("expected ErrNotFound for a firebase UID with no account, got %v", err)
 	}
 }
