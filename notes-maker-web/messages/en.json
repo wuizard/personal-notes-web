@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Notes Maker",
+    "name": "Quick Checklist",
     "tagline": "Your notes, kept on your device."
   },
   "nav": {
@@ -128,8 +128,35 @@
     "dismiss": "Start fresh"
   },
   "seo": {
-    "title": "Notes Maker — Free Personal Notes, To-Do List & Checklist App",
-    "description": "A free personal notes app and to-do list maker with no sign-up. Write notes, build checklists, and stay organised — everything stays private on your own device and works offline."
+    "title": "Quick Checklist — Free Personal Notes, To-Do List & Checklist App",
+    "description": "A free online checklist app and to-do list maker with no sign-up. Write quick notes, build a digital checklist, and stay organised — everything stays private on your own device and works offline.",
+    "keywords": [
+      "checklist app",
+      "online checklist",
+      "free checklist app",
+      "to-do list app",
+      "digital checklist",
+      "checklist maker",
+      "note taking app",
+      "quick notes app",
+      "notes and checklist app",
+      "checklist app without account",
+      "online checklist no login",
+      "checklist app that works offline",
+      "no signup checklist",
+      "free forever checklist",
+      "grocery checklist app",
+      "packing checklist app",
+      "travel checklist maker",
+      "daily routine checklist",
+      "cleaning checklist app",
+      "moving checklist app",
+      "wedding checklist app",
+      "habit checklist app",
+      "productivity checklist app",
+      "google keep alternative",
+      "todoist alternative free"
+    ]
   },
   "landing": {
     "heroTitle": "Personal notes and to-do lists that stay yours.",
@@ -145,7 +172,25 @@
       "checklistBody": "Capture starts as a checklist, and checklists are unlimited — on every plan.",
       "autoEntryTitle": "Auto task entry",
       "autoEntryBody": "Start typing and it finishes the phrase for you, learned from your own past tasks — press Tab to accept."
-    }
+    },
+    "useCases": {
+      "title": "One checklist app, every list",
+      "items": [
+        "Grocery list",
+        "Packing list",
+        "Travel checklist",
+        "Daily routine",
+        "Work tasks",
+        "Cleaning checklist",
+        "Moving checklist",
+        "Wedding checklist",
+        "Event planning",
+        "Study checklist",
+        "Meeting notes",
+        "Habit tracker"
+      ]
+    },
+    "altTo": "Free forever, no ads, no login, and it works offline — a lighter alternative to Todoist, Google Keep, or Notion when all you want is a fast checklist and to-do list app."
   },
   "settings": {
     "title": "Settings",
@@ -266,7 +311,7 @@
     "menu": "Account menu",
     "aboutUs": "About us",
     "feedback": "Send feedback",
-    "feedbackSubject": "Notes Maker feedback",
+    "feedbackSubject": "Quick Checklist feedback",
     "purchasePlan": "Upgrade to Premium",
     "signIn": "Sign in",
     "signOut": "Sign out",
@@ -366,7 +411,7 @@
   },
   "legal": {
     "lastUpdated": "Last updated",
-    "backHome": "Back to Notes Maker",
+    "backHome": "Back to Quick Checklist",
     "privacy": "Privacy Policy"
   }
 }

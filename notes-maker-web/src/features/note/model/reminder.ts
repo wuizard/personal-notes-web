@@ -19,7 +19,12 @@ export interface ReminderSpec {
   weekday?: number;
 }
 
-export const DEFAULT_REMINDER_TIME = "00:00";
+// 08:00, not midnight: a reminder someone actually sets up is meant to be
+// seen, and this app only ever notifies while the tab is open — midnight is
+// rarely that. (parseTime's own fallback for a reminder with no `time` field
+// at all — e.g. one written before this field existed — is unrelated and
+// stays 00:00, see reminder.test.ts's "defaults to the start of the local day".)
+export const DEFAULT_REMINDER_TIME = "08:00";
 
 function parseTime(time: string | undefined): { h: number; m: number } {
   const match = /^(\d{1,2}):(\d{2})$/.exec(time ?? "");

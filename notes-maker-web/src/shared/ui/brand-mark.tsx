@@ -27,7 +27,7 @@ export function BrandMark({
       viewBox="0 0 512 512"
       className={className}
       role="img"
-      aria-label="Notes Maker"
+      aria-label="Quick Checklist"
     >
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">

@@ -46,15 +46,17 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "seo" });
   const title = t("title");
   const description = t("description");
+  const keywords = t.raw("keywords") as string[];
   const path = `/${locale}`;
 
   return {
     metadataBase: new URL(SITE_URL),
-    title: { default: title, template: "%s · Notes Maker" },
+    title: { default: title, template: "%s · Quick Checklist" },
     description,
-    applicationName: "Notes Maker",
+    keywords,
+    applicationName: "Quick Checklist",
     manifest: "/manifest.webmanifest",
-    appleWebApp: { capable: true, statusBarStyle: "default", title: "Notes Maker" },
+    appleWebApp: { capable: true, statusBarStyle: "default", title: "Quick Checklist" },
     icons: {
       icon: [
         { url: "/icons/favicon.svg", type: "image/svg+xml" },
@@ -71,7 +73,7 @@ export async function generateMetadata({
     openGraph: {
       type: "website",
       url: path,
-      siteName: "Notes Maker",
+      siteName: "Quick Checklist",
       title,
       description,
       locale,

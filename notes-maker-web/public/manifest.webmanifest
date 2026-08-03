@@ -1,6 +1,6 @@
 {
-  "name": "Notes Maker",
-  "short_name": "Notes",
+  "name": "Quick Checklist",
+  "short_name": "Checklist",
   "description": "Free, no account, stored in your own browser.",
   "start_url": "/",
   "scope": "/",

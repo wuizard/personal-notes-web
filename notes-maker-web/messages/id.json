@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Notes Maker",
+    "name": "Quick Checklist",
     "tagline": "Catatan Anda, tersimpan di perangkat Anda."
   },
   "nav": {
@@ -128,8 +128,35 @@
     "dismiss": "Mulai dari awal"
   },
   "seo": {
-    "title": "Notes Maker — Aplikasi Catatan Pribadi, To-Do List & Checklist Gratis",
-    "description": "Aplikasi catatan pribadi dan to-do list gratis tanpa perlu mendaftar. Tulis catatan, buat checklist, dan tetap terorganisir — semuanya tersimpan privat di perangkat Anda dan bisa dipakai offline."
+    "title": "Quick Checklist — Aplikasi Catatan Pribadi, To-Do List & Checklist Gratis",
+    "description": "Aplikasi checklist online dan to-do list gratis tanpa perlu mendaftar. Tulis catatan cepat, buat daftar ceklis harian, dan tetap terorganisir — semuanya tersimpan privat di perangkat Anda dan bisa dipakai offline.",
+    "keywords": [
+      "aplikasi checklist",
+      "aplikasi catatan",
+      "aplikasi to do list",
+      "daftar tugas online",
+      "aplikasi ceklis harian",
+      "catatan online gratis",
+      "aplikasi notes gratis",
+      "pengingat tugas",
+      "aplikasi daftar belanja",
+      "checklist harian online",
+      "checklist app",
+      "online checklist",
+      "free checklist app",
+      "to-do list app",
+      "checklist maker",
+      "checklist app without account",
+      "online checklist no login",
+      "checklist app that works offline",
+      "grocery checklist app",
+      "packing checklist app",
+      "travel checklist maker",
+      "daily routine checklist",
+      "cleaning checklist app",
+      "moving checklist app",
+      "wedding checklist app"
+    ]
   },
   "landing": {
     "heroTitle": "Catatan pribadi dan to-do list yang tetap milik Anda.",
@@ -145,7 +172,25 @@
       "checklistBody": "Pencatatan dimulai sebagai daftar centang, dan daftar centang tanpa batas — di semua paket.",
       "autoEntryTitle": "Entri tugas otomatis",
       "autoEntryBody": "Mulai mengetik dan kalimatnya akan dilengkapi otomatis, dipelajari dari tugas-tugas Anda sebelumnya — tekan Tab untuk menerimanya."
-    }
+    },
+    "useCases": {
+      "title": "Satu aplikasi checklist, untuk semua daftar",
+      "items": [
+        "Daftar belanja",
+        "Daftar packing",
+        "Checklist perjalanan",
+        "Rutinitas harian",
+        "Tugas kerja",
+        "Checklist bersih-bersih",
+        "Checklist pindahan",
+        "Checklist pernikahan",
+        "Perencanaan acara",
+        "Checklist belajar",
+        "Catatan rapat",
+        "Pelacak kebiasaan"
+      ]
+    },
+    "altTo": "Gratis selamanya, tanpa iklan, tanpa login, dan bisa dipakai offline — alternatif yang lebih ringan dibanding Todoist, Google Keep, atau Notion saat Anda hanya butuh aplikasi checklist dan to-do list yang cepat."
   },
   "settings": {
     "title": "Pengaturan",
@@ -266,7 +311,7 @@
     "menu": "Menu akun",
     "aboutUs": "Tentang kami",
     "feedback": "Kirim masukan",
-    "feedbackSubject": "Masukan Notes Maker",
+    "feedbackSubject": "Masukan Quick Checklist",
     "purchasePlan": "Tingkatkan ke Premium",
     "signIn": "Masuk",
     "signOut": "Keluar",
@@ -366,7 +411,7 @@
   },
   "legal": {
     "lastUpdated": "Terakhir diperbarui",
-    "backHome": "Kembali ke Notes Maker",
+    "backHome": "Kembali ke Quick Checklist",
     "privacy": "Kebijakan Privasi"
   }
 }

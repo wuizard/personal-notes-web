@@ -58,7 +58,7 @@ export const privacyPolicyEn: PrivacyPolicy = {
   updated: PRIVACY_UPDATED,
   summaryHeading: "The short version",
   summary: [
-    "If you use Notes Maker without an account, nothing you write ever reaches us. Your notes, checklists, images, and reminders are stored by your own browser, on your own device. There is no server involved, so there is nothing for us to read, lose, or hand over.",
+    "If you use Quick Checklist without an account, nothing you write ever reaches us. Your notes, checklists, images, and reminders are stored by your own browser, on your own device. There is no server involved, so there is nothing for us to read, lose, or hand over.",
     "If you create an account, we learn your email address. If you subscribe, your notes are copied to our server so they can appear on your other devices — encrypted, but with a key we hold, which means it is not end-to-end encryption and we could technically read them.",
     "Free accounts see ads from Google, which sets its own cookies. That is the one part of this app where a third party watches you, and it is the price of the free tier.",
   ],
@@ -67,7 +67,7 @@ export const privacyPolicyEn: PrivacyPolicy = {
       id: "who-we-are",
       heading: "Who we are",
       paragraphs: [
-        "Notes Maker (quickchecklist.app) is built and operated by an individual developer based in Indonesia. There is no company behind it — it is one person, which is worth saying plainly because it tells you what to expect from the support and response times below.",
+        "Quick Checklist (quickchecklist.app) is built and operated by an individual developer based in Indonesia. There is no company behind it — it is one person, which is worth saying plainly because it tells you what to expect from the support and response times below.",
         `For anything in this policy — access, correction, deletion, complaints — write to ${CONTACT_EMAIL}. Please allow up to 30 days for a substantive reply.`,
       ],
     },
@@ -221,7 +221,7 @@ export const privacyPolicyEn: PrivacyPolicy = {
       id: "children",
       heading: "Children",
       paragraphs: [
-        "Notes Maker is not directed at children under 13, and we do not knowingly collect their personal data. If you believe a child has given us personal data, write to us and we will delete it.",
+        "Quick Checklist is not directed at children under 13, and we do not knowingly collect their personal data. If you believe a child has given us personal data, write to us and we will delete it.",
       ],
     },
     {
@@ -247,7 +247,7 @@ export const privacyPolicyId: PrivacyPolicy = {
   updated: PRIVACY_UPDATED,
   summaryHeading: "Ringkasnya",
   summary: [
-    "Jika Anda memakai Notes Maker tanpa akun, apa pun yang Anda tulis tidak pernah sampai ke kami. Catatan, daftar tugas, gambar, dan pengingat Anda disimpan oleh peramban Anda sendiri, di perangkat Anda sendiri. Tidak ada server yang terlibat, jadi tidak ada yang bisa kami baca, hilangkan, atau serahkan.",
+    "Jika Anda memakai Quick Checklist tanpa akun, apa pun yang Anda tulis tidak pernah sampai ke kami. Catatan, daftar tugas, gambar, dan pengingat Anda disimpan oleh peramban Anda sendiri, di perangkat Anda sendiri. Tidak ada server yang terlibat, jadi tidak ada yang bisa kami baca, hilangkan, atau serahkan.",
     "Jika Anda membuat akun, kami mengetahui alamat email Anda. Jika Anda berlangganan, catatan Anda disalin ke server kami agar bisa muncul di perangkat lain — terenkripsi, tetapi dengan kunci yang kami pegang. Artinya ini bukan enkripsi ujung-ke-ujung, dan secara teknis kami bisa membacanya.",
     "Akun gratis melihat iklan dari Google, yang memasang cookie-nya sendiri. Itulah satu-satunya bagian aplikasi ini di mana pihak ketiga mengamati Anda, dan itu adalah harga dari tier gratis.",
   ],
@@ -256,7 +256,7 @@ export const privacyPolicyId: PrivacyPolicy = {
       id: "who-we-are",
       heading: "Siapa kami",
       paragraphs: [
-        "Notes Maker (quickchecklist.app) dibuat dan dijalankan oleh seorang pengembang perorangan yang berbasis di Indonesia. Tidak ada perusahaan di baliknya — hanya satu orang. Ini perlu dikatakan terus terang karena menjelaskan apa yang bisa Anda harapkan dari dukungan dan waktu tanggapan di bawah ini.",
+        "Quick Checklist (quickchecklist.app) dibuat dan dijalankan oleh seorang pengembang perorangan yang berbasis di Indonesia. Tidak ada perusahaan di baliknya — hanya satu orang. Ini perlu dikatakan terus terang karena menjelaskan apa yang bisa Anda harapkan dari dukungan dan waktu tanggapan di bawah ini.",
         `Untuk hal apa pun dalam kebijakan ini — akses, koreksi, penghapusan, keluhan — kirim surel ke ${CONTACT_EMAIL}. Mohon beri waktu hingga 30 hari untuk jawaban yang substantif.`,
       ],
     },
@@ -410,7 +410,7 @@ export const privacyPolicyId: PrivacyPolicy = {
       id: "children",
       heading: "Anak-anak",
       paragraphs: [
-        "Notes Maker tidak ditujukan untuk anak di bawah 13 tahun, dan kami tidak dengan sengaja mengumpulkan data pribadi mereka. Jika Anda yakin seorang anak telah memberikan data pribadi kepada kami, hubungi kami dan akan kami hapus.",
+        "Quick Checklist tidak ditujukan untuk anak di bawah 13 tahun, dan kami tidak dengan sengaja mengumpulkan data pribadi mereka. Jika Anda yakin seorang anak telah memberikan data pribadi kepada kami, hubungi kami dan akan kami hapus.",
       ],
     },
     {

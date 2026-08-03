@@ -73,17 +73,33 @@ export function ReminderDialog({
         </h2>
 
         <div className="mt-4 flex flex-col gap-3">
-          <label className="flex flex-col gap-1 text-[12.5px] font-medium text-muted">
-            {t("repeatLabel")}
-            <select
-              value={repeat}
-              onChange={(e) => setRepeat(e.target.value as "daily" | "weekly")}
-              className={fieldClass}
-            >
-              <option value="daily">{t("repeatDaily")}</option>
-              <option value="weekly">{t("repeatWeekly")}</option>
-            </select>
-          </label>
+          <div className="flex items-center justify-between text-[12.5px] font-medium text-muted">
+            <span id={`${titleId}-repeat`}>{t("repeatLabel")}</span>
+            <div className="flex items-center gap-2">
+              <span className={repeat === "daily" ? "text-foreground" : undefined}>
+                {t("repeatDaily")}
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={repeat === "weekly"}
+                aria-labelledby={`${titleId}-repeat`}
+                onClick={() => setRepeat((r) => (r === "daily" ? "weekly" : "daily"))}
+                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                  repeat === "weekly" ? "bg-accent" : "bg-surface-secondary"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform ${
+                    repeat === "weekly" ? "translate-x-[22px]" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+              <span className={repeat === "weekly" ? "text-foreground" : undefined}>
+                {t("repeatWeekly")}
+              </span>
+            </div>
+          </div>
 
           {repeat === "weekly" && (
             <label className="flex flex-col gap-1 text-[12.5px] font-medium text-muted">

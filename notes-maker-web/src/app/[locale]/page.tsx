@@ -30,11 +30,12 @@ export default async function LandingPage({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "Notes Maker",
+    name: "Quick Checklist",
     applicationCategory: "ProductivityApplication",
     operatingSystem: "Web",
     description: t("seo.description"),
     url: `https://quickchecklist.app/${locale}`,
+    keywords: (t.raw("seo.keywords") as string[]).join(", "),
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   };
 
@@ -100,6 +101,30 @@ export default async function LandingPage({
             </li>
           ))}
         </ul>
+
+        {/* Real, crawlable copy for the long-tail "checklist for X" and
+            "alternative to Y" searches — the terms live in on-page text
+            here, not stuffed into a meta tag where Google gives them no
+            weight (seo.keywords still carries them for the pages that do
+            read that field, e.g. the JSON-LD block above). */}
+        <div className="mt-10 border-t border-[var(--card-border)] pt-8">
+          <h2 className="text-sm font-semibold text-muted">
+            {t("landing.useCases.title")}
+          </h2>
+          <ul className="mt-3 flex flex-wrap gap-2" role="list">
+            {(t.raw("landing.useCases.items") as string[]).map((item) => (
+              <li
+                key={item}
+                className="rounded-full border border-[var(--card-border)] bg-surface px-3 py-1 text-[13px] text-muted"
+              >
+                {item}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 max-w-prose text-[13px] text-muted">
+            {t("landing.altTo")}
+          </p>
+        </div>
 
         {/* The palette, shown rather than described — each swatch is now a
             real theme picker: it sets the app-wide colour wash and enters
