@@ -1,0 +1,2 @@
+{"time":"2026-08-04T15:44:44.6922464+07:00","level":"INFO","msg":"notes-maker-api listening","port":"8080"}
+{"time":"2026-08-04T15:44:44.6944474+07:00","level":"ERROR","msg":"server: exited","error":"listen tcp :8080: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted."}

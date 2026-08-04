@@ -34,6 +34,7 @@ export function AuthMenu({ direction = "down" }: { direction?: "up" | "down" }) 
   const [signingIn, setSigningIn] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loadedPhotoURL, setLoadedPhotoURL] = useState<string | null>(null);
   const authReady = isFirebaseConfigured();
 
   if (authReady && loading) {
@@ -52,15 +53,23 @@ export function AuthMenu({ direction = "down" }: { direction?: "up" | "down" }) 
         className="grid size-9 place-items-center rounded-xl text-muted transition-colors hover:bg-surface-secondary hover:text-foreground"
       >
         {user?.photoURL ? (
-          // Firebase avatars come from Google's CDN; next/image would need a
-          // remotePatterns allowance for no gain on a 28px thumbnail.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={user.photoURL}
-            alt=""
-            referrerPolicy="no-referrer"
-            className="size-7 rounded-full"
-          />
+          <span className="relative grid size-7 place-items-center rounded-full bg-accent-soft text-[12.5px] font-semibold text-accent-soft-foreground">
+            {/* Initials placeholder shows until the CDN image loads (or
+                permanently, if it errors) so the icon is never blank. */}
+            {loadedPhotoURL !== user.photoURL && initial}
+            {/* Firebase avatars come from Google's CDN; next/image would need a
+                remotePatterns allowance for no gain on a 28px thumbnail. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={user.photoURL}
+              alt=""
+              referrerPolicy="no-referrer"
+              onLoad={() => setLoadedPhotoURL(user.photoURL)}
+              className={`absolute inset-0 size-7 rounded-full object-cover ${
+                loadedPhotoURL === user.photoURL ? "opacity-100" : "opacity-0"
+              }`}
+            />
+          </span>
         ) : user ? (
           <span className="grid size-7 place-items-center rounded-full bg-accent-soft text-[12.5px] font-semibold text-accent-soft-foreground">
             {initial}

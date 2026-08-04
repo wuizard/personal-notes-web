@@ -1,0 +1,16 @@
+[1m[38;2;173;127;168m▲ Next.js 16.2.11[39m[22m (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://10.14.0.2:3000
+- Environments: .env.local
+[32m[1m✓[22m[39m Ready in 1278ms
+
+ GET /en [32m200[39m in 4.8s[2m (next.js: 3.6s, generate-params: 953ms, application-code: 1279ms)[22m
+ GET /en [32m200[39m in 391ms[2m (next.js: 52ms, generate-params: 27ms, application-code: 338ms)[22m
+ GET /en/notes [32m200[39m in 1857ms[2m (next.js: 1104ms, generate-params: 1015ms, application-code: 753ms)[22m
+ GET /en/notes [32m200[39m in 320ms[2m (next.js: 22ms, generate-params: 13ms, application-code: 298ms)[22m
+ GET / [34m307[39m in 337ms[2m (next.js: 71ms, application-code: 265ms)[22m
+ GET /en/notes [32m200[39m in 268ms[2m (next.js: 40ms, generate-params: 15ms, application-code: 227ms)[22m
+[32m[1m✓[22m[39m Compiled in 624ms
+ GET /en/notes [32m200[39m in 243ms[2m (next.js: 109ms, generate-params: 9ms, application-code: 134ms)[22m
+[32m[1m✓[22m[39m Compiled in 339ms
+ GET /en/notes [32m200[39m in 215ms[2m (next.js: 114ms, generate-params: 9ms, application-code: 101ms)[22m
